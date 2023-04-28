@@ -5,6 +5,8 @@
 #include "BLPUserWidget.h"
 #include "BLPUWMainMenu.h"
 #include "BLPUWPauseMenu.h"
+#include "BLPGMClassic.h"
+#include "BLPGameState.h"
 
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"

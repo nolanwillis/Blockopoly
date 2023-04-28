@@ -2,12 +2,10 @@
 
 
 #include "BLPGameState.h"
-#include "BLPProperty.h"
+#include "BLPSpace.h"
 
-void ABLPGameState::BeginPlay()
-{
-	for (auto Property : PropertyList)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Found property: %s"), *FString(Property->GetName()));
-	}
-}
+//void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//	DOREPLIFETIME(ABLPGameState, SpaceList);
+//}

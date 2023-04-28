@@ -6,7 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "BLPGameState.generated.h"
 
-class ABLPProperty;
+class ABLPSpace;
 
 UCLASS()
 class BLOCKOPOLY_API ABLPGameState : public AGameState
@@ -14,9 +14,10 @@ class BLOCKOPOLY_API ABLPGameState : public AGameState
 	GENERATED_BODY()
 
 public:
-	virtual void BeginPlay() override;
+	TArray<ABLPSpace*> GetSpaceList() { return SpaceList; }
+	void AddToSpaceList(ABLPSpace* Space) { SpaceList.Add(Space); }
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Property Management")
-	TArray<ABLPProperty*> PropertyList;
-	
+private:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Property Management", meta = (AllowPrivateAccess = true))
+	TArray<ABLPSpace*> SpaceList;
 };

@@ -2,9 +2,9 @@
 
 
 #include "BLPGMClassic.h"
-#include "BLPGameState.h"
+
 
 ABLPGMClassic::ABLPGMClassic()
 {
-	GameStateClass = ABLPGameState::StaticClass();
+	
 }
