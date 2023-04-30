@@ -2,10 +2,17 @@
 
 
 #include "BLPGameState.h"
-#include "BLPSpace.h"
+#include "BLPPlayerState.h"
 
-//void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-//	DOREPLIFETIME(ABLPGameState, SpaceList);
-//}
+void ABLPGameState::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (HasAuthority())
+	{
+		// Set first turn to first player to connect to the game
+		ABLPPlayerState* FirstPlayer = Cast<ABLPPlayerState>(PlayerArray[0]);
+		FirstPlayer->SetIsItMyTurn(true);
+	}
+}
+
