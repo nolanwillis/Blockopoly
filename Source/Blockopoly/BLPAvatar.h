@@ -27,6 +27,8 @@ private:
 	void FinishTurn();
 	// For testing 
 	void ListAvailableProperties();
+	void Sell();
+	void BuyBuilding();
 	
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Shape;

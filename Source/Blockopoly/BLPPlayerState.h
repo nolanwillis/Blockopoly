@@ -31,7 +31,7 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
 	int CreditBalance = 1500;
 	
-	UPROPERTY(ReplicatedUsing=OnRep_DesiredSpaceID)
+	UPROPERTY(ReplicatedUsing=OnRep_DesiredSpaceID, VisibleAnywhere)
 	int DesiredSpaceID = 0;
 	
 	UPROPERTY(ReplicatedUsing=OnRep_IsItMyTurn)

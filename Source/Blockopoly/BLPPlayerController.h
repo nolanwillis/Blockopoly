@@ -9,8 +9,10 @@
 #include "BLPPlayerController.generated.h"
 
 class ABLPAvatar;
+class ABLPEstatePropertySpace;
 class ABLPGameState; 
-class ABLPPlayerState; 
+class ABLPPlayerState;
+class ABLPPropertySpace;
 class ABLPSpace;
 
 /**
@@ -38,5 +40,15 @@ public:
 	void Server_BuyPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
 	UFUNCTION(Server, Unreliable, WithValidation)
-	void Server_SellPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, ABLPPropertySpace* PropertySpacePtr);
+	void Server_SellPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
+
+	UFUNCTION(Server, Unreliable, WithValidation)
+	void Server_BuyBuilding(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
+	
+
+private:
+	void PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
+
+	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount);
+	
 };

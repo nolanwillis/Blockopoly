@@ -6,8 +6,6 @@
 #include "BLPSpace.h"
 #include "BLPPropertySpace.generated.h"
 
-class UMaterial;
-class UStaticMeshComponent;
 /**
  * 
  */
@@ -46,11 +44,5 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
 	int SellValue;
-	
-	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
-	UMaterial* Color;
-
-	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
-	UStaticMeshComponent* TitleBar;
 };
 

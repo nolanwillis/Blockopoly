@@ -5,8 +5,10 @@
 #include "BLPPlayerState.h"
 #include "BLPSpace.h"
 #include "BLPPropertySpace.h"
+#include "BLPEstatePropertySpace.h"
 
 #include "GameFramework/Controller.h"
+#include "Components/StaticMeshComponent.h"
 
 // Server RPC that moves the Avatar to it's DesiredSpaceID
 void ABLPPlayerController::Server_Move_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& LocalSpaceList)
@@ -91,42 +93,20 @@ void ABLPPlayerController::Server_ApplySpaceSideEffect_Implementation(ABLPPlayer
 		return;
 	}
 	
-	const int LocalDesiredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
-	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[LocalDesiredSpaceID];
+	const int EnteredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
+	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[EnteredSpaceID];
+	if (!EnteredSpace)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Entered space could not be found"));
+		return;
+	}
 	
 	if (Cast<ABLPPropertySpace>(EnteredSpace))
 	{
-		const ABLPPropertySpace* EnteredProperty = Cast<ABLPPropertySpace>(EnteredSpace);
-		if (EnteredProperty->GetOwnerID() == -1)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("This property has no owner"));
-			return;
-		}
-		if (EnteredProperty->GetOwnerID() != PlayerStatePtr->GetPlayerId())
-		{
-			PlayerStatePtr->AddToBalance(-EnteredProperty->GetRent());
-			
-			TArray<TObjectPtr<APlayerState>> LocalPlayerArray = GameStatePtr->PlayerArray;
-			for (TObjectPtr<APlayerState> const PState : LocalPlayerArray)
-			{
-				if (PState->GetPlayerId() == EnteredProperty->GetOwnerID())
-				{
-					if (ABLPPlayerState* OwnerOfProperty = Cast<ABLPPlayerState>(Player))
-					{
-						OwnerOfProperty->AddToBalance(EnteredProperty->GetRent());
-					}
-					else
-					{
-						UE_LOG(LogTemp, Warning, TEXT("Owner couldn't be found!"));
-					}
-				}
-			}
-		}
+		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
+		PropertySpaceSideEffect(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("This is not a property"));
-	}
+	
 }
 bool ABLPPlayerController::Server_ApplySpaceSideEffect_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
@@ -189,26 +169,142 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 bool ABLPPlayerController::Server_BuyPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr){ return true; }
 
 // Server RPC that allows a user to sell a property (NOT TESTED)
-void ABLPPlayerController::Server_SellPropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, ABLPPropertySpace* PropertySpacePtr)
+void ABLPPlayerController::Server_SellPropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
 {
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PC")); return; }
-	if (!PropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("PropertySpacePtr is null, from PC")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	if (SpaceID < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SpaceID invalid")); return; }
 	
 	if (!PlayerStatePtr->GetIsItMyTurn())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: It's not your turn!"))
 		return;
 	}
+	
+	ABLPPropertySpace* PropertySpacePtr = nullptr;
 
+	TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
+	for (ABLPSpace* Space : LocalSpaceList)
+	{
+		if (Space->GetSpaceID() == SpaceID) PropertySpacePtr = Cast<ABLPPropertySpace>(Space);
+	}
+
+	if (!PropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not a property!")); return; }
+	
 	if (PlayerStatePtr->GetPlayerId() != PropertySpacePtr->GetOwnerID())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("You don't own this property"))
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this property!"))
 		return;
 	}
 
 	PropertySpacePtr->SetOwnerID(-1);
 	PlayerStatePtr->RemoveFromOwnedPropertyList(PropertySpacePtr);
 	PlayerStatePtr->AddToBalance(PropertySpacePtr->GetSellValue());
+	GameStatePtr->AddToAvailablePropertySpaceList(PropertySpacePtr);
 }
-bool ABLPPlayerController::Server_SellPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, ABLPPropertySpace* PropertySpacePtr){ return true; }
+bool ABLPPlayerController::Server_SellPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
+
+void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
+{
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	if (SpaceID < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SpaceID invalid")); return; }
+	
+	if (!PlayerStatePtr->GetIsItMyTurn())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: It's not your turn!"))
+		return;
+	}
+	
+	ABLPEstatePropertySpace* EstatePropertySpacePtr = nullptr;
+
+	TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
+	for (ABLPSpace* Space : LocalSpaceList)
+	{
+		if (Space->GetSpaceID() == SpaceID) EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(Space);
+	}
+
+	if (!EstatePropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not an estate property!")); return; }
+	
+	if (PlayerStatePtr->GetPlayerId() != EstatePropertySpacePtr->GetOwnerID())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this estate property!"))
+		return;
+	}
+
+	PlayerStatePtr->AddToBalance(-EstatePropertySpacePtr->GetBuildingCost());
+	const int UpdatedBuildingCount = EstatePropertySpacePtr->GetBuildingCount() + 1;
+	EstatePropertySpacePtr->SetBuildingCount(UpdatedBuildingCount);
+	UpdateBuildings(EstatePropertySpacePtr, UpdatedBuildingCount);
+	
+}
+bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr,const int& SpaceID){ return true; }
+
+// Side effects for all types of spaces
+// Collects rent from player if they do not own the property they move to
+void ABLPPlayerController::PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const
+{
+	if (EnteredPropertySpace->GetOwnerID() == -1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("This property has no owner, from PC"));
+		return;
+	}
+	if (EnteredPropertySpace->GetOwnerID() != PlayerStatePtr->GetPlayerId())
+	{
+		PlayerStatePtr->AddToBalance(-EnteredPropertySpace->GetRent());
+			
+		TArray<TObjectPtr<APlayerState>> LocalPlayerArray = GameStatePtr->PlayerArray;
+		for (TObjectPtr<APlayerState> const PState : LocalPlayerArray)
+		{
+			if (PState->GetPlayerId() == EnteredPropertySpace->GetOwnerID())
+			{
+				if (ABLPPlayerState* OwnerOfProperty = Cast<ABLPPlayerState>(Player))
+				{
+					OwnerOfProperty->AddToBalance(EnteredPropertySpace->GetRent());
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Owner couldn't be found, from PC!"));
+				}
+			}
+		}
+	}
+}
+
+// Updates the amount of buildings on an estate property
+void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount)
+{
+	if (BuildingCount == 1)
+	{
+		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse0();
+		HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built your 1st house"));
+	}
+	else if (BuildingCount == 2)
+	{
+		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse1();
+		HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 2nd house"));
+	}
+	else if (BuildingCount == 3)
+	{
+		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse2();
+		HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 3rd house"));
+		
+	}
+	else if (BuildingCount == 4)
+	{
+		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse3();
+		HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 4th house"));
+	}
+	else if (BuildingCount == 5)
+	{
+		UStaticMeshComponent* HotelPtr = EstatePropertySpacePtr->GetHotel();
+		HotelPtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a hotel"));
+	}
+	
+}
+

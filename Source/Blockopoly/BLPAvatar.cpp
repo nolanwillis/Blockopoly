@@ -39,6 +39,8 @@ void ABLPAvatar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("Purchase", IE_Pressed, this, &ABLPAvatar::Purchase);
 	PlayerInputComponent->BindAction("FinishTurn", IE_Pressed, this, &ABLPAvatar::FinishTurn);
 	PlayerInputComponent->BindAction("ListAvailableProperties", IE_Pressed, this, &ABLPAvatar::ListAvailableProperties);
+	PlayerInputComponent->BindAction("Sell", IE_Pressed, this, &ABLPAvatar::Sell);
+	PlayerInputComponent->BindAction("BuyBuilding", IE_Pressed, this, &ABLPAvatar::BuyBuilding);
 }
 
 // Make Avatar move a random # of spaces by calling server RPCs
@@ -100,6 +102,32 @@ void ABLPAvatar::ListAvailableProperties()
 		UE_LOG(LogTemp, Warning, TEXT("|Name: %s | Rent: %d|"), *Property->GetName(), Property->GetRent());
 	}
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
+}
+
+void ABLPAvatar::Sell()
+{
+	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
+	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
+	
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
+
+	PlayerControllerPtr->Server_SellPropertySpace(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
+}
+
+void ABLPAvatar::BuyBuilding()
+{
+	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
+	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
+	
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
+
+	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
 }
 
 

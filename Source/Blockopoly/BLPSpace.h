@@ -34,7 +34,7 @@ public:
 
 	// Accessors
 	FString GetName() { return Name; }
-	int GetSpaceID() { return SpaceID; }
+	int GetSpaceID() const { return SpaceID; }
 
 	// Gets the transform of an open SpawnPoint from the SpawnPoints array
 	FTransform GetSpawnPointTransform();

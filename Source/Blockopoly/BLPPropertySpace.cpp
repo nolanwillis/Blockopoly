@@ -11,8 +11,7 @@
 ABLPPropertySpace::ABLPPropertySpace()
 {
 	bReplicates = true;
-	TitleBar = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TitleBar"));
-	TitleBar->SetupAttachment(RootComponent);
+	
 }
 
 // Called when the game starts or when spawned
@@ -20,14 +19,20 @@ void ABLPPropertySpace::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (TitleBar) TitleBar->SetMaterial(0, Color);
-
-	if (const UWorld* World = GetWorld())
+	if (const UWorld* WorldPtr = GetWorld())
 	{
-		if (ABLPGameState* GameStatePtr = Cast<ABLPGameState>(World->GetGameState()))
+		if (ABLPGameState* GameStatePtr = Cast<ABLPGameState>(WorldPtr->GetGameState()))
 		{
 			GameStatePtr->AddToAvailablePropertySpaceList(this);
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PropertySpace"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WorldPtr is null, from PropertySpace"));
 	}
 }
 
