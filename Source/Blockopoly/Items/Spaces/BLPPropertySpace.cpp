@@ -2,7 +2,7 @@
 
 
 #include "BLPPropertySpace.h"
-#include "BLPGameState.h"
+#include "../../Framework/State/BLPGameState.h"
 
 #include "Materials/Material.h"
 #include "Components/StaticMeshComponent.h"

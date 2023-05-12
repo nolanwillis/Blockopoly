@@ -2,11 +2,11 @@
 
 
 #include "BLPGameInstance.h"
-#include "BLPUserWidget.h"
-#include "BLPUWMainMenu.h"
-#include "BLPUWPauseMenu.h"
-#include "BLPGMClassic.h"
-#include "BLPGameState.h"
+#include "../UI/BLPUserWidget.h"
+#include "../UI/BLPUWMainMenu.h"
+#include "../UI/BLPUWPauseMenu.h"
+#include "../Framework/GameModes/BLPGMClassic.h"
+#include "../Framework/State/BLPGameState.h"
 
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"

@@ -2,7 +2,7 @@
 
 
 #include "BLPGMLobbyGamemode.h"
-#include "BLPGameInstance.h"
+#include "../BLPGameInstance.h"
 
 void ABLPGMLobbyGamemode::PostLogin(APlayerController* NewPlayer)
 {

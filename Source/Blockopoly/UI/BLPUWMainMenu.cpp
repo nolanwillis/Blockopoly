@@ -3,7 +3,7 @@
 
 #include "BLPUWMainMenu.h"
 #include "BLPUWSessionEntry.h"
-#include "BLPGameInstance.h"
+#include "../Framework/BLPGameInstance.h"
 
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"

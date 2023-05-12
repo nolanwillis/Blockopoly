@@ -2,7 +2,7 @@
 
 
 #include "BLPSpace.h"
-#include "BLPGameState.h"
+#include "../../Framework/State/BLPGameState.h"
 
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"

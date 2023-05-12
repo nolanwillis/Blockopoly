@@ -22,9 +22,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	void Move();
-	void Purchase();
+	void TakeTurn();
 	void FinishTurn();
+	void Purchase();
+	
 	// For testing 
 	void ListAvailableProperties();
 	void Sell();

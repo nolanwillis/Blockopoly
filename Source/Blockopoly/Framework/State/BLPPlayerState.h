@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BLPPropertySpace.h"
 #include "GameFramework/PlayerState.h"
 #include "BLPPlayerState.generated.h"
 
+class ABLPPropertySpace;
 /**
  * 
  */

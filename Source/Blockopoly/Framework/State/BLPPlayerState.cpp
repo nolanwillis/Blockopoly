@@ -1,9 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BLPPlayerState.h"
-#include "BLPAvatar.h"
+#include "../Pawns/BLPAvatar.h"
 #include "BLPGameState.h"
-#include "BLPSpace.h"
+#include "../../Items/Spaces/BLPSpace.h"
+#include "../../Items/Spaces/BLPPropertySpace.h"
 
 #include "Net/UnrealNetwork.h"
 

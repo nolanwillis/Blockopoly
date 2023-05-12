@@ -1,54 +1,37 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "BLPPlayerController.h"
-#include "BLPAvatar.h"
-#include "BLPGameState.h"
-#include "BLPPlayerState.h"
-#include "BLPSpace.h"
-#include "BLPPropertySpace.h"
-#include "BLPEstatePropertySpace.h"
+#include "./Pawns/BLPAvatar.h"
+#include "./State/BLPGameState.h"
+#include "./State/BLPPlayerState.h"
+#include "../Items/Spaces/BLPSpace.h"
+#include "../Items/Spaces/BLPPropertySpace.h"
+#include "../Items/Spaces/BLPEstatePropertySpace.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
 
 // Server RPC that moves the Avatar to it's DesiredSpaceID
-void ABLPPlayerController::Server_Move_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& LocalSpaceList)
+void ABLPPlayerController::Server_TakeTurn_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PC")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
-	if (LocalSpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
-	
-	for (ABLPSpace* Space : LocalSpaceList)
-	{
-		if (Space->GetSpaceID() == PlayerStatePtr->GetDesiredSpaceID())
-		{
-			AvatarPtr->SetActorTransform(Space->GetActorTransform() + Space->GetSpawnPointTransform());
-		}
-	}
-}
-bool ABLPPlayerController::Server_Move_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& LocalSpaceList){ return true; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PC")); return; }
 
-// Server RPC that simulates a dice roll 
-void ABLPPlayerController::Server_RollDice_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
-{
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
 	if (!PlayerStatePtr->GetIsItMyTurn())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
 		return;
 	}
-	
-	const int DiceValue = FMath::RandRange(1, 12);
-	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
-	int NewDesiredSpaceID = PlayerStatePtr->GetDesiredSpaceID() + DiceValue;
-	const int LargestSpaceID = GameStatePtr->GetSpaceList().Num()-1;
-	if (NewDesiredSpaceID > LargestSpaceID) NewDesiredSpaceID = DiceValue-1;
-	
-	PlayerStatePtr->SetDesiredSpaceID(NewDesiredSpaceID);
-	
-	UE_LOG(LogTemp, Warning, TEXT("DesiredSpaceID is: %d"), PlayerStatePtr->GetDesiredSpaceID());
+
+	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
+
+	if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
+
+	RollDice(PlayerStatePtr, GameStatePtr);
+	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	ApplySpaceSideEffect(PlayerStatePtr, GameStatePtr);
 }
-bool ABLPPlayerController::Server_RollDice_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
+bool ABLPPlayerController::Server_TakeTurn_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
 // Server RPC that finishes the current turn and moves to the next
 void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -80,35 +63,6 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 	Cast<ABLPPlayerState>(LocalPlayerArray[GameStatePtr->GetPlayerUpIndex()])->SetIsItMyTurn(true);
 }
 bool ABLPPlayerController::Server_FinishTurn_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
-
-// Server RPC that applies the side effect of a newly entered space (ex: if a unowned property take rent)
-void ABLPPlayerController::Server_ApplySpaceSideEffect_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
-{
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PC")); return; }
-	
-	if (!PlayerStatePtr->GetIsItMyTurn())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
-		return;
-	}
-	
-	const int EnteredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
-	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[EnteredSpaceID];
-	if (!EnteredSpace)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Entered space could not be found"));
-		return;
-	}
-	
-	if (Cast<ABLPPropertySpace>(EnteredSpace))
-	{
-		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
-		PropertySpaceSideEffect(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
-	}
-	
-}
-bool ABLPPlayerController::Server_ApplySpaceSideEffect_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
 // Server RPC that allows a user to buy a property that has no owner
 void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -168,7 +122,7 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 }
 bool ABLPPlayerController::Server_BuyPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr){ return true; }
 
-// Server RPC that allows a user to sell a property (NOT TESTED)
+// Server RPC that allows a user to sell a property
 void ABLPPlayerController::Server_SellPropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
@@ -204,6 +158,7 @@ void ABLPPlayerController::Server_SellPropertySpace_Implementation(ABLPPlayerSta
 }
 bool ABLPPlayerController::Server_SellPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
 
+// Server RPC that enables a user to build a building on a property
 void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
@@ -236,11 +191,53 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 	const int UpdatedBuildingCount = EstatePropertySpacePtr->GetBuildingCount() + 1;
 	EstatePropertySpacePtr->SetBuildingCount(UpdatedBuildingCount);
 	UpdateBuildings(EstatePropertySpacePtr, UpdatedBuildingCount);
-	
 }
 bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr,const int& SpaceID){ return true; }
 
-// Side effects for all types of spaces
+// Simulates a dice roll
+void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
+{
+	const int DiceValue = FMath::RandRange(1, 12);
+	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
+	int NewDesiredSpaceID = PlayerStatePtr->GetDesiredSpaceID() + DiceValue;
+	const int LargestSpaceID = GameStatePtr->GetSpaceList().Num()-1;
+	if (NewDesiredSpaceID > LargestSpaceID) NewDesiredSpaceID = DiceValue-1;
+	
+	PlayerStatePtr->SetDesiredSpaceID(NewDesiredSpaceID);
+	
+	UE_LOG(LogTemp, Warning, TEXT("DesiredSpaceID is: %d"), PlayerStatePtr->GetDesiredSpaceID());
+}
+
+// Moves the player avatar
+void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, const ABLPPlayerState* PlayerStatePtr, TArray<ABLPSpace*> SpaceList) const
+{
+	for (ABLPSpace* Space : SpaceList)
+	{
+		if (Space->GetSpaceID() == PlayerStatePtr->GetDesiredSpaceID())
+		{
+			AvatarPtr->SetActorTransform(Space->GetActorTransform() + Space->GetSpawnPointTransform());
+		}
+	}
+}
+
+// Applies correct side effect depending on what space is landed on
+void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
+{
+	const int EnteredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
+	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[EnteredSpaceID];
+	if (!EnteredSpace)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Entered space could not be found"));
+		return;
+	}
+	
+	if (Cast<ABLPPropertySpace>(EnteredSpace))
+	{
+		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
+		PropertySpaceSideEffect(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
+	}
+}
+
 // Collects rent from player if they do not own the property they move to
 void ABLPPlayerController::PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const
 {

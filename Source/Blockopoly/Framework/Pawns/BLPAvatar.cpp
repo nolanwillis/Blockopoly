@@ -2,10 +2,11 @@
 
 
 #include "BLPAvatar.h"
-#include "BLPGameState.h"
-#include "BLPPlayerController.h"
-#include "BLPPlayerState.h"
-#include "BLPSpace.h"
+#include "../State/BLPGameState.h"
+#include "../BLPPlayerController.h"
+#include "../State/BLPPlayerState.h"
+#include "../../Items/Spaces/BLPSpace.h"
+#include "../../Items/Spaces/BLPPropertySpace.h"
 
 #include "Components/StaticMeshComponent.h"
 
@@ -35,16 +36,16 @@ void ABLPAvatar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Move", IE_Pressed, this, &ABLPAvatar::Move);
-	PlayerInputComponent->BindAction("Purchase", IE_Pressed, this, &ABLPAvatar::Purchase);
+	PlayerInputComponent->BindAction("TakeTurn", IE_Pressed, this, &ABLPAvatar::TakeTurn);
 	PlayerInputComponent->BindAction("FinishTurn", IE_Pressed, this, &ABLPAvatar::FinishTurn);
+	PlayerInputComponent->BindAction("Purchase", IE_Pressed, this, &ABLPAvatar::Purchase);
 	PlayerInputComponent->BindAction("ListAvailableProperties", IE_Pressed, this, &ABLPAvatar::ListAvailableProperties);
 	PlayerInputComponent->BindAction("Sell", IE_Pressed, this, &ABLPAvatar::Sell);
 	PlayerInputComponent->BindAction("BuyBuilding", IE_Pressed, this, &ABLPAvatar::BuyBuilding);
 }
 
 // Make Avatar move a random # of spaces by calling server RPCs
-void ABLPAvatar::Move()
+void ABLPAvatar::TakeTurn()
 {
 	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
@@ -55,10 +56,8 @@ void ABLPAvatar::Move()
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
 	
 	const TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
+	PlayerControllerPtr->Server_TakeTurn(this, PlayerStatePtr, GameStatePtr);
 	
-	PlayerControllerPtr->Server_RollDice(PlayerStatePtr, GameStatePtr);
-	PlayerControllerPtr->Server_Move(this, PlayerStatePtr, LocalSpaceList);
-	PlayerControllerPtr->Server_ApplySpaceSideEffect(PlayerStatePtr, GameStatePtr);
 }
 
 void ABLPAvatar::Purchase()
@@ -126,7 +125,7 @@ void ABLPAvatar::BuyBuilding()
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
-
+	
 	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
 }
 

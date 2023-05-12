@@ -2,7 +2,7 @@
 
 
 #include "BLPUWPauseMenu.h"
-#include "BLPGameInstance.h"
+#include "../Framework/BLPGameInstance.h"
 
 #include "Components/Button.h"
 
