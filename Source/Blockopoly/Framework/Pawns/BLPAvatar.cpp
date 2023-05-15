@@ -42,6 +42,8 @@ void ABLPAvatar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("ListAvailableProperties", IE_Pressed, this, &ABLPAvatar::ListAvailableProperties);
 	PlayerInputComponent->BindAction("Sell", IE_Pressed, this, &ABLPAvatar::Sell);
 	PlayerInputComponent->BindAction("BuyBuilding", IE_Pressed, this, &ABLPAvatar::BuyBuilding);
+	PlayerInputComponent->BindAction("DrawChanceCard", IE_Pressed, this, &ABLPAvatar::DrawChanceCard);
+	PlayerInputComponent->BindAction("DrawChestCard", IE_Pressed, this, &ABLPAvatar::DrawChestCard);
 }
 
 // Make Avatar move a random # of spaces by calling server RPCs
@@ -51,9 +53,9 @@ void ABLPAvatar::TakeTurn()
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
 	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
 	
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 	
 	const TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
 	PlayerControllerPtr->Server_TakeTurn(this, PlayerStatePtr, GameStatePtr);
@@ -66,9 +68,9 @@ void ABLPAvatar::Purchase()
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
 	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
 	
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 
 	PlayerControllerPtr->Server_BuyPropertySpace(PlayerStatePtr, GameStatePtr);
 }
@@ -79,9 +81,9 @@ void ABLPAvatar::FinishTurn()
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
 	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
 	
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 
 	// TODO: Attach this to a button in the UI, its here for testing
 	PlayerControllerPtr->Server_FinishTurn(PlayerStatePtr, GameStatePtr);
@@ -109,9 +111,9 @@ void ABLPAvatar::Sell()
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
 	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
 	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 
 	PlayerControllerPtr->Server_SellPropertySpace(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
 }
@@ -122,11 +124,33 @@ void ABLPAvatar::BuyBuilding()
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
 	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
 	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerController Ptr is null, from Avatar")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerState Ptr is null, from Avatar")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 	
 	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
+}
+
+void ABLPAvatar::DrawChanceCard()
+{
+	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
+	
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerStatePtr is null")); return; }
+
+	GameStatePtr->DrawChanceCard(PlayerStatePtr);
+}
+
+void ABLPAvatar::DrawChestCard()
+{
+	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
+	
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerStatePtr is null")); return; }
+
+	GameStatePtr->DrawChestCard(PlayerStatePtr);
 }
 
 

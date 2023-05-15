@@ -6,6 +6,8 @@
 #include "../Items/Spaces/BLPSpace.h"
 #include "../Items/Spaces/BLPPropertySpace.h"
 #include "../Items/Spaces/BLPEstatePropertySpace.h"
+#include "../Items/Spaces/BLPChanceSpace.h"
+#include "../Items/Spaces/BLPChestSpace.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
@@ -221,7 +223,7 @@ void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, const ABLPPlayerSta
 }
 
 // Applies correct side effect depending on what space is landed on
-void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
+void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	const int EnteredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
 	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[EnteredSpaceID];
@@ -235,6 +237,14 @@ void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr,
 	{
 		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
 		PropertySpaceSideEffect(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
+	}
+	else if (Cast<ABLPChanceSpace>(EnteredSpace))
+	{
+		DrawChanceCard(GameStatePtr);
+	}
+	else if (Cast<ABLPChestSpace>(EnteredSpace))
+	{
+		DrawChestCard(GameStatePtr);
 	}
 }
 
@@ -303,5 +313,13 @@ void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* Estate
 		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a hotel"));
 	}
 	
+}
+
+void ABLPPlayerController::DrawChanceCard(ABLPGameState* GameStatePtr)
+{
+}
+
+void ABLPPlayerController::DrawChestCard(ABLPGameState* GameStatePtr)
+{
 }
 

@@ -30,6 +30,8 @@ private:
 	void ListAvailableProperties();
 	void Sell();
 	void BuyBuilding();
+	void DrawChanceCard();
+	void DrawChestCard();
 	
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Shape;

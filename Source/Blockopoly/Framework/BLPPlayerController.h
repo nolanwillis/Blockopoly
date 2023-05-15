@@ -30,9 +30,6 @@ public:
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_FinishTurn(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
-	// UFUNCTION(Server, Unreliable, WithValidation)
-	// void Server_ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
-
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_BuyPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
@@ -41,13 +38,14 @@ public:
 
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_BuyBuilding(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
-	
 
 private:
 	void RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
 	void MovePlayer(ABLPAvatar* AvatarPtr, const ABLPPlayerState* PlayerStatePtr, TArray<ABLPSpace*> SpaceList) const;
-	void ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
+	void ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	void PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount);
+	void DrawChanceCard(ABLPGameState* GameStatePtr);
+	void DrawChestCard(ABLPGameState* GameStatePtr);
 	
 };
