@@ -19,10 +19,10 @@ void ABLPPlayerState::OnRep_CreditBalance() const
 	UE_LOG(LogTemp, Warning, TEXT("New Balance: %d"), CreditBalance);
 }
 
-// Simulates Avatar movement locally when DesiredSpaceID is changed
+// Simulates Avatar movement locally when CurrentSpaceId is changed
 void ABLPPlayerState::OnRep_DesiredSpaceID() const
 {
-	UE_LOG(LogTemp, Warning, TEXT("DesiredSpaceID Updated"));
+	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId Updated"));
 
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(GetPawn());
 	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
@@ -34,7 +34,7 @@ void ABLPPlayerState::OnRep_DesiredSpaceID() const
 	
 	for (ABLPSpace* Space : LocalSpaceList)
 	{
-		if (Space->GetSpaceID() == DesiredSpaceID)
+		if (Space->GetSpaceID() == CurrentSpaceId)
 		{
 			AvatarPtr->SetActorTransform(Space->GetActorTransform() + Space->GetSpawnPointTransform());
 		}
@@ -66,14 +66,33 @@ void ABLPPlayerState::OnRep_OwnedPropertyList() const
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
 }
 
+void ABLPPlayerState::OnRep_JailTurnCounter()
+{
+	if (InJailTurnCounter == 3)
+	{
+		InJail = true;
+	}
+	if (InJailTurnCounter == 0)
+	{
+		InJail = false;
+	}
+}
+
+void ABLPPlayerState::OnRep_GetOutOfJailCounter()
+{
+	// TODO: Update UI by removing or adding get out of jail card and in jail warning
+}
+
 void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	// Here we list the variables we want to replicate
 	DOREPLIFETIME(ABLPPlayerState, CreditBalance);
-	DOREPLIFETIME(ABLPPlayerState, DesiredSpaceID);
+	DOREPLIFETIME(ABLPPlayerState, CurrentSpaceId);
 	DOREPLIFETIME(ABLPPlayerState, IsItMyTurn);
 	DOREPLIFETIME(ABLPPlayerState, OwnedPropertyList);
+	DOREPLIFETIME(ABLPPlayerState, InJailTurnCounter);
+	DOREPLIFETIME(ABLPPlayerState, GetOutOfJailCounter);
 }
 

@@ -115,7 +115,7 @@ void ABLPAvatar::Sell()
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 
-	PlayerControllerPtr->Server_SellPropertySpace(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
+	PlayerControllerPtr->Server_SellPropertySpace(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetCurrentSpaceId());
 }
 
 void ABLPAvatar::BuyBuilding()
@@ -128,7 +128,7 @@ void ABLPAvatar::BuyBuilding()
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 	
-	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetDesiredSpaceID());
+	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetCurrentSpaceId());
 }
 
 void ABLPAvatar::DrawChanceCard()

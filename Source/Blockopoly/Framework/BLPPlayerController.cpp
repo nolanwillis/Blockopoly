@@ -12,7 +12,7 @@
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
 
-// Server RPC that moves the Avatar to it's DesiredSpaceID
+// Server RPC that moves the Avatar to it's CurrentSpaceId
 void ABLPPlayerController::Server_TakeTurn_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PC")); return; }
@@ -78,7 +78,7 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 		return;
 	}
 	
-	const int LocalDesiredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
+	const int LocalDesiredSpaceID = PlayerStatePtr->GetCurrentSpaceId();
 	const TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
 	ABLPPropertySpace* PropertySpaceToPurchase = nullptr;
 	for (ABLPSpace* Space : LocalSpaceList)
@@ -201,31 +201,47 @@ void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPG
 {
 	const int DiceValue = FMath::RandRange(1, 12);
 	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
-	int NewDesiredSpaceID = PlayerStatePtr->GetDesiredSpaceID() + DiceValue;
-	const int LargestSpaceID = GameStatePtr->GetSpaceList().Num()-1;
-	if (NewDesiredSpaceID > LargestSpaceID) NewDesiredSpaceID = DiceValue-1;
 	
-	PlayerStatePtr->SetDesiredSpaceID(NewDesiredSpaceID);
+	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + DiceValue;
+	const int MaxSpaceID = GameStatePtr->GetSpaceList().Num()-1;
+
+	// If we pass go
+	if (NewSpaceID > MaxSpaceID)
+	{
+		NewSpaceID = NewSpaceID-MaxSpaceID-1;
+		PlayerStatePtr->AddToBalance(200);
+	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("DesiredSpaceID is: %d"), PlayerStatePtr->GetDesiredSpaceID());
+	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
+	
+	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
 }
 
-// Moves the player avatar
-void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, const ABLPPlayerState* PlayerStatePtr, TArray<ABLPSpace*> SpaceList) const
+// Moves player (should always be called from the server)
+void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, const ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
 {
 	for (ABLPSpace* Space : SpaceList)
 	{
-		if (Space->GetSpaceID() == PlayerStatePtr->GetDesiredSpaceID())
+		if (Space->GetSpaceID() == PlayerStatePtr->GetCurrentSpaceId())
 		{
 			AvatarPtr->SetActorTransform(Space->GetActorTransform() + Space->GetSpawnPointTransform());
 		}
 	}
 }
 
+void ABLPPlayerController::SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
+{
+	if (!AvatarPtr) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: AvatarPtr is null"));
+	if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null"));
+	PlayerStatePtr->SetInJailTurnCounter(3);
+	PlayerStatePtr->SetCurrentSpaceId(10);
+	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+}
+
 // Applies correct side effect depending on what space is landed on
 void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	const int EnteredSpaceID = PlayerStatePtr->GetDesiredSpaceID();
+	const int EnteredSpaceID = PlayerStatePtr->GetCurrentSpaceId();
 	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[EnteredSpaceID];
 	if (!EnteredSpace)
 	{
@@ -259,22 +275,12 @@ void ABLPPlayerController::PropertySpaceSideEffect(ABLPPlayerState* PlayerStateP
 	if (EnteredPropertySpace->GetOwnerID() != PlayerStatePtr->GetPlayerId())
 	{
 		PlayerStatePtr->AddToBalance(-EnteredPropertySpace->GetRent());
+
+		ABLPPlayerState* OwnerOfProperty = GameStatePtr->GetOwnerOfProperty(EnteredPropertySpace);
 			
-		TArray<TObjectPtr<APlayerState>> LocalPlayerArray = GameStatePtr->PlayerArray;
-		for (TObjectPtr<APlayerState> const PState : LocalPlayerArray)
-		{
-			if (PState->GetPlayerId() == EnteredPropertySpace->GetOwnerID())
-			{
-				if (ABLPPlayerState* OwnerOfProperty = Cast<ABLPPlayerState>(Player))
-				{
-					OwnerOfProperty->AddToBalance(EnteredPropertySpace->GetRent());
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Owner couldn't be found, from PC!"));
-				}
-			}
-		}
+		if (!OwnerOfProperty) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Owner of property could not be found!"));
+
+		OwnerOfProperty->AddToBalance(EnteredPropertySpace->GetRent());
 	}
 }
 

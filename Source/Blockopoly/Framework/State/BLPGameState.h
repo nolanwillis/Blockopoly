@@ -11,7 +11,7 @@ class ABLPPropertySpace;
 class ABLPPlayerState;
 
 // WARNING: IF CHANGED ADJUST CARD LISTS
-constexpr int GNum_ChanceCards = 16;
+constexpr int GNum_ChanceCards = 5;
 constexpr int GNum_ChestCards = 16;
 
 UCLASS()
@@ -24,14 +24,21 @@ class BLOCKOPOLY_API ABLPGameState : public AGameState
 public:
 	TArray<ABLPSpace*> GetSpaceList() const { return SpaceList; }
 	void AddToSpaceList(ABLPSpace* Space) { SpaceList.Add(Space); }
+	
 	int GetPlayerUpIndex() const { return PlayerUpIndex; }
 	void SetPlayerUpIndex(const int& Value) { PlayerUpIndex = Value; }
+	
 	TArray<ABLPPropertySpace*> GetAvailablePropertySpaceList () const { return AvailablePropertySpaceList; }
 	void AddToAvailablePropertySpaceList(ABLPPropertySpace* Value) { AvailablePropertySpaceList.Add(Value); }
 	void RemoveFromAvailablePropertySpaceList(ABLPPropertySpace* Value) { AvailablePropertySpaceList.Remove(Value); }
+
 	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr);
 	void DrawChestCard(ABLPPlayerState* PlayerStatePtr);
+
+	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
+	ABLPSpace* GetSpaceFromId(const int& ID) const;
 	
+protected:
 	virtual void BeginPlay() override;
 
 private:
