@@ -18,34 +18,41 @@ ABLPSpace::ABLPSpace()
 	RootComponent = Root;
 	Square = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Square"));
 	Square->SetupAttachment(RootComponent);
-
-	// Set the location of spawn points
-	SpawnPoint0.Transform.SetLocation(FVector(0, -60, 0));
-	SpawnPoint1.Transform.SetLocation(FVector(0, 60, 0));
-	SpawnPoint2.Transform.SetLocation(FVector(-100, -60, 0));
-	SpawnPoint3.Transform.SetLocation(FVector(-100, 60, 0));
 }
 
-FTransform ABLPSpace::GetSpawnPointTransform()
+FSpawnPoint* ABLPSpace::GetOpenSpawnPoint()
 {
 	// Find the first open spawn point and return it. We don't need a case for when all are taken because there
 	// will always be enough spawn points.
-	FTransform Response;
-	for (auto& SpawnPoint : SpawnPoints)
+	for (const auto SpawnPoint : SpawnPoints)
 	{
-		if (!SpawnPoint.Taken)
+		if (!SpawnPoint->Taken)
 		{
-			SpawnPoint.Taken = true;
-			Response = SpawnPoint.Transform;
+			SpawnPoint->Taken = true;
+			return SpawnPoint;
 		}
 	}
-	return Response;
+	return nullptr;
 }
 
 // Called when the game starts or when spawned.
 void ABLPSpace::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Set the location of spawn points
+	SpawnPoint0.Transform.SetLocation(FVector(0, -75, 20));
+	SpawnPoint0.Index = 0;
+	SpawnPoint0.Taken = false;
+	SpawnPoint1.Transform.SetLocation(FVector(0, 75, 20));
+	SpawnPoint1.Index = 1;
+	SpawnPoint1.Taken = false;
+	SpawnPoint2.Transform.SetLocation(FVector(-110, -75, 20));
+	SpawnPoint2.Index = 2;
+	SpawnPoint2.Taken = false;
+	SpawnPoint3.Transform.SetLocation(FVector(-110, 75, 20));
+	SpawnPoint3.Index = 3;
+	SpawnPoint3.Taken = false;
 
 	// Add self to SpaceList in GameState
 	ABLPGameState* GameState = Cast<ABLPGameState>(GetWorld()->GetGameState());

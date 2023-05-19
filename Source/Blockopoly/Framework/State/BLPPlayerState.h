@@ -6,7 +6,9 @@
 #include "GameFramework/PlayerState.h"
 #include "BLPPlayerState.generated.h"
 
+struct FSpawnPoint;
 class ABLPPropertySpace;
+
 /**
  * 
  */
@@ -23,6 +25,9 @@ public:
 	
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
 	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; }
+
+	FSpawnPoint* GetCurrentSpawnPoint() const { return CurrentSpawnPoint; }
+	void SetCurrentSpawnPoint(FSpawnPoint* Value){ CurrentSpawnPoint = Value; }
 	
 	bool GetIsItMyTurn() const { return IsItMyTurn; }
 	void SetIsItMyTurn(const bool& Value) { IsItMyTurn = Value; }
@@ -40,6 +45,8 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_DesiredSpaceID, VisibleAnywhere)
 	int CurrentSpaceId = 0;
+
+	FSpawnPoint* CurrentSpawnPoint;
 	
 	UPROPERTY(ReplicatedUsing=OnRep_IsItMyTurn)
 	bool IsItMyTurn = false;
@@ -59,7 +66,7 @@ private:
 	void OnRep_CreditBalance() const;
 	
 	UFUNCTION()
-	void OnRep_DesiredSpaceID() const;
+	void OnRep_DesiredSpaceID();
 
 	UFUNCTION()
 	void OnRep_IsItMyTurn() const;
@@ -72,5 +79,4 @@ private:
 
 	UFUNCTION()
 	void OnRep_GetOutOfJailCounter();
-	
 };

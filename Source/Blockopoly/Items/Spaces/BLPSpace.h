@@ -17,7 +17,9 @@ struct FSpawnPoint
 	UPROPERTY(EditAnywhere, Meta = (MakeEditWidget = true))
 	FTransform Transform;
 
-	bool Taken = false;
+	bool Taken;
+
+	int Index;
 };
 
 UCLASS()
@@ -37,7 +39,7 @@ public:
 	int GetSpaceID() const { return SpaceID; }
 
 	// Gets the transform of an open SpawnPoint from the SpawnPoints array
-	FTransform GetSpawnPointTransform();
+	FSpawnPoint* GetOpenSpawnPoint();
 
 protected:
 	// Called when the game starts or when spawned
@@ -57,7 +59,7 @@ private:
 		UStaticMeshComponent* Square;
 
 	// Array of spawn points
-	TArray<FSpawnPoint> SpawnPoints{ SpawnPoint0, SpawnPoint1, SpawnPoint2, SpawnPoint3 };
+	TArray<FSpawnPoint*> SpawnPoints{ &SpawnPoint0, &SpawnPoint1, &SpawnPoint2, &SpawnPoint3 };
 
 	UPROPERTY(EditAnywhere, Category = SpawnPoints, meta = (AllowPrivateAccess = true))
 		FSpawnPoint SpawnPoint0;

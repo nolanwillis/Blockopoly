@@ -20,7 +20,7 @@ void ABLPPlayerState::OnRep_CreditBalance() const
 }
 
 // Simulates Avatar movement locally when CurrentSpaceId is changed
-void ABLPPlayerState::OnRep_DesiredSpaceID() const
+void ABLPPlayerState::OnRep_DesiredSpaceID()
 {
 	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId Updated"));
 
@@ -36,7 +36,21 @@ void ABLPPlayerState::OnRep_DesiredSpaceID() const
 	{
 		if (Space->GetSpaceID() == CurrentSpaceId)
 		{
-			AvatarPtr->SetActorTransform(Space->GetActorTransform() + Space->GetSpawnPointTransform());
+			
+			FSpawnPoint* OldSpawnPoint = CurrentSpawnPoint;
+			if (OldSpawnPoint) OldSpawnPoint->Taken = false; 
+
+			FSpawnPoint* NewSpawnPoint = Space->GetOpenSpawnPoint();
+			if (!NewSpawnPoint)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Spawn point could not be found!"));
+				return;
+			}
+			CurrentSpawnPoint = NewSpawnPoint;
+			
+			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
+			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator();
+			AvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
 		}
 	}
 }

@@ -196,6 +196,8 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 }
 bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr,const int& SpaceID){ return true; }
 
+// Opens spawn point
+
 // Simulates a dice roll
 void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
 {
@@ -218,13 +220,27 @@ void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPG
 }
 
 // Moves player (should always be called from the server)
-void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, const ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
+void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
 {
 	for (ABLPSpace* Space : SpaceList)
 	{
 		if (Space->GetSpaceID() == PlayerStatePtr->GetCurrentSpaceId())
 		{
-			AvatarPtr->SetActorTransform(Space->GetActorTransform() + Space->GetSpawnPointTransform());
+			FSpawnPoint* OldSpawnPoint = PlayerStatePtr->GetCurrentSpawnPoint();
+			if (OldSpawnPoint) OldSpawnPoint->Taken = false; 
+
+			FSpawnPoint* NewSpawnPoint = Space->GetOpenSpawnPoint();
+			if (!NewSpawnPoint)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Spawn point could not be found!"));
+				return;
+			}
+			PlayerStatePtr->SetCurrentSpawnPoint(NewSpawnPoint);
+			
+			UE_LOG(LogTemp, Warning, TEXT("SpawnPointId: %d, Location: %s" ), NewSpawnPoint->Index, *(NewSpawnPoint->Transform).ToString());
+			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
+			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator();
+			AvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
 		}
 	}
 }

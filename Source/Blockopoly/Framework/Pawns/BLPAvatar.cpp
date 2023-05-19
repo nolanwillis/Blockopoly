@@ -8,6 +8,7 @@
 #include "../../Items/Spaces/BLPSpace.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
 
+#include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 
 // Sets default values
@@ -15,6 +16,8 @@ ABLPAvatar::ABLPAvatar()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
+
 	Shape = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shape"));
 	RootComponent = Shape;
 
@@ -100,7 +103,7 @@ void ABLPAvatar::ListAvailableProperties()
 	TArray<ABLPPropertySpace*> LocalAvailablePropertySpaceList = GameStatePtr->GetAvailablePropertySpaceList();
 	for (ABLPPropertySpace* Property : LocalAvailablePropertySpaceList)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("|Name: %s | Rent: %d|"), *Property->GetName(), Property->GetRent());
+		UE_LOG(LogTemp, Warning, TEXT("[Name: %s | Rent: %d]"), *Property->GetName(), Property->GetRent());
 	}
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
 }

@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "BLPAvatar.generated.h"
 
+class UBoxComponent;
+
 UCLASS()
 class BLOCKOPOLY_API ABLPAvatar : public APawn
 {
@@ -32,7 +34,12 @@ private:
 	void BuyBuilding();
 	void DrawChanceCard();
 	void DrawChestCard();
+
+	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
+	UBoxComponent* Root;
 	
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Shape;
+
+	
 };
