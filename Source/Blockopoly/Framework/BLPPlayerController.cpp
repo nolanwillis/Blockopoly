@@ -4,10 +4,10 @@
 #include "./State/BLPGameState.h"
 #include "./State/BLPPlayerState.h"
 #include "../Items/Spaces/BLPSpace.h"
-#include "../Items/Spaces/BLPPropertySpace.h"
-#include "../Items/Spaces/BLPEstatePropertySpace.h"
 #include "../Items/Spaces/BLPChanceSpace.h"
 #include "../Items/Spaces/BLPChestSpace.h"
+#include "../Items/Spaces/BLPPropertySpace.h"
+#include "../Items/Spaces/BLPEstatePropertySpace.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
@@ -85,7 +85,6 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 	{
 		if (Space->GetSpaceID() == LocalDesiredSpaceID) PropertySpaceToPurchase = Cast<ABLPPropertySpace>(Space);
 	}
-
 	if (!PropertySpaceToPurchase)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ERROR: The property your trying to buy could not be found"))
@@ -173,13 +172,7 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 		return;
 	}
 	
-	ABLPEstatePropertySpace* EstatePropertySpacePtr = nullptr;
-
-	TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
-	for (ABLPSpace* Space : LocalSpaceList)
-	{
-		if (Space->GetSpaceID() == SpaceID) EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(Space);
-	}
+	ABLPEstatePropertySpace*  EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(GameStatePtr->GetSpaceFromId(SpaceID));
 
 	if (!EstatePropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not an estate property!")); return; }
 	
@@ -195,8 +188,6 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 	UpdateBuildings(EstatePropertySpacePtr, UpdatedBuildingCount);
 }
 bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr,const int& SpaceID){ return true; }
-
-// Opens spawn point
 
 // Simulates a dice roll
 void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
@@ -249,7 +240,7 @@ void ABLPPlayerController::SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 {
 	if (!AvatarPtr) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: AvatarPtr is null"));
 	if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null"));
-	PlayerStatePtr->SetInJailTurnCounter(3);
+	PlayerStatePtr->SetJailCounter(3);
 	PlayerStatePtr->SetCurrentSpaceId(10);
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 }
@@ -257,27 +248,29 @@ void ABLPPlayerController::SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 // Applies correct side effect depending on what space is landed on
 void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ABLPPlayerController: ApplySpaceSideEffect called"));
 	const int EnteredSpaceID = PlayerStatePtr->GetCurrentSpaceId();
-	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceList()[EnteredSpaceID];
+	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceFromId(EnteredSpaceID);
 	if (!EnteredSpace)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Entered space could not be found"));
 		return;
 	}
-	
 	if (Cast<ABLPPropertySpace>(EnteredSpace))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Property Space Entered"));
 		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
 		PropertySpaceSideEffect(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
 	}
 	else if (Cast<ABLPChanceSpace>(EnteredSpace))
 	{
-		DrawChanceCard(GameStatePtr);
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chance Space Entered"));
+		DrawChanceCard(PlayerStatePtr, GameStatePtr);
 	}
-	else if (Cast<ABLPChestSpace>(EnteredSpace))
-	{
-		DrawChestCard(GameStatePtr);
-	}
+	// else if (Cast<ABLPChestSpace>(EnteredSpace))
+	// {
+	// 	DrawChestCard(PlayerStatePtr, GameStatePtr);
+	// }
 }
 
 // Collects rent from player if they do not own the property they move to
@@ -337,11 +330,12 @@ void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* Estate
 	
 }
 
-void ABLPPlayerController::DrawChanceCard(ABLPGameState* GameStatePtr)
+void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
+	GameStatePtr->DrawChanceCard(PlayerStatePtr);
 }
 
-void ABLPPlayerController::DrawChestCard(ABLPGameState* GameStatePtr)
+void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr)
 {
 }
 

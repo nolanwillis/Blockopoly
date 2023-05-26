@@ -38,17 +38,17 @@ public:
 
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_BuyBuilding(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
-	
-	void MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
 
+	// The following funtions must be public for the chance/chest system to work
+	void MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
 	void SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
+	void ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	
 private:
 	void RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
-	void ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	void PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount);
-	void DrawChanceCard(ABLPGameState* GameStatePtr);
-	void DrawChestCard(ABLPGameState* GameStatePtr);
+	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
+	void DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	
 };

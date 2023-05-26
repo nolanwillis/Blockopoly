@@ -10,8 +10,8 @@ class ABLPSpace;
 class ABLPPropertySpace;
 class ABLPPlayerState;
 
-// WARNING: IF CHANGED ADJUST CARD LISTS
-constexpr int GNum_ChanceCards = 5;
+// WARNING: MAX VALUE IS 16 ONLY CHANGE IF TESTING
+constexpr int GNum_ChanceCards = 16;
 constexpr int GNum_ChestCards = 16;
 
 UCLASS()
@@ -56,9 +56,9 @@ private:
 	
 	// Arrays of function pointers, required for community chest and chance systems
 	TArray<BLPGameStateFuncPtr> ChanceCards {&ABLPGameState::ChanceCard0, &ABLPGameState::ChanceCard1, &ABLPGameState::ChanceCard2, &ABLPGameState::ChanceCard3,
-		                                     &ABLPGameState::ChanceCard4, &ABLPGameState::ChanceCard5, &ABLPGameState::ChanceCard6, &ABLPGameState::ChanceCard7,
-		                                     &ABLPGameState::ChanceCard8, &ABLPGameState::ChanceCard9, &ABLPGameState::ChanceCard10, &ABLPGameState::ChanceCard11,
-		                                     &ABLPGameState::ChanceCard12, &ABLPGameState::ChanceCard13, &ABLPGameState::ChanceCard14, &ABLPGameState::ChanceCard15};
+		                                     &ABLPGameState::ChanceCard4, &ABLPGameState::ChanceCard4, &ABLPGameState::ChanceCard5, &ABLPGameState::ChanceCard6,
+		                                     &ABLPGameState::ChanceCard7, &ABLPGameState::ChanceCard8, &ABLPGameState::ChanceCard9, &ABLPGameState::ChanceCard10,
+		                                     &ABLPGameState::ChanceCard11, &ABLPGameState::ChanceCard12, &ABLPGameState::ChanceCard13, &ABLPGameState::ChanceCard14};
 	TArray<BLPGameStateFuncPtr> ChestCards {&ABLPGameState::ChestCard0, &ABLPGameState::ChestCard1, &ABLPGameState::ChestCard2, &ABLPGameState::ChestCard3,
 											 &ABLPGameState::ChestCard4, &ABLPGameState::ChestCard5, &ABLPGameState::ChestCard6, &ABLPGameState::ChestCard7,
 											 &ABLPGameState::ChestCard8, &ABLPGameState::ChestCard9, &ABLPGameState::ChestCard10, &ABLPGameState::ChestCard11,
@@ -80,7 +80,6 @@ private:
 	void ChanceCard12(ABLPPlayerState* PlayerStatePtr);
 	void ChanceCard13(ABLPPlayerState* PlayerStatePtr);
 	void ChanceCard14(ABLPPlayerState* PlayerStatePtr);
-	void ChanceCard15(ABLPPlayerState* PlayerStatePtr);
 
 	// Chest Card Functions
 	void ChestCard0(ABLPPlayerState* PlayerStatePtr);
@@ -102,4 +101,5 @@ private:
 
 	UFUNCTION()
 	void OnRep_AvailablePropertySpaces();
+	
 };

@@ -36,8 +36,11 @@ public:
 	void AddToOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Add(Value); }
 	void RemoveFromOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Remove(Value); }
 	
-	int GetInJailTurnCounter() const { return InJailTurnCounter; }
-	void SetInJailTurnCounter(const int& Value) { InJailTurnCounter = Value >= 0 && Value <= 3 ? Value : 0;} 
+	int GetJailCounter() const { return JailCounter; }
+	void SetJailCounter(const int& Value) { JailCounter = Value >= 0 && Value <= 3 ? Value : 0; }
+	
+	int GetJailSkipCounter() const { return JailSkipCounter; }
+	void SetJailSkipCounter(const int& Value) { JailSkipCounter = Value; }
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
@@ -54,11 +57,13 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_OwnedPropertyList)
 	TArray<ABLPPropertySpace*> OwnedPropertyList;
 
-	UPROPERTY(ReplicatedUsing=OnRep_JailTurnCounter)
-	int InJailTurnCounter = 0;
+	// How many turns the player must be in jail for
+	UPROPERTY(ReplicatedUsing=OnRep_JailCounter)
+	int JailCounter = 0;
 
-	UPROPERTY(ReplicatedUsing=OnRep_GetOutOfJailCounter)
-	int GetOutOfJailCounter = 0;
+	// Get out jail free card counter
+	UPROPERTY(ReplicatedUsing=OnRep_JailSkipCounter)
+	int JailSkipCounter = 0;
 
 	bool InJail = false;
 
@@ -75,8 +80,8 @@ private:
 	void OnRep_OwnedPropertyList() const;
 
 	UFUNCTION()
-	void OnRep_JailTurnCounter();
+	void OnRep_JailCounter();
 
 	UFUNCTION()
-	void OnRep_GetOutOfJailCounter();
+	void OnRep_JailSkipCounter();
 };

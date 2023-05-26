@@ -80,19 +80,19 @@ void ABLPPlayerState::OnRep_OwnedPropertyList() const
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
 }
 
-void ABLPPlayerState::OnRep_JailTurnCounter()
+void ABLPPlayerState::OnRep_JailCounter()
 {
-	if (InJailTurnCounter == 3)
+	if (JailCounter == 3)
 	{
 		InJail = true;
 	}
-	if (InJailTurnCounter == 0)
+	if (JailCounter == 0)
 	{
 		InJail = false;
 	}
 }
 
-void ABLPPlayerState::OnRep_GetOutOfJailCounter()
+void ABLPPlayerState::OnRep_JailSkipCounter()
 {
 	// TODO: Update UI by removing or adding get out of jail card and in jail warning
 }
@@ -106,7 +106,7 @@ void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABLPPlayerState, CurrentSpaceId);
 	DOREPLIFETIME(ABLPPlayerState, IsItMyTurn);
 	DOREPLIFETIME(ABLPPlayerState, OwnedPropertyList);
-	DOREPLIFETIME(ABLPPlayerState, InJailTurnCounter);
-	DOREPLIFETIME(ABLPPlayerState, GetOutOfJailCounter);
+	DOREPLIFETIME(ABLPPlayerState, JailCounter);
+	DOREPLIFETIME(ABLPPlayerState, JailSkipCounter);
 }
 
