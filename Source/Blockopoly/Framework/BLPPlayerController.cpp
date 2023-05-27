@@ -245,6 +245,40 @@ void ABLPPlayerController::SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 }
 
+// Updates the amount of buildings on an estate property
+void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount)
+{
+	if (BuildingCount == 1)
+	{
+		if (UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse0()) HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built your 1st house"));
+	}
+	else if (BuildingCount == 2)
+	{
+		if (UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse1()) HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 2nd house"));
+	}
+	else if (BuildingCount == 3)
+	{
+		if (UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse2()) HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 3rd house"));
+	}
+	else if (BuildingCount == 4)
+	{
+		if (UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse3()) HousePtr->SetVisibility(true, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 4th house"));
+	}
+	else if (BuildingCount == 5)
+	{
+		if (UStaticMeshComponent* HotelPtr = EstatePropertySpacePtr->GetHotel()) HotelPtr->SetVisibility(true, false);
+		if (UStaticMeshComponent* HousePtr0 = EstatePropertySpacePtr->GetHouse0()) HousePtr0->SetVisibility(false, false);
+		if (UStaticMeshComponent* HousePtr1 = EstatePropertySpacePtr->GetHouse1()) HousePtr1->SetVisibility(false, false);
+		if (UStaticMeshComponent* HousePtr2 = EstatePropertySpacePtr->GetHouse2()) HousePtr2->SetVisibility(false, false);
+		if (UStaticMeshComponent* HousePtr3 = EstatePropertySpacePtr->GetHouse3()) HousePtr3->SetVisibility(false, false);
+		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a hotel"));
+	}
+}
+
 // Applies correct side effect depending on what space is landed on
 void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
@@ -260,21 +294,22 @@ void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr,
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Property Space Entered"));
 		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
-		PropertySpaceSideEffect(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
+		ChargeRent(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
 	}
 	else if (Cast<ABLPChanceSpace>(EnteredSpace))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chance Space Entered"));
 		DrawChanceCard(PlayerStatePtr, GameStatePtr);
 	}
-	// else if (Cast<ABLPChestSpace>(EnteredSpace))
-	// {
-	// 	DrawChestCard(PlayerStatePtr, GameStatePtr);
-	// }
+	else if (Cast<ABLPChestSpace>(EnteredSpace))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chest Space Entered"));
+		DrawChestCard(PlayerStatePtr, GameStatePtr);
+	}
 }
 
 // Collects rent from player if they do not own the property they move to
-void ABLPPlayerController::PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const
+void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const
 {
 	if (EnteredPropertySpace->GetOwnerID() == -1)
 	{
@@ -293,43 +328,6 @@ void ABLPPlayerController::PropertySpaceSideEffect(ABLPPlayerState* PlayerStateP
 	}
 }
 
-// Updates the amount of buildings on an estate property
-void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount)
-{
-	if (BuildingCount == 1)
-	{
-		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse0();
-		HousePtr->SetVisibility(true, false);
-		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built your 1st house"));
-	}
-	else if (BuildingCount == 2)
-	{
-		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse1();
-		HousePtr->SetVisibility(true, false);
-		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 2nd house"));
-	}
-	else if (BuildingCount == 3)
-	{
-		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse2();
-		HousePtr->SetVisibility(true, false);
-		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 3rd house"));
-		
-	}
-	else if (BuildingCount == 4)
-	{
-		UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse3();
-		HousePtr->SetVisibility(true, false);
-		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a 4th house"));
-	}
-	else if (BuildingCount == 5)
-	{
-		UStaticMeshComponent* HotelPtr = EstatePropertySpacePtr->GetHotel();
-		HotelPtr->SetVisibility(true, false);
-		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built a hotel"));
-	}
-	
-}
-
 void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	GameStatePtr->DrawChanceCard(PlayerStatePtr);
@@ -337,5 +335,6 @@ void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPG
 
 void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr)
 {
+	GameStatePtr->DrawChestCard(PlayerStatePtr);
 }
 

@@ -46,8 +46,8 @@ public:
 	
 private:
 	void RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
-	void PropertySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount);
+	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	void DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	

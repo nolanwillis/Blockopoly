@@ -267,8 +267,8 @@ void ABLPGameState::ChanceCard9(ABLPPlayerState* PlayerStatePtr)
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
 
-	if (!AvatarPtr) UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null"));
-	if (!PlayerControllerPtr) UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null"));
+	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
 
 	PlayerControllerPtr->SendToJail(AvatarPtr, PlayerStatePtr, SpaceList);
 }
@@ -347,67 +347,148 @@ void ABLPGameState::ChanceCard14(ABLPPlayerState* PlayerStatePtr)
 // Chest Card Functions
 void ABLPGameState::ChestCard0(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard0 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Advance to Go, collect $200"));
+
+	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
+	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
+
+	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
+
+	// This is required since were not using the RollDice function which normally takes care of passing Go.
+	PlayerStatePtr->AddToBalance(200);
+	
+	PlayerStatePtr->SetCurrentSpaceId(0);
+	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 }
 void ABLPGameState::ChestCard1(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard1 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Bank error in your favor. Collect $200."));
+
+	PlayerStatePtr->AddToBalance(200);
 }
 void ABLPGameState::ChestCard2(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard2 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Doctor's fee. Pay $50."));
+
+	PlayerStatePtr->AddToBalance(-50);
 }
 void ABLPGameState::ChestCard3(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard3 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Go to Jail. Go directly to jail, do not pass Go, do not collect $200."));
+
+	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
+	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
+
+	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null")); return; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
+
+	PlayerControllerPtr->SendToJail(AvatarPtr, PlayerStatePtr, SpaceList);
 }
 void ABLPGameState::ChestCard4(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard4 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Holiday fund matures. Reveive $100."));
+
+	PlayerStatePtr->AddToBalance(100);
 }
 void ABLPGameState::ChestCard5(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard5 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Income tax refund. Collect $20."));
+
+	PlayerStatePtr->AddToBalance(20);
 }
 void ABLPGameState::ChestCard6(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard6 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("It is your birthday! Collect $10 from every player."));
+
+	const int PlayerCount = PlayerArray.Num();
+	for (int i = 0; i < PlayerCount; i++)
+	{
+		if (i == PlayerUpIndex) continue;
+		ABLPPlayerState* OtherPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[i]);
+		OtherPlayerStatePtr->AddToBalance(-10);
+	}
+	PlayerStatePtr->AddToBalance((PlayerCount-1) * 10);
 }
 void ABLPGameState::ChestCard7(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard7 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Life insurance matures. Collect $100."));
+
+	PlayerStatePtr->AddToBalance(100);
 }
 void ABLPGameState::ChestCard8(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard8 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Pay hospital fees of $100."));
+
+	PlayerStatePtr->AddToBalance(-100);
 }
 void ABLPGameState::ChestCard9(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard9 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Pay school fees of $50"));
+
+	PlayerStatePtr->AddToBalance(50);
 }
 void ABLPGameState::ChestCard10(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard10 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Recieve $25 consultancy fee."));
+
+	PlayerStatePtr->AddToBalance(-25);
 }
 void ABLPGameState::ChestCard11(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard11 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("You are assessed for street repair. $40 per house. $115 per hotel."));
+
+	TArray<ABLPPropertySpace*> OwnedPropertyList = PlayerStatePtr->GetOwnedPropertyList();
+	int HotelCount = 0;
+	int HouseCount = 0;
+	for (ABLPPropertySpace* Property : OwnedPropertyList)
+	{
+		if (const ABLPEstatePropertySpace* EstateProperty = Cast<ABLPEstatePropertySpace>(Property))
+		{
+			const int BuildingCount = EstateProperty->GetBuildingCount();
+			if (BuildingCount < 5)
+			{
+				HouseCount += BuildingCount;
+			}
+			else
+			{
+				HotelCount += 1;
+			}
+		}
+	}
+	PlayerStatePtr->AddToBalance((HouseCount*-40) + (HotelCount*-115));
 }
 void ABLPGameState::ChestCard12(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard12 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("You have won second prize in a beauty contest. Collect $10."));
+
+	PlayerStatePtr->AddToBalance(10);
 }
 void ABLPGameState::ChestCard13(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard13 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("You inherit $100"));
+
+	PlayerStatePtr->AddToBalance(100);
 }
 void ABLPGameState::ChestCard14(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard14 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("From sale of stock you get $50."));
+
+	PlayerStatePtr->AddToBalance(50);
 }
 void ABLPGameState::ChestCard15(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ChestCard15 has been drawn and initialized!"));
+	UE_LOG(LogTemp, Warning, TEXT("Get Out of Jail Free"));
+
+	const int CurrentJailSkipCount = PlayerStatePtr->GetJailSkipCounter();
+	if (CurrentJailSkipCount < 2)
+	{
+		PlayerStatePtr->SetJailSkipCounter(CurrentJailSkipCount+1);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You already have 2 of these! So you get nothing!"));
+	}
 }
 
 void ABLPGameState::OnRep_AvailablePropertySpaces()
