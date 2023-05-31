@@ -19,7 +19,6 @@ void UBLPUserWidget::Setup()
 	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 	PlayerController->SetInputMode(InputModeData);
 	PlayerController->bShowMouseCursor = true;
-	UE_LOG(LogTemp, Warning, TEXT("Setup called"));
 }
 
 // Removes a UI element from the viewport

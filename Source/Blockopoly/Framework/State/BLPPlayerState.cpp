@@ -5,6 +5,7 @@
 #include "BLPGameState.h"
 #include "../../Items/Spaces/BLPSpace.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
+#include "../../Items/Spaces/BLPJailSpace.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -30,17 +31,22 @@ void ABLPPlayerState::OnRep_DesiredSpaceID()
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PS")); return; }
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PS")); return; }
 
-	TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
+	TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
 	
-	for (ABLPSpace* Space : LocalSpaceList)
+	for (ABLPSpace* Space : SpaceList)
 	{
 		if (Space->GetSpaceID() == CurrentSpaceId)
 		{
-			
-			FSpawnPoint* OldSpawnPoint = CurrentSpawnPoint;
-			if (OldSpawnPoint) OldSpawnPoint->Taken = false; 
+			FSpawnPoint* NewSpawnPoint = nullptr;
 
-			FSpawnPoint* NewSpawnPoint = Space->GetOpenSpawnPoint();
+			if (JailCounter == 3)
+			{
+				if (ABLPJailSpace* JailSpace = Cast<ABLPJailSpace>(Space)) NewSpawnPoint = JailSpace->GetOpenJailCell();
+			}
+			else
+			{
+				NewSpawnPoint = Space->GetOpenSpawnPoint();
+			}
 			if (!NewSpawnPoint)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Spawn point could not be found!"));
@@ -82,19 +88,15 @@ void ABLPPlayerState::OnRep_OwnedPropertyList() const
 
 void ABLPPlayerState::OnRep_JailCounter()
 {
-	if (JailCounter == 3)
-	{
-		InJail = true;
-	}
 	if (JailCounter == 0)
 	{
-		InJail = false;
+		UE_LOG(LogTemp, Warning, TEXT("Your are free to go next turn!"));
 	}
 }
 
 void ABLPPlayerState::OnRep_JailSkipCounter()
 {
-	// TODO: Update UI by removing or adding get out of jail card and in jail warning
+	UE_LOG(LogTemp, Warning, TEXT("Get Out of Jail Free Card added"));
 }
 
 void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

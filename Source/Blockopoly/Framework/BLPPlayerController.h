@@ -24,13 +24,13 @@ class BLOCKOPOLY_API ABLPPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(Server, Unreliable, WithValidation)
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_TakeTurn(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
-	UFUNCTION(Server, Unreliable, WithValidation)
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_FinishTurn(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
-	UFUNCTION(Server, Unreliable, WithValidation)
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_BuyPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
 	UFUNCTION(Server, Unreliable, WithValidation)
@@ -41,7 +41,7 @@ public:
 
 	// The following funtions must be public for the chance/chest system to work
 	void MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
-	void SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
+	void SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
 	void ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	
 private:
@@ -50,5 +50,4 @@ private:
 	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	void DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
-	
 };

@@ -24,7 +24,7 @@ ABLPAvatar::ABLPAvatar()
 	if (HasAuthority())
 	{
 		SetReplicates(true);
-		SetReplicateMovement(true);
+		AActor::SetReplicateMovement(true);
 	} 
 }
 
@@ -155,6 +155,7 @@ void ABLPAvatar::DrawChestCard()
 
 	GameStatePtr->DrawChestCard(PlayerStatePtr);
 }
+
 
 
 

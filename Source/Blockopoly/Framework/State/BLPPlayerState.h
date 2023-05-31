@@ -44,7 +44,7 @@ public:
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
-	int CreditBalance = 1500;
+	int CreditBalance = 1000000;
 	
 	UPROPERTY(ReplicatedUsing=OnRep_DesiredSpaceID, VisibleAnywhere)
 	int CurrentSpaceId = 0;
@@ -64,8 +64,6 @@ private:
 	// Get out jail free card counter
 	UPROPERTY(ReplicatedUsing=OnRep_JailSkipCounter)
 	int JailSkipCounter = 0;
-
-	bool InJail = false;
 
 	UFUNCTION()
 	void OnRep_CreditBalance() const;

@@ -265,12 +265,10 @@ void ABLPGameState::ChanceCard9(ABLPPlayerState* PlayerStatePtr)
 	UE_LOG(LogTemp, Warning, TEXT("Go to Jail. Go directly to Jail, do not pass Go, do not collect $200."));
 
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
-	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
-
-	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null")); return; }
+	
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
 
-	PlayerControllerPtr->SendToJail(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerControllerPtr->SendToJail(PlayerStatePtr, SpaceList);
 }
 void ABLPGameState::ChanceCard10(ABLPPlayerState* PlayerStatePtr)
 {
@@ -378,12 +376,10 @@ void ABLPGameState::ChestCard3(ABLPPlayerState* PlayerStatePtr)
 	UE_LOG(LogTemp, Warning, TEXT("Go to Jail. Go directly to jail, do not pass Go, do not collect $200."));
 
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
-	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
-
-	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null")); return; }
+	
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
 
-	PlayerControllerPtr->SendToJail(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerControllerPtr->SendToJail(PlayerStatePtr, SpaceList);
 }
 void ABLPGameState::ChestCard4(ABLPPlayerState* PlayerStatePtr)
 {

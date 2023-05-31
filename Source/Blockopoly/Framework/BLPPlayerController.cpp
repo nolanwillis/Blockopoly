@@ -8,9 +8,12 @@
 #include "../Items/Spaces/BLPChestSpace.h"
 #include "../Items/Spaces/BLPPropertySpace.h"
 #include "../Items/Spaces/BLPEstatePropertySpace.h"
+#include "../Items/Spaces/BLPGoToJailSpace.h"
+#include "../Items/Spaces/BLPJailSpace.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
+
 
 // Server RPC that moves the Avatar to it's CurrentSpaceId
 void ABLPPlayerController::Server_TakeTurn_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -25,10 +28,16 @@ void ABLPPlayerController::Server_TakeTurn_Implementation(ABLPAvatar* AvatarPtr,
 		return;
 	}
 
+	if (PlayerStatePtr->GetJailCounter() > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Your in jail for %d more turns!"), PlayerStatePtr->GetJailCounter());
+		return;
+	}
+	
 	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
 
 	if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
-
+	
 	RollDice(PlayerStatePtr, GameStatePtr);
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	ApplySpaceSideEffect(PlayerStatePtr, GameStatePtr);
@@ -45,6 +54,11 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
 		return;
+	}
+
+	if (PlayerStatePtr->GetJailCounter() > 0)
+	{
+		PlayerStatePtr->SetJailCounter(PlayerStatePtr->GetJailCounter() - 1);
 	}
 	
 	PlayerStatePtr->SetIsItMyTurn(false);
@@ -154,7 +168,7 @@ void ABLPPlayerController::Server_SellPropertySpace_Implementation(ABLPPlayerSta
 
 	PropertySpacePtr->SetOwnerID(-1);
 	PlayerStatePtr->RemoveFromOwnedPropertyList(PropertySpacePtr);
-	PlayerStatePtr->AddToBalance(PropertySpacePtr->GetSellValue());
+	PlayerStatePtr->AddToBalance(PropertySpacePtr->GetMortgageValue());
 	GameStatePtr->AddToAvailablePropertySpaceList(PropertySpacePtr);
 }
 bool ABLPPlayerController::Server_SellPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
@@ -218,9 +232,20 @@ void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 		if (Space->GetSpaceID() == PlayerStatePtr->GetCurrentSpaceId())
 		{
 			FSpawnPoint* OldSpawnPoint = PlayerStatePtr->GetCurrentSpawnPoint();
-			if (OldSpawnPoint) OldSpawnPoint->Taken = false; 
+			if (OldSpawnPoint) OldSpawnPoint->Taken = false;
 
-			FSpawnPoint* NewSpawnPoint = Space->GetOpenSpawnPoint();
+			FSpawnPoint* NewSpawnPoint = nullptr;
+
+			// If player is in jail get special spawn point else get normal spawn point
+			if (PlayerStatePtr->GetJailCounter() == 3)
+			{
+				if (ABLPJailSpace* JailSpace = Cast<ABLPJailSpace>(Space)) NewSpawnPoint = JailSpace->GetOpenJailCell();
+			}
+			else
+			{
+				NewSpawnPoint = Space->GetOpenSpawnPoint();
+			}
+			
 			if (!NewSpawnPoint)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Spawn point could not be found!"));
@@ -236,10 +261,12 @@ void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 	}
 }
 
-void ABLPPlayerController::SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
+void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
 {
-	if (!AvatarPtr) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: AvatarPtr is null"));
-	if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null"));
+	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
+	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: AvatarPtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	
 	PlayerStatePtr->SetJailCounter(3);
 	PlayerStatePtr->SetCurrentSpaceId(10);
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
@@ -247,6 +274,7 @@ void ABLPPlayerController::SendToJail(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 
 // Updates the amount of buildings on an estate property
 void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount)
+
 {
 	if (BuildingCount == 1)
 	{
@@ -305,6 +333,11 @@ void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr,
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chest Space Entered"));
 		DrawChestCard(PlayerStatePtr, GameStatePtr);
+	}
+	else if (Cast<ABLPGoToJailSpace>(EnteredSpace))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GO TO JAIL!!"));
+		SendToJail(PlayerStatePtr, GameStatePtr->GetSpaceList());
 	}
 }
 

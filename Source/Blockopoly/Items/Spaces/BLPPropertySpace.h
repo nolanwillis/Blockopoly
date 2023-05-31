@@ -24,8 +24,8 @@ public:
 	void SetRent(const int& Value) { Rent = Value; }
 	int GetPurchaseCost() const { return PurchaseCost; }
 	void SetPurchaseCost (const int& Value) { PurchaseCost = Value; }
-	int GetSellValue() const { return SellValue; }
-	void SetSellValue(const int& Value) { SellValue = Value; }
+	int GetMortgageValue() const { return MortgageValue; }
+	void SetMortgageValue(const int& Value) { MortgageValue = Value; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,6 +43,6 @@ private:
 	int PurchaseCost;
 	
 	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
-	int SellValue;
+	int MortgageValue;
 };
 

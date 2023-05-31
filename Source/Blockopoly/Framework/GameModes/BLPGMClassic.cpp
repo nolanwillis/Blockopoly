@@ -4,7 +4,3 @@
 #include "BLPGMClassic.h"
 
 
-ABLPGMClassic::ABLPGMClassic()
-{
-	
-}

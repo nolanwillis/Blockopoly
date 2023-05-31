@@ -16,5 +16,5 @@ class BLOCKOPOLY_API ABLPGMClassic : public ABLPGameMode
 	GENERATED_BODY()
 
 public:
-	ABLPGMClassic();
+	
 };

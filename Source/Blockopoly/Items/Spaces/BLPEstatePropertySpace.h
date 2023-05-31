@@ -23,6 +23,13 @@ public:
 	int GetBuildingCount() const { return BuildingCount; }
 	void SetBuildingCount(const int& Value) { if (Value < 0 || Value > 5) return; BuildingCount = Value; }
 	int GetBuildingCost() const { return BuildingCost; }
+	int GetSetRent() const { return SetRent; }
+	int GetRent1Houses() const { return Rent1Houses; }
+	int GetRent2Houses() const { return Rent2Houses; }
+	int GetRent3Houses() const { return Rent3Houses; }
+	int GetRent4Houses() const { return Rent4Houses; }
+	int GetRentHotel() const { return RentHotel; }
+	UMaterial* GetColor() const { return Color; }
 	UStaticMeshComponent* GetHouse0() const {return House0;}
 	UStaticMeshComponent* GetHouse1() const {return House1;}
 	UStaticMeshComponent* GetHouse2() const {return House2;}
@@ -33,12 +40,6 @@ protected:
 	virtual void BeginPlay() override;
 	
 private:
-	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
-	UMaterial* Color;
-
-	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
-	int BuildingCost;
-	
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* TitleBar;
 	
@@ -56,10 +57,32 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Hotel;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	UMaterial* Color;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int BuildingCost;
 	
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int SetRent;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int Rent1Houses;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int Rent2Houses;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int Rent3Houses;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int Rent4Houses;
+
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	int RentHotel;
+
 	UPROPERTY(Replicated)
 	int BuildingCount = 0;
-
-	
 	
 };
