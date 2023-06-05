@@ -10,13 +10,35 @@
 #include "../Items/Spaces/BLPEstatePropertySpace.h"
 #include "../Items/Spaces/BLPGoToJailSpace.h"
 #include "../Items/Spaces/BLPJailSpace.h"
+#include "../UI/BLPUWGameMenu.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
 
+ABLPPlayerController::ABLPPlayerController()
+{
+	// Gets reference to WBP_GameMenu
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_GameMenu(TEXT("/Game/Core/UI/WBP_GameMenu"));
+	if (!WBP_GameMenu.Class) return;
+	GameMenuClass = WBP_GameMenu.Class;
+}
+
+void ABLPPlayerController::BeginPlayingState()
+{
+	Super::BeginPlayingState();
+
+	if (IsLocalPlayerController())
+	{
+		// Construct the a WBP_GameMenu
+		if (!GameMenuClass) return;
+		GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
+		if (!GameMenu) return;
+		GameMenu->Setup();
+	}
+}
 
 // Server RPC that moves the Avatar to it's CurrentSpaceId
-void ABLPPlayerController::Server_TakeTurn_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PC")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
@@ -41,8 +63,9 @@ void ABLPPlayerController::Server_TakeTurn_Implementation(ABLPAvatar* AvatarPtr,
 	RollDice(PlayerStatePtr, GameStatePtr);
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	ApplySpaceSideEffect(PlayerStatePtr, GameStatePtr);
+	CanBuyCurrentProperty(PlayerStatePtr, GameStatePtr);
 }
-bool ABLPPlayerController::Server_TakeTurn_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
+bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
 // Server RPC that finishes the current turn and moves to the next
 void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -61,22 +84,8 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 		PlayerStatePtr->SetJailCounter(PlayerStatePtr->GetJailCounter() - 1);
 	}
 	
-	PlayerStatePtr->SetIsItMyTurn(false);
-	
-	const TArray<TObjectPtr<APlayerState>> LocalPlayerArray = GameStatePtr->PlayerArray;
-	const int PlayerCount = LocalPlayerArray.Num();
-	
-	if (GameStatePtr->GetPlayerUpIndex() < PlayerCount-1)
-	{
-		GameStatePtr->SetPlayerUpIndex(GameStatePtr->GetPlayerUpIndex()+1);
-	}
-	else
-	{
-		GameStatePtr->SetPlayerUpIndex(0);
-	}
-
-	// Update the PlayerState of the player with the next turn
-	Cast<ABLPPlayerState>(LocalPlayerArray[GameStatePtr->GetPlayerUpIndex()])->SetIsItMyTurn(true);
+	GameStatePtr->NextPlayerUp();
+	PlayerStatePtr->SetCanBuyCurrentProperty(false);
 }
 bool ABLPPlayerController::Server_FinishTurn_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
@@ -92,34 +101,11 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 		return;
 	}
 	
-	const int LocalDesiredSpaceID = PlayerStatePtr->GetCurrentSpaceId();
-	const TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
-	ABLPPropertySpace* PropertySpaceToPurchase = nullptr;
-	for (ABLPSpace* Space : LocalSpaceList)
-	{
-		if (Space->GetSpaceID() == LocalDesiredSpaceID) PropertySpaceToPurchase = Cast<ABLPPropertySpace>(Space);
-	}
-	if (!PropertySpaceToPurchase)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ERROR: The property your trying to buy could not be found"))
-		return;
-	}
+	ABLPPropertySpace* PropertySpaceToPurchase = Cast<ABLPPropertySpace>(GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId()));
 
-	if (PropertySpaceToPurchase->GetOwnerID() == PlayerStatePtr->GetPlayerId())
+	if (!PlayerStatePtr->GetCanBuyCurrentProperty())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("You already own this property!"));
-		return;
-	}
-
-	if (!PropertySpaceToPurchase)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("The Space your attempting to purchase is not a PropertySpace"));
-		return;
-	}
-
-	if (PropertySpaceToPurchase->GetOwnerID() != -1)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("This property is already owned!"));
+		UE_LOG(LogTemp, Warning, TEXT("This property is not available for purchase"));
 		return;
 	}
 
@@ -134,6 +120,7 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 	PlayerStatePtr->AddToOwnedPropertyList(PropertySpaceToPurchase);
 	GameStatePtr->RemoveFromAvailablePropertySpaceList(PropertySpaceToPurchase);
 	PlayerStatePtr->AddToBalance(-PropertySpaceToPurchase->GetPurchaseCost());
+	PlayerStatePtr->SetCanBuyCurrentProperty(false);
 }
 bool ABLPPlayerController::Server_BuyPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr){ return true; }
 
@@ -369,5 +356,21 @@ void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPG
 void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr)
 {
 	GameStatePtr->DrawChestCard(PlayerStatePtr);
+}
+
+void ABLPPlayerController::CanBuyCurrentProperty(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
+{
+	ABLPSpace* Space = GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId());
+	if (const ABLPPropertySpace* PropertySpace = Cast<ABLPPropertySpace>(Space))
+	{
+		if (PropertySpace->GetOwnerID() == -1)
+		{
+			PlayerStatePtr->SetCanBuyCurrentProperty(true);
+		}
+		else
+		{
+			PlayerStatePtr->SetCanBuyCurrentProperty(false);
+		}
+	}
 }
 

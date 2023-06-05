@@ -18,6 +18,8 @@ ABLPPlayerState::ABLPPlayerState()
 void ABLPPlayerState::OnRep_CreditBalance() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("New Balance: %d"), CreditBalance);
+	if (!OnBalanceChangedDelegate.IsBound()) return;
+	OnBalanceChangedDelegate.Broadcast(CreditBalance);
 }
 
 // Simulates Avatar movement locally when CurrentSpaceId is changed
@@ -62,15 +64,19 @@ void ABLPPlayerState::OnRep_DesiredSpaceID()
 }
 
 // Notifies UI if its this players turn, so the turn UI buttons appear (roll, finish turn, etc.)
-void ABLPPlayerState::OnRep_IsItMyTurn() const
+void ABLPPlayerState::OnRep_IsItMyTurn() const 
 {
 	if (IsItMyTurn)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s: It's my turn!"), *GetPlayerName());
+		if (!ItsMyTurnDelegate.IsBound()) return;
+		ItsMyTurnDelegate.Broadcast();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s I finished my turn"), *GetPlayerName());
+		if (!ItsNotMyTurnDelegate.IsBound()) return;
+		ItsNotMyTurnDelegate.Broadcast();
 	}
 }
 
@@ -88,15 +94,30 @@ void ABLPPlayerState::OnRep_OwnedPropertyList() const
 
 void ABLPPlayerState::OnRep_JailCounter()
 {
-	if (JailCounter == 0)
+	if (JailCounter > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Your are free to go next turn!"));
+		InJailDelegate.ExecuteIfBound(JailCounter);
+	}
+	else if (JailCounter == 0)
+	{
+		OutOfJailDelegate.ExecuteIfBound();
 	}
 }
 
 void ABLPPlayerState::OnRep_JailSkipCounter()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Get Out of Jail Free Card added"));
+}
+
+void ABLPPlayerState::OnRep_PlayerCount()
+{
+	PlayerCountDelegate.ExecuteIfBound();
+}
+
+void ABLPPlayerState::OnRep_CanBuyCurrentProperty()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Can Buy Current Property Updated"));
+	CanBuyDelegate.ExecuteIfBound(CanBuyCurrentProperty);
 }
 
 void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -110,5 +131,6 @@ void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABLPPlayerState, OwnedPropertyList);
 	DOREPLIFETIME(ABLPPlayerState, JailCounter);
 	DOREPLIFETIME(ABLPPlayerState, JailSkipCounter);
+	DOREPLIFETIME(ABLPPlayerState, CanBuyCurrentProperty);
 }
 

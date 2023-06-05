@@ -61,7 +61,7 @@ void ABLPAvatar::TakeTurn()
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
 	
 	const TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
-	PlayerControllerPtr->Server_TakeTurn(this, PlayerStatePtr, GameStatePtr);
+	PlayerControllerPtr->Server_Roll(this, PlayerStatePtr, GameStatePtr);
 	
 }
 

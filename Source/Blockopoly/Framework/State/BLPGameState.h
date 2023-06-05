@@ -26,7 +26,7 @@ public:
 	void AddToSpaceList(ABLPSpace* Space) { SpaceList.Add(Space); }
 	
 	int GetPlayerUpIndex() const { return PlayerUpIndex; }
-	void SetPlayerUpIndex(const int& Value) { PlayerUpIndex = Value; }
+	void NextPlayerUp();
 	
 	TArray<ABLPPropertySpace*> GetAvailablePropertySpaceList () const { return AvailablePropertySpaceList; }
 	void AddToAvailablePropertySpaceList(ABLPPropertySpace* Value) { AvailablePropertySpaceList.Add(Value); }
@@ -45,7 +45,7 @@ private:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "General Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPSpace*> SpaceList;
 
-	UPROPERTY(ReplicatedUsing=OnRep_AvailablePropertySpaces, BlueprintReadWrite, EditAnywhere, Category = "Property Spaces", meta = (AllowPrivateAccess = true))
+	// UPROPERTY(ReplicatedUsing=OnRep_AvailablePropertySpaces, BlueprintReadWrite, EditAnywhere, Category = "Property Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPPropertySpace*> AvailablePropertySpaceList;
 	
 	// Keeps track of which player in the PlayerArray has the current turn
@@ -98,8 +98,4 @@ private:
 	void ChestCard13(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard14(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard15(ABLPPlayerState* PlayerStatePtr);
-
-	UFUNCTION()
-	void OnRep_AvailablePropertySpaces();
-	
 };

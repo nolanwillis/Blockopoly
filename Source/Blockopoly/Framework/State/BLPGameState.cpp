@@ -7,8 +7,6 @@
 #include "Blockopoly/Framework/Pawns/BLPAvatar.h"
 #include "Blockopoly/Items/Spaces/BLPEstatePropertySpace.h"
 
-#include "Net/UnrealNetwork.h"
-
 void ABLPGameState::BeginPlay()
 {
 	Super::BeginPlay();
@@ -42,6 +40,28 @@ ABLPSpace* ABLPGameState::GetSpaceFromId(const int& ID) const
 	}
 	UE_LOG(LogTemp, Warning, TEXT("BLPGameState: Could not find space with given ID"));
 	return nullptr;
+}
+
+void ABLPGameState::NextPlayerUp() 
+{
+	const int PlayerCount = PlayerArray.Num();
+	// If someone quits, you can't update their player state
+	if (PlayerUpIndex == PlayerCount)
+	{
+		PlayerUpIndex = 0;
+	}
+	else if (PlayerUpIndex == PlayerCount-1)
+	{
+		if (ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[PlayerUpIndex])) PlayerStatePtr->SetIsItMyTurn(false);
+		PlayerUpIndex = 0;
+	}
+	else
+	{
+		if (ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[PlayerUpIndex])) PlayerStatePtr->SetIsItMyTurn(false);
+		PlayerUpIndex++;
+	}
+
+	if (ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[PlayerUpIndex])) PlayerStatePtr->SetIsItMyTurn(true);
 }
 
 void ABLPGameState::DrawChanceCard(ABLPPlayerState* PlayerStatePtr)
@@ -485,18 +505,4 @@ void ABLPGameState::ChestCard15(ABLPPlayerState* PlayerStatePtr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("You already have 2 of these! So you get nothing!"));
 	}
-}
-
-void ABLPGameState::OnRep_AvailablePropertySpaces()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Available Property List Updated!"));
-}
-
-void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// Here we list the variables we want to replicate
-	DOREPLIFETIME(ABLPGameState, AvailablePropertySpaceList);
-
 }

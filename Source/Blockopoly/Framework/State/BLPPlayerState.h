@@ -3,11 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BLPGameState.h"
 #include "GameFramework/PlayerState.h"
 #include "BLPPlayerState.generated.h"
 
 struct FSpawnPoint;
 class ABLPPropertySpace;
+class ABLPPlayerState;
+
+DECLARE_MULTICAST_DELEGATE(FItsMyTurnSignature);
+DECLARE_MULTICAST_DELEGATE(FItsNotMyTurnSignature);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
+DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
+DECLARE_DELEGATE(FOutOfJailSignature);
+DECLARE_DELEGATE(FPlayerCountSignature);
+DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
 
 /**
  * 
@@ -21,26 +31,40 @@ public:
 	ABLPPlayerState();
 	
 	int GetBalance() const { return CreditBalance; }
-	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value > 0 ? CreditBalance+Value : 0; }
+	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value > 0 ? CreditBalance+Value : 0; OnRep_CreditBalance();}
 	
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
-	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; }
+	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; OnRep_DesiredSpaceID();}
 
 	FSpawnPoint* GetCurrentSpawnPoint() const { return CurrentSpawnPoint; }
 	void SetCurrentSpawnPoint(FSpawnPoint* Value){ CurrentSpawnPoint = Value; }
 	
 	bool GetIsItMyTurn() const { return IsItMyTurn; }
-	void SetIsItMyTurn(const bool& Value) { IsItMyTurn = Value; }
+	void SetIsItMyTurn(const bool& Value) { IsItMyTurn = Value; OnRep_IsItMyTurn();}
 	
 	TArray<ABLPPropertySpace*> GetOwnedPropertyList() const { return OwnedPropertyList; }
-	void AddToOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Add(Value); }
-	void RemoveFromOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Remove(Value); }
+	void AddToOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Add(Value); OnRep_OwnedPropertyList();}
+	void RemoveFromOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Remove(Value); OnRep_OwnedPropertyList();}
 	
-	int GetJailCounter() const { return JailCounter; }
-	void SetJailCounter(const int& Value) { JailCounter = Value >= 0 && Value <= 3 ? Value : 0; }
+	int GetJailCounter() const { return JailCounter;}
+	void SetJailCounter(const int& Value) { JailCounter = Value >= 0 && Value <= 3 ? Value : 0; OnRep_JailCounter();}
 	
 	int GetJailSkipCounter() const { return JailSkipCounter; }
-	void SetJailSkipCounter(const int& Value) { JailSkipCounter = Value; }
+	void SetJailSkipCounter(const int& Value) { JailSkipCounter = Value; OnRep_JailSkipCounter();}
+
+	void SetPlayerCount(const int& Value) { PlayerCount = Value; OnRep_PlayerCount();}
+
+	bool GetCanBuyCurrentProperty() const { return CanBuyCurrentProperty; }
+	void SetCanBuyCurrentProperty(const bool& Value) { CanBuyCurrentProperty = Value; OnRep_CanBuyCurrentProperty();}
+
+	FItsMyTurnSignature ItsMyTurnDelegate;
+	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
+	FOnBalanceChangedSignature OnBalanceChangedDelegate;
+	FInJailSignature InJailDelegate;
+	FOutOfJailSignature OutOfJailDelegate;
+	FPlayerCountSignature PlayerCountDelegate;
+	FCanBuySignature CanBuyDelegate;
+	
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
@@ -65,6 +89,13 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_JailSkipCounter)
 	int JailSkipCounter = 0;
 
+	// Local player count, used to keep player list up to date
+	UPROPERTY(ReplicatedUsing=OnRep_PlayerCount)
+	int PlayerCount;
+
+	UPROPERTY(ReplicatedUsing=OnRep_CanBuyCurrentProperty)
+	bool CanBuyCurrentProperty = false;
+
 	UFUNCTION()
 	void OnRep_CreditBalance() const;
 	
@@ -82,4 +113,10 @@ private:
 
 	UFUNCTION()
 	void OnRep_JailSkipCounter();
+
+	UFUNCTION()
+	void OnRep_PlayerCount();
+
+	UFUNCTION()
+	void OnRep_CanBuyCurrentProperty();
 };

@@ -15,6 +15,6 @@ class BLOCKOPOLY_API ABLPGMClassic : public ABLPGameMode
 {
 	GENERATED_BODY()
 
-public:
-	
+protected:
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 };
