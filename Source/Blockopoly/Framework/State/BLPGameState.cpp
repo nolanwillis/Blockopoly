@@ -97,6 +97,9 @@ void ABLPGameState::ChanceCard0(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Advance to Boardwalk"));
 
+	const FString Description = "Advance to Boardwalk";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
 
@@ -110,6 +113,9 @@ void ABLPGameState::ChanceCard0(ABLPPlayerState* PlayerStatePtr)
 void ABLPGameState::ChanceCard1(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Advance to Go, collect $200"));
+
+	const FString Description = "Advance to Go, collect $200";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -126,6 +132,9 @@ void ABLPGameState::ChanceCard1(ABLPPlayerState* PlayerStatePtr)
 void ABLPGameState::ChanceCard2(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Advance to Illinois Avenue. If you pass Go, collect $200"));
+
+	const FString Description = "Advance to Illinois Avenue. If you pass Go, collect $200";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -147,6 +156,9 @@ void ABLPGameState::ChanceCard3(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Advance to St. Charles Place. If you pass Go, collect $200"));
 
+	const FString Description = "Advance to St. Charles Place. If you pass Go, collect $200";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
 
@@ -167,6 +179,10 @@ void ABLPGameState::ChanceCard4(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Advance to the nearest Railroad. If unowned, you may buy it from the"
 								"Bank. If owned, pay the owner twice the rent"));
+
+	const FString Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
+								"Bank. If owned, pay the owner twice the rent";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 	
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -208,6 +224,11 @@ void ABLPGameState::ChanceCard5(ABLPPlayerState* PlayerStatePtr)
 	UE_LOG(LogTemp, Warning, TEXT("Advance to the nearest Utility. If unowned, you may buy it from the"
 								"Bank. If owned, throw the dice and pay the owner ten times the amount"
 								"thrown"));
+
+	const FString Description = "Advance to the nearest Utility. If unowned, you may buy it from the"
+								"Bank. If owned, throw the dice and pay the owner ten times the amount"
+								"thrown";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 	
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -249,11 +270,17 @@ void ABLPGameState::ChanceCard6(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Bank pays you a dividend of $50"));
 
+	const FString Description = "Bank pays you a dividend of $50";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+
 	PlayerStatePtr->AddToBalance(50);
 }
 void ABLPGameState::ChanceCard7(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Get Out of Jail Free"));
+
+	const FString Description = "Get Out of Jail Free";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 
 	const int CurrentJailSkipCount = PlayerStatePtr->GetJailSkipCounter();
 	if (CurrentJailSkipCount < 2)
@@ -268,6 +295,9 @@ void ABLPGameState::ChanceCard7(ABLPPlayerState* PlayerStatePtr)
 void ABLPGameState::ChanceCard8(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Go back 3 Spaces"));
+
+	const FString Description = "Go back 3 Spaces";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -284,6 +314,9 @@ void ABLPGameState::ChanceCard9(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Go to Jail. Go directly to Jail, do not pass Go, do not collect $200."));
 
+	const FString Description = "Go to Jail. Go directly to Jail, do not pass Go, do not collect $200.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
@@ -294,6 +327,10 @@ void ABLPGameState::ChanceCard10(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Make general repairs on all your property. For each house pay $25."
 							   "For each hotel pay $100."));
+
+	const FString Description = "Make general repairs on all your property. For each house pay $25."
+							   "For each hotel pay $100.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 	
 	TArray<ABLPPropertySpace*> OwnedPropertyList = PlayerStatePtr->GetOwnedPropertyList();
 	int HotelCount = 0;
@@ -319,11 +356,17 @@ void ABLPGameState::ChanceCard11(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Speeding fine $15."));
 
+	const FString Description = "Speeding fine $15.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+
 	PlayerStatePtr->AddToBalance(-15);
 }
 void ABLPGameState::ChanceCard12(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Take a trip to Reading Railroad. If you pass Go, collect $200."));
+
+	const FString Description = "Take a trip to Reading Railroad. If you pass Go, collect $200.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -344,7 +387,10 @@ void ABLPGameState::ChanceCard12(ABLPPlayerState* PlayerStatePtr)
 }
 void ABLPGameState::ChanceCard13(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("You have been elected Chairment of the Board. Pay each player $50."));
+	UE_LOG(LogTemp, Warning, TEXT("You have been elected Chairmen of the Board. Pay each player $50."));
+
+	const FString Description = "You have been elected Chairmen of the Board. Pay each player $50.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 
 	const int PlayerCount = PlayerArray.Num();
 	for (int i = 0; i < PlayerCount; i++)
@@ -359,6 +405,9 @@ void ABLPGameState::ChanceCard14(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Your building loan matures. Collect $150."));
 
+	const FString Description = "Your building loan matures. Collect $150.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+
 	PlayerStatePtr->AddToBalance(150);
 }
 
@@ -366,6 +415,9 @@ void ABLPGameState::ChanceCard14(ABLPPlayerState* PlayerStatePtr)
 void ABLPGameState::ChestCard0(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Advance to Go, collect $200"));
+
+	const FString Description = "Advance to Go, collect $200";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
@@ -383,17 +435,26 @@ void ABLPGameState::ChestCard1(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Bank error in your favor. Collect $200."));
 
+	const FString Description = "Bank error in your favor. Collect $200.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(200);
 }
 void ABLPGameState::ChestCard2(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Doctor's fee. Pay $50."));
 
+	const FString Description = "Doctor's fee. Pay $50.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(-50);
 }
 void ABLPGameState::ChestCard3(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Go to Jail. Go directly to jail, do not pass Go, do not collect $200."));
+
+	const FString Description = "Go to Jail. Go directly to jail, do not pass Go, do not collect $200.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	
@@ -403,7 +464,10 @@ void ABLPGameState::ChestCard3(ABLPPlayerState* PlayerStatePtr)
 }
 void ABLPGameState::ChestCard4(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Holiday fund matures. Reveive $100."));
+	UE_LOG(LogTemp, Warning, TEXT("Holiday fund matures. Receive $100."));
+
+	const FString Description = "Holiday fund matures. Receive $100.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	PlayerStatePtr->AddToBalance(100);
 }
@@ -411,11 +475,17 @@ void ABLPGameState::ChestCard5(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Income tax refund. Collect $20."));
 
+	const FString Description = "Income tax refund. Collect $20.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(20);
 }
 void ABLPGameState::ChestCard6(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("It is your birthday! Collect $10 from every player."));
+
+	const FString Description = "It is your birthday! Collect $10 from every player.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	const int PlayerCount = PlayerArray.Num();
 	for (int i = 0; i < PlayerCount; i++)
@@ -430,11 +500,17 @@ void ABLPGameState::ChestCard7(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Life insurance matures. Collect $100."));
 
+	const FString Description = "Life insurance matures. Collect $100.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(100);
 }
 void ABLPGameState::ChestCard8(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Pay hospital fees of $100."));
+
+	const FString Description = "Pay hospital fees of $100.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	PlayerStatePtr->AddToBalance(-100);
 }
@@ -442,17 +518,26 @@ void ABLPGameState::ChestCard9(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Pay school fees of $50"));
 
+	const FString Description = "Pay school fees of $50";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(50);
 }
 void ABLPGameState::ChestCard10(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Recieve $25 consultancy fee."));
 
+	const FString Description = "Recieve $25 consultancy fee.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(-25);
 }
 void ABLPGameState::ChestCard11(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("You are assessed for street repair. $40 per house. $115 per hotel."));
+
+	const FString Description = "You are assessed for street repair. $40 per house. $115 per hotel.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	TArray<ABLPPropertySpace*> OwnedPropertyList = PlayerStatePtr->GetOwnedPropertyList();
 	int HotelCount = 0;
@@ -478,11 +563,17 @@ void ABLPGameState::ChestCard12(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("You have won second prize in a beauty contest. Collect $10."));
 
+	const FString Description = "You have won second prize in a beauty contest. Collect $10.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(10);
 }
 void ABLPGameState::ChestCard13(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("You inherit $100"));
+
+	const FString Description = "You inherit $100";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	PlayerStatePtr->AddToBalance(100);
 }
@@ -490,11 +581,17 @@ void ABLPGameState::ChestCard14(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("From sale of stock you get $50."));
 
+	const FString Description = "From sale of stock you get $50.";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+
 	PlayerStatePtr->AddToBalance(50);
 }
 void ABLPGameState::ChestCard15(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Get Out of Jail Free"));
+
+	const FString Description = "Get Out of Jail Free";
+	AlertUIOfCardDraw(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 
 	const int CurrentJailSkipCount = PlayerStatePtr->GetJailSkipCounter();
 	if (CurrentJailSkipCount < 2)
@@ -504,5 +601,24 @@ void ABLPGameState::ChestCard15(ABLPPlayerState* PlayerStatePtr)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("You already have 2 of these! So you get nothing!"));
+	}
+}
+
+void ABLPGameState::AlertUIOfCardDraw(const FString& PlayerName, const FString& Type, const FString& Description)
+{
+	const FString Heading = PlayerName + " Took a " + Type + " Card";
+	
+	for (TObjectPtr<APlayerState> PlayerState : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+
+		BLPPlayerStatePtr->AddDrawCardMessage(Type, Heading, Description);
+
+		
+		// if (!BLPPlayerStatePtr->CardDrawnDelegate.IsBound()){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: %s's BLPPlayerState has nothing bound to the CardDrawnDelegate"), *BLPPlayerStatePtr->GetPlayerName())}
+		//
+		// BLPPlayerStatePtr->CardDrawnDelegate.ExecuteIfBound(Type, Heading, Description);
+		// UE_LOG(LogTemp, Warning, TEXT("%s's UI was alerted"), *BLPPlayerStatePtr->GetPlayerName());
 	}
 }

@@ -62,7 +62,7 @@ private:
 	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	void DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
-	void CanBuyCurrentProperty(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
+	void CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
 
 	TSubclassOf<UUserWidget> GameMenuClass;
 };

@@ -98,4 +98,7 @@ private:
 	void ChestCard13(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard14(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard15(ABLPPlayerState* PlayerStatePtr);
+	
+	void AlertUIOfCardDraw(const FString& PlayerName, const FString& Type, const FString& Description); 
+	
 };

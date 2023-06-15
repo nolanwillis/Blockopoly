@@ -18,6 +18,8 @@ DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FPlayerCountSignature);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
+DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
+DECLARE_DELEGATE_ThreeParams(FCardDrawnSignature, const FString& Type, const FString& Heading, const FString& Description);
 
 /**
  * 
@@ -57,6 +59,12 @@ public:
 	bool GetCanBuyCurrentProperty() const { return CanBuyCurrentProperty; }
 	void SetCanBuyCurrentProperty(const bool& Value) { CanBuyCurrentProperty = Value; OnRep_CanBuyCurrentProperty();}
 
+	bool GetHasRolled() const { return HasRolled; }
+	void SetHasRolled(const bool& Value) { HasRolled = Value; OnRep_HasRolled(); }
+
+	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
+	void AddDrawCardMessage(const FString& Type, const FString& Heading, const FString& Description);
+
 	FItsMyTurnSignature ItsMyTurnDelegate;
 	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
@@ -64,7 +72,8 @@ public:
 	FOutOfJailSignature OutOfJailDelegate;
 	FPlayerCountSignature PlayerCountDelegate;
 	FCanBuySignature CanBuyDelegate;
-	
+	FHasRolledSignature HasRolledDelegate;
+	FCardDrawnSignature CardDrawnDelegate;
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
@@ -96,6 +105,10 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_CanBuyCurrentProperty)
 	bool CanBuyCurrentProperty = false;
 
+	// Keeps track of if the player has rolled during their turn
+	UPROPERTY(ReplicatedUsing=OnRep_HasRolled)
+	bool HasRolled = false;
+
 	UFUNCTION()
 	void OnRep_CreditBalance() const;
 	
@@ -119,4 +132,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_CanBuyCurrentProperty();
+
+	UFUNCTION()
+	void OnRep_HasRolled();
 };

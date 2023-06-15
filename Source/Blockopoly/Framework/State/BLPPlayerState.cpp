@@ -14,6 +14,15 @@ ABLPPlayerState::ABLPPlayerState()
 	SetReplicates(true);
 }
 
+void ABLPPlayerState::AddDrawCardMessage_Implementation(const FString& Type, const FString& Heading, const FString& Description)
+{
+	CardDrawnDelegate.Execute(Type, Heading, Description);
+}
+bool ABLPPlayerState::AddDrawCardMessage_Validate(const FString& Type, const FString& Heading, const FString& Description)
+{
+	return true;
+}
+
 // Notifies UI of credit change, so UI reflects correct credit amount
 void ABLPPlayerState::OnRep_CreditBalance() const
 {
@@ -116,8 +125,21 @@ void ABLPPlayerState::OnRep_PlayerCount()
 
 void ABLPPlayerState::OnRep_CanBuyCurrentProperty()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Can Buy Current Property Updated"));
 	CanBuyDelegate.ExecuteIfBound(CanBuyCurrentProperty);
+}
+
+void ABLPPlayerState::OnRep_HasRolled()
+{
+	if (HasRolled)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HasRolled is true"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HasRolled is false"));
+	}
+	
+	HasRolledDelegate.ExecuteIfBound(HasRolled);
 }
 
 void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -132,5 +154,6 @@ void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABLPPlayerState, JailCounter);
 	DOREPLIFETIME(ABLPPlayerState, JailSkipCounter);
 	DOREPLIFETIME(ABLPPlayerState, CanBuyCurrentProperty);
+	DOREPLIFETIME(ABLPPlayerState, HasRolled);
 }
 

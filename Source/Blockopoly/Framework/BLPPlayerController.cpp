@@ -63,7 +63,9 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 	RollDice(PlayerStatePtr, GameStatePtr);
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	ApplySpaceSideEffect(PlayerStatePtr, GameStatePtr);
-	CanBuyCurrentProperty(PlayerStatePtr, GameStatePtr);
+	CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
+
+	PlayerStatePtr->SetHasRolled(true);
 }
 bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
@@ -79,6 +81,12 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 		return;
 	}
 
+	if (!PlayerStatePtr->GetHasRolled() && PlayerStatePtr->GetJailCounter() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You need to roll before finishing your turn!"))
+		return;
+	}
+
 	if (PlayerStatePtr->GetJailCounter() > 0)
 	{
 		PlayerStatePtr->SetJailCounter(PlayerStatePtr->GetJailCounter() - 1);
@@ -86,6 +94,7 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 	
 	GameStatePtr->NextPlayerUp();
 	PlayerStatePtr->SetCanBuyCurrentProperty(false);
+	PlayerStatePtr->SetHasRolled(false);
 }
 bool ABLPPlayerController::Server_FinishTurn_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
@@ -358,7 +367,7 @@ void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr,ABLPGam
 	GameStatePtr->DrawChestCard(PlayerStatePtr);
 }
 
-void ABLPPlayerController::CanBuyCurrentProperty(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
+void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
 {
 	ABLPSpace* Space = GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId());
 	if (const ABLPPropertySpace* PropertySpace = Cast<ABLPPropertySpace>(Space))
