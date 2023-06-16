@@ -1,39 +1,39 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "./BLPUWDrawCardMessage.h"
+#include "./BLPUWNotification.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
 
-void UBLPUWDrawCardMessage::Setup(const FString& Heading, const FString& Description) const
+void UBLPUWNotification::Setup(const FString& Heading, const FString& Description) const
 {
-	CardHeading->SetText(FText::FromString(Heading));
-	CardDescription->SetText(FText::FromString(Description));
+	HeadingTextBlock->SetText(FText::FromString(Heading));
+	DescriptionTextBlock->SetText(FText::FromString(Description));
 }
 
-void UBLPUWDrawCardMessage::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+void UBLPUWNotification::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	CardTitleTimeline.TickTimeline(InDeltaTime);
+	TitleTimeline.TickTimeline(InDeltaTime);
 	MessageTimeline.TickTimeline(InDeltaTime);
 	CardStartTimeline.TickTimeline(InDeltaTime);
 	CardEndTimeline.TickTimeline(InDeltaTime);
 }
 
-void UBLPUWDrawCardMessage::NativeConstruct()
+void UBLPUWNotification::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	FOnTimelineFloat CardTitleOpacityProgressUpdate;
-	CardTitleOpacityProgressUpdate.BindUFunction(this, FName("CardTitleOpacityUpdate"));
+	FOnTimelineFloat TitleOpacityProgressUpdate;
+	TitleOpacityProgressUpdate.BindUFunction(this, FName("TitleOpacityUpdate"));
 	FOnTimelineFloat MessageOpacityProgressUpdate;
 	MessageOpacityProgressUpdate.BindUFunction(this, FName("MessageOpacityUpdate"));
 	FOnTimelineFloat CardOpacityProgressUpdate;
 	CardOpacityProgressUpdate.BindUFunction(this, FName("CardOpacityUpdate"));
-	FOnTimelineEvent CardTitleOpacityFinishedEvent;
-	
-	CardTitleOpacityFinishedEvent.BindUFunction(this, FName("CardTitleOpacityFinished"));
+
+	FOnTimelineEvent TitleOpacityFinishedEvent;
+	TitleOpacityFinishedEvent.BindUFunction(this, FName("TitleOpacityFinished"));
 	FOnTimelineEvent MessageOpacityFinishedEvent;
 	MessageOpacityFinishedEvent.BindUFunction(this, FName("MessageOpacityFinished"));
 	FOnTimelineEvent CardStartOpacityFinishedEvent;
@@ -41,18 +41,18 @@ void UBLPUWDrawCardMessage::NativeConstruct()
 	FOnTimelineEvent CardEndOpacityFinishedEvent;
 	CardEndOpacityFinishedEvent.BindUFunction(this, FName("CardEndOpacityFinished"));
 
-	if (!CardTitleOpacityCurve || !MessageOpacityCurve || !CardStartOpacityCurve || !CardEndOpacityCurve)
+	if (!TitleOpacityCurve || !MessageOpacityCurve || !CardStartOpacityCurve || !CardEndOpacityCurve)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPUWDrawCardMessage: all timeline curves are not set"));
 		return;
 	}
 	
-	CardTitleTimeline.AddInterpFloat(CardTitleOpacityCurve, CardTitleOpacityProgressUpdate);
+	TitleTimeline.AddInterpFloat(TitleOpacityCurve, TitleOpacityProgressUpdate);
 	MessageTimeline.AddInterpFloat(MessageOpacityCurve, MessageOpacityProgressUpdate);
 	CardStartTimeline.AddInterpFloat(CardStartOpacityCurve, CardOpacityProgressUpdate);
 	CardEndTimeline.AddInterpFloat(CardEndOpacityCurve, CardOpacityProgressUpdate);
 	
-	CardTitleTimeline.SetTimelineFinishedFunc(CardTitleOpacityFinishedEvent);
+	TitleTimeline.SetTimelineFinishedFunc(TitleOpacityFinishedEvent);
 	MessageTimeline.SetTimelineFinishedFunc(MessageOpacityFinishedEvent);
 	CardStartTimeline.SetTimelineFinishedFunc(CardStartOpacityFinishedEvent);
 	CardEndTimeline.SetTimelineFinishedFunc(CardEndOpacityFinishedEvent);
@@ -60,42 +60,42 @@ void UBLPUWDrawCardMessage::NativeConstruct()
 	CardStartTimeline.PlayFromStart();
 }
 
-void UBLPUWDrawCardMessage::CardTitleOpacityUpdate(float Value)
+void UBLPUWNotification::TitleOpacityUpdate(float Value)
 {
 	const float NewOpacity = FMath::Lerp(0.0, 1.0, Value);
-	CardTitle->SetRenderOpacity(NewOpacity);
+	TitleTextBlock->SetRenderOpacity(NewOpacity);
 }
 
-void UBLPUWDrawCardMessage::MessageOpacityUpdate(float Value)
+void UBLPUWNotification::MessageOpacityUpdate(float Value)
 {
 	const float NewOpacity = FMath::Lerp(0.0, 1.0, Value);
-	CardHeading->SetRenderOpacity(NewOpacity);
-	CardDescription->SetRenderOpacity(NewOpacity);
+	HeadingTextBlock->SetRenderOpacity(NewOpacity);
+	DescriptionTextBlock->SetRenderOpacity(NewOpacity);
 }
 
-void UBLPUWDrawCardMessage::CardOpacityUpdate(float Value)
+void UBLPUWNotification::CardOpacityUpdate(float Value)
 {
 	const float NewOpacity = FMath::Lerp(0.0, 1.0, Value);
 	MainSizeBox->SetRenderOpacity(Value);
 }
 
-void UBLPUWDrawCardMessage::CardTitleOpacityFinished()
+void UBLPUWNotification::TitleOpacityFinished()
 {
 	MessageTimeline.PlayFromStart();
-	CardTitle->SetVisibility(ESlateVisibility::Hidden);
+	TitleTextBlock->SetVisibility(ESlateVisibility::Hidden);
 }
 
-void UBLPUWDrawCardMessage::MessageOpacityFinished()
+void UBLPUWNotification::MessageOpacityFinished()
 {
 	CardEndTimeline.PlayFromStart();
 }
 
-void UBLPUWDrawCardMessage::CardStartOpacityFinished()
+void UBLPUWNotification::CardStartOpacityFinished()
 {
-	CardTitleTimeline.PlayFromStart();
+	TitleTimeline.PlayFromStart();
 }
 
-void UBLPUWDrawCardMessage::CardEndOpacityFinished()
+void UBLPUWNotification::CardEndOpacityFinished()
 {
 	this->RemoveFromParent();
 }

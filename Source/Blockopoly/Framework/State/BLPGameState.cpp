@@ -613,12 +613,6 @@ void ABLPGameState::AlertUIOfCardDraw(const FString& PlayerName, const FString& 
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
 
-		BLPPlayerStatePtr->AddDrawCardMessage(Type, Heading, Description);
-
-		
-		// if (!BLPPlayerStatePtr->CardDrawnDelegate.IsBound()){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: %s's BLPPlayerState has nothing bound to the CardDrawnDelegate"), *BLPPlayerStatePtr->GetPlayerName())}
-		//
-		// BLPPlayerStatePtr->CardDrawnDelegate.ExecuteIfBound(Type, Heading, Description);
-		// UE_LOG(LogTemp, Warning, TEXT("%s's UI was alerted"), *BLPPlayerStatePtr->GetPlayerName());
+		BLPPlayerStatePtr->AddNotification(Type, Heading, Description);
 	}
 }

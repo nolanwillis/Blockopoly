@@ -63,16 +63,16 @@ private:
 	UWrapBox* PlayerCardWrapBox;
 
 	UPROPERTY(meta = (BindWidget))
-	USizeBox* DrawCardMessageSlot;
+	USizeBox* CardNotificationSlot;
 
 	// PlayerCard class reference
 	TSubclassOf<UUserWidget> PlayerCardClass;
 
-	// DrawChestCardMessage class reference
-	TSubclassOf<UUserWidget> DrawChanceCardMessageClass;
+	// ChestCardNotification class reference
+	TSubclassOf<UUserWidget> ChanceCardNotificationClass;
 
-	// DrawChanceCardMessage class reference
-	TSubclassOf<UUserWidget> DrawChestCardMessageClass;
+	// ChanceCardNotification class reference
+	TSubclassOf<UUserWidget> ChestCardNotificationClass;
 
 	// Button handlers
 	UFUNCTION()
@@ -100,5 +100,5 @@ private:
 	UFUNCTION()
 	void HasRolled(const bool Value);
 	UFUNCTION()
-	void CardDrawn(const FString& Type, const FString& Heading, const FString& Description);
+	void AddNotification(const FString& Type, const FString& Heading, const FString& Description);
 };

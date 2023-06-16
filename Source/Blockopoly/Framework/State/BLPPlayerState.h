@@ -19,7 +19,7 @@ DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FPlayerCountSignature);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
 DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
-DECLARE_DELEGATE_ThreeParams(FCardDrawnSignature, const FString& Type, const FString& Heading, const FString& Description);
+DECLARE_DELEGATE_ThreeParams(FNotificationSignature, const FString& Type, const FString& Heading, const FString& Description);
 
 /**
  * 
@@ -63,7 +63,7 @@ public:
 	void SetHasRolled(const bool& Value) { HasRolled = Value; OnRep_HasRolled(); }
 
 	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
-	void AddDrawCardMessage(const FString& Type, const FString& Heading, const FString& Description);
+	void AddNotification(const FString& Type, const FString& Heading, const FString& Description);
 
 	FItsMyTurnSignature ItsMyTurnDelegate;
 	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
@@ -73,7 +73,7 @@ public:
 	FPlayerCountSignature PlayerCountDelegate;
 	FCanBuySignature CanBuyDelegate;
 	FHasRolledSignature HasRolledDelegate;
-	FCardDrawnSignature CardDrawnDelegate;
+	FNotificationSignature NotificationDelegate;
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)

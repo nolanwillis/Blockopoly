@@ -14,11 +14,12 @@ ABLPPlayerState::ABLPPlayerState()
 	SetReplicates(true);
 }
 
-void ABLPPlayerState::AddDrawCardMessage_Implementation(const FString& Type, const FString& Heading, const FString& Description)
+void ABLPPlayerState::AddNotification_Implementation(const FString& Type, const FString& Heading, const FString& Description)
 {
-	CardDrawnDelegate.Execute(Type, Heading, Description);
+	NotificationDelegate.Execute(Type, Heading, Description);
 }
-bool ABLPPlayerState::AddDrawCardMessage_Validate(const FString& Type, const FString& Heading, const FString& Description)
+
+bool ABLPPlayerState::AddNotification_Validate(const FString& Type, const FString& Heading, const FString& Description)
 {
 	return true;
 }

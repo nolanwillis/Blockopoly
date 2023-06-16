@@ -2,7 +2,7 @@
 
 #include "BLPUWGameMenu.h"
 
-#include "BLPUWDrawCardMessage.h"
+#include "BLPUWNotification.h"
 #include "BLPUWPropertyMenu.h"
 #include "BLPUWPlayerCard.h"
 #include "../Framework/Pawns/BLPAvatar.h"
@@ -24,13 +24,13 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	if (!WBP_PlayerCard.Class) return;
 	PlayerCardClass = WBP_PlayerCard.Class;
 
-	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_DrawChanceCardMessage(TEXT("/Game/Core/UI/WBP_DrawChanceCardMessage"));
-	if (!WBP_DrawChanceCardMessage.Class) return;
-	DrawChanceCardMessageClass = WBP_DrawChanceCardMessage.Class;
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_ChanceCardNotification(TEXT("/Game/Core/UI/WBP_ChanceCardNotification"));
+	if (!WBP_ChanceCardNotification.Class) return;
+	ChanceCardNotificationClass = WBP_ChanceCardNotification.Class;
 
-	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_DrawChestCardMessage(TEXT("/Game/Core/UI/WBP_DrawChestCardMessage"));
-	if (!WBP_DrawChestCardMessage.Class) return;
-	DrawChestCardMessageClass = WBP_DrawChestCardMessage.Class;
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_ChestCardNotification(TEXT("/Game/Core/UI/WBP_ChestCardNotification"));
+	if (!WBP_ChestCardNotification.Class) return;
+	ChestCardNotificationClass = WBP_ChestCardNotification.Class;
 }
 
 bool UBLPUWGameMenu::Initialize()
@@ -64,7 +64,7 @@ bool UBLPUWGameMenu::Initialize()
 	PlayerStatePtr->PlayerCountDelegate.BindUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
 	PlayerStatePtr->CanBuyDelegate.BindUObject(this, &UBLPUWGameMenu::CanBuy);
 	PlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
-	PlayerStatePtr->CardDrawnDelegate.BindUObject(this, &UBLPUWGameMenu::CardDrawn);
+	PlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
 
 	// Required to initially setup the player list
 	RefreshPlayerList();
@@ -214,28 +214,29 @@ void UBLPUWGameMenu::HasRolled(const bool Value)
 	}
 }
 
-void UBLPUWGameMenu::CardDrawn(const FString& Type, const FString& Heading, const FString& Description)
+void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading, const FString& Description)
 {
-	DrawCardMessageSlot->ClearChildren();
+	CardNotificationSlot->ClearChildren();
 	
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	UBLPUWDrawCardMessage* DrawCardMessage = nullptr;
+	UBLPUWNotification* Notification = nullptr;
 	
 	if (Type == "Chance")
 	{
-		DrawCardMessage = CreateWidget<UBLPUWDrawCardMessage>(World, DrawChanceCardMessageClass);
+		Notification = CreateWidget<UBLPUWNotification>(World, ChanceCardNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Heading, Description);
+		CardNotificationSlot->AddChild(Notification);
 	}
-	else
+	else if (Type == "Community Chest")
 	{
-		DrawCardMessage = CreateWidget<UBLPUWDrawCardMessage>(World, DrawChestCardMessageClass);
+		Notification = CreateWidget<UBLPUWNotification>(World, ChestCardNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Heading, Description);
+		CardNotificationSlot->AddChild(Notification);
 	}
-
-	if (!DrawCardMessage) return;
-
-	DrawCardMessage->Setup(Heading, Description);
-	DrawCardMessageSlot->AddChild(DrawCardMessage);
 }
 
 void UBLPUWGameMenu::RefreshPlayerList()

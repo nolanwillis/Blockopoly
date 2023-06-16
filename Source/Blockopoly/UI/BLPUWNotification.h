@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
 #include "./Components/TimelineComponent.h"
-#include "BLPUWDrawCardMessage.generated.h"
+#include "BLPUWNotification.generated.h"
 
 class UTextBlock;
 class USizeBox;
@@ -15,10 +15,9 @@ class UCurveFloat;
  * 
  */
 UCLASS()
-class BLOCKOPOLY_API UBLPUWDrawCardMessage : public UBLPUserWidget
+class BLOCKOPOLY_API UBLPUWNotification : public UBLPUserWidget
 {
 	GENERATED_BODY()
-
 public:
 	void Setup(const FString& Heading, const FString& Description) const;
 	
@@ -32,16 +31,16 @@ private:
 	USizeBox* MainSizeBox;
 	
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* CardHeading;
+	UTextBlock* HeadingTextBlock;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* CardDescription;
+	UTextBlock* DescriptionTextBlock;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* CardTitle;
+	UTextBlock* TitleTextBlock;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timeline Curves", meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* CardTitleOpacityCurve;
+	UCurveFloat* TitleOpacityCurve;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timeline Curves", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* MessageOpacityCurve;
@@ -52,13 +51,13 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timeline Curves", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* CardEndOpacityCurve;
 
-	FTimeline CardTitleTimeline;
+	FTimeline TitleTimeline;
 	FTimeline MessageTimeline;
 	FTimeline CardStartTimeline;
 	FTimeline CardEndTimeline;
 
 	UFUNCTION()
-	void CardTitleOpacityUpdate(float Value);
+	void TitleOpacityUpdate(float Value);
 
 	UFUNCTION()
 	void MessageOpacityUpdate(float Value);
@@ -67,7 +66,7 @@ private:
 	void CardOpacityUpdate(float Value);
 
 	UFUNCTION()
-	void CardTitleOpacityFinished();
+	void TitleOpacityFinished();
 
 	UFUNCTION()
 	void MessageOpacityFinished();
