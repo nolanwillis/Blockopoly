@@ -31,6 +31,10 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_ChestCardNotification(TEXT("/Game/Core/UI/WBP_ChestCardNotification"));
 	if (!WBP_ChestCardNotification.Class) return;
 	ChestCardNotificationClass = WBP_ChestCardNotification.Class;
+
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_RollNotification(TEXT("/Game/Core/UI/WBP_RollNotification"));
+	if (!WBP_RollNotification.Class) return;
+	RollNotificationClass = WBP_RollNotification.Class;
 }
 
 bool UBLPUWGameMenu::Initialize()
@@ -216,8 +220,6 @@ void UBLPUWGameMenu::HasRolled(const bool Value)
 
 void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading, const FString& Description)
 {
-	CardNotificationSlot->ClearChildren();
-	
 	UWorld* World = GetWorld();
 	if (!World) return;
 
@@ -225,6 +227,7 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 	
 	if (Type == "Chance")
 	{
+		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChanceCardNotificationClass);
 		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
 		Notification->Setup(Heading, Description);
@@ -232,10 +235,19 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 	}
 	else if (Type == "Community Chest")
 	{
+		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChestCardNotificationClass);
 		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
 		Notification->Setup(Heading, Description);
 		CardNotificationSlot->AddChild(Notification);
+	}
+	else if (Type == "Roll")
+	{
+		BannerNotificationSlotL->ClearChildren();
+		Notification = CreateWidget<UBLPUWNotification>(World, RollNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Heading, Description);
+		BannerNotificationSlotL->AddChild(Notification);
 	}
 }
 

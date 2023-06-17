@@ -37,6 +37,8 @@ public:
 
 	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
 	ABLPSpace* GetSpaceFromId(const int& ID) const;
+
+	void AddRollNotificationToUI(const FString& PlayerName, const int& Number);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -99,6 +101,8 @@ private:
 	void ChestCard14(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard15(ABLPPlayerState* PlayerStatePtr);
 	
-	void AlertUIOfCardDraw(const FString& PlayerName, const FString& Type, const FString& Description); 
+	void AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description);
+
+	
 	
 };

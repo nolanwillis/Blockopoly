@@ -200,7 +200,7 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr,const int& SpaceID){ return true; }
 
 // Simulates a dice roll
-void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
+void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const
 {
 	const int DiceValue = FMath::RandRange(1, 12);
 	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
@@ -218,6 +218,8 @@ void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, const ABLPG
 	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
 	
 	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
+
+	GameStatePtr->AddRollNotificationToUI(PlayerStatePtr->GetPlayerName(), DiceValue);
 }
 
 // Moves player (should always be called from the server)

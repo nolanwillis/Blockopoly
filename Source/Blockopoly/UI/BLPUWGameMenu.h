@@ -65,6 +65,12 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	USizeBox* CardNotificationSlot;
 
+	UPROPERTY(meta = (BindWidget))
+	USizeBox* BannerNotificationSlotL;
+
+	UPROPERTY(meta = (BindWidget))
+	USizeBox* BannerNotificationSlotR;
+
 	// PlayerCard class reference
 	TSubclassOf<UUserWidget> PlayerCardClass;
 
@@ -73,6 +79,9 @@ private:
 
 	// ChanceCardNotification class reference
 	TSubclassOf<UUserWidget> ChestCardNotificationClass;
+
+	// RollNotification class reference
+	TSubclassOf<UUserWidget> RollNotificationClass;
 
 	// Button handlers
 	UFUNCTION()
