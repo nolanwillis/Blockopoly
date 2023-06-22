@@ -10,6 +10,7 @@
 class UTextBlock;
 class USizeBox;
 class UCurveFloat;
+class UBLPUWGameMenu;
 
 /**
  * 
@@ -19,7 +20,7 @@ class BLOCKOPOLY_API UBLPUWNotification : public UBLPUserWidget
 {
 	GENERATED_BODY()
 public:
-	void Setup(const FString& Heading, const FString& Description) const;
+	void Setup(const FString& InType, const FString& Heading, const FString& Description, UBLPUWGameMenu* InParent);
 	
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
@@ -27,6 +28,12 @@ protected:
 	virtual void NativeConstruct() override;
 	
 private:
+	UPROPERTY()
+	FString Type;
+	
+	UPROPERTY()
+	UBLPUWGameMenu* Parent;
+	
 	UPROPERTY(meta = (BindWidget))
 	USizeBox* MainSizeBox;
 	

@@ -37,28 +37,26 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	RollNotificationClass = WBP_RollNotification.Class;
 }
 
-bool UBLPUWGameMenu::Initialize()
+ void UBLPUWGameMenu::NativeConstruct()
 {
-	// Call parent version of function and store result in variable
-	const bool Success = Super::Initialize();
-	if (!Success) return false;
+	Super::NativeConstruct();
 
 	// Bind button callbacks to OnClicked delegate
-	if (!PropertyMenuBtn) return false;
+	if (!PropertyMenuBtn) return;
 	PropertyMenuBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::PropertyMenuBtnClicked);
-	if (!BuyBtn) return false;
+	if (!BuyBtn) return;
 	BuyBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::BuyBtnClicked);
-	if (!RollBtn) return false;
+	if (!RollBtn) return;
 	RollBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::RollBtnClicked);
-	if (!FinishTurnBtn) return false;
+	if (!FinishTurnBtn) return ;
 	FinishTurnBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::FinishTurnBtnClicked);
 
 	ABLPPlayerController* PlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerControllerPtr is null")); return false; }
+	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerControllerPtr is null")); return; }
 	
 	// Bind functions to delegates in PlayerState
 	ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null")); return false; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null")); return; }
 	
 	PlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsMyTurn);
 	PlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsNotMyTurn);
@@ -70,17 +68,18 @@ bool UBLPUWGameMenu::Initialize()
 	PlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
 	PlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
 
+	if (PlayerStatePtr->NotificationDelegate.IsBound()) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: NotificationDelegate Bound!"));
+	if (!PlayerStatePtr->NotificationDelegate.IsBound()) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: NotificationDelegate IS NOT Bound!"));
+	
 	// Required to initially setup the player list
 	RefreshPlayerList();
 	
 	// If not on server, ItsNotMyTurn won't be called initially, since this function is only automatically
-	// called when the PlayerUpIndex changes (the host will always be first).
+	// called when the PlayerUpId changes (the host will always be first).
 	if (GetOwningPlayer()->GetLocalRole() < ROLE_Authority)
 	{
 		ItsNotMyTurn();
 	}
-	
-	return true;
 }
 
 void UBLPUWGameMenu::PropertyMenuBtnClicked()
@@ -95,13 +94,13 @@ void UBLPUWGameMenu::BuyBtnClicked()
 {
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
 	if (!PlayerControllerPtr) return;
-	
+
 	const UWorld* World = GetWorld();
 	if (!World) return;
-	ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>(); 
-	ABLPPlayerState* PlayerStatePtr = PlayerControllerPtr->GetPlayerState<ABLPPlayerState>();
+	ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>(); 
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	
-	PlayerControllerPtr->Server_BuyPropertySpace(PlayerStatePtr, GameStatePtr);
+	PlayerControllerPtr->Server_BuyPropertySpace(BLPPlayerStatePtr, BLPGameStatePtr);
 
 	BuyBtn->SetVisibility(ESlateVisibility::Hidden);
 
@@ -116,8 +115,8 @@ void UBLPUWGameMenu::RollBtnClicked()
 	const UWorld* World = GetWorld();
 	if (!World) return;
 	ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>(); 
-	ABLPPlayerState* PlayerStatePtr = PlayerControllerPtr->GetPlayerState<ABLPPlayerState>();
-	ABLPAvatar* AvatarPtr = PlayerControllerPtr->GetPawn<ABLPAvatar>();
+	ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+	ABLPAvatar* AvatarPtr = GetOwningPlayerPawn<ABLPAvatar>();
 	
 	PlayerControllerPtr->Server_Roll(AvatarPtr, PlayerStatePtr, GameStatePtr);
 	
@@ -155,8 +154,12 @@ void UBLPUWGameMenu::ItsNotMyTurn()
 	if (!World) return;
 	ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>();
 	if (!GameStatePtr) return;
-	const int PlayerUpIndex = GameStatePtr->GetPlayerUpIndex();
-	const FString PlayerUpName = GameStatePtr->PlayerArray[PlayerUpIndex]->GetPlayerName();
+	
+	const int PlayerUpIndex = GameStatePtr->GetPlayerUpId();
+	ABLPPlayerState* PlayerUpBLPPlayerState = GameStatePtr->GetBLPPlayerStateFromId(PlayerUpIndex);
+
+	if (!PlayerUpBLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerUpBLPPlayerState is null")); return; }
+	const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
 	
 	YourTurnText->SetText(FText::FromString(PlayerUpName + " is up"));
 	RollBtn->SetVisibility(ESlateVisibility::Hidden);
@@ -230,7 +233,7 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChanceCardNotificationClass);
 		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-		Notification->Setup(Heading, Description);
+		Notification->Setup(Type, Heading, Description, this);
 		CardNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Community Chest")
@@ -238,7 +241,7 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChestCardNotificationClass);
 		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-		Notification->Setup(Heading, Description);
+		Notification->Setup(Type, Heading, Description, this);
 		CardNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Roll")
@@ -246,7 +249,7 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 		BannerNotificationSlotL->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, RollNotificationClass);
 		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-		Notification->Setup(Heading, Description);
+		Notification->Setup(Type, Heading, Description, this);
 		BannerNotificationSlotL->AddChild(Notification);
 	}
 }

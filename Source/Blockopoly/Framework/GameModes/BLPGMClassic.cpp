@@ -3,25 +3,27 @@
 
 #include "BLPGMClassic.h"
 
-#include "../BLPPlayerController.h"
 #include "../State/BLPGameState.h"
-#include "Blockopoly/Framework/State/BLPPlayerState.h"
-#include "Blockopoly/UI/BLPUWGameMenu.h"
-
+#include "../State/BLPPlayerState.h"
 
 void ABLPGMClassic::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	ABLPGameState* GameStatePtr = GetGameState<ABLPGameState>();
+	const ABLPGameState* GameStatePtr = GetGameState<ABLPGameState>();
+	
 	TArray<TObjectPtr<APlayerState>> PlayerArray = GameStatePtr->PlayerArray;
 
+	ABLPPlayerState* NewBLPPlayerStatePtr = NewPlayer->GetPlayerState<ABLPPlayerState>();
+	if (!NewBLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
+	NewBLPPlayerStatePtr->SetBLPPlayerId(PlayerArray.Num()-1);
+
 	// Tell all the player controllers to update their UI when a new player enters
-	for (TObjectPtr<APlayerState> Player : PlayerArray)
+	for (APlayerState* PlayerStatePtr : PlayerArray)
 	{
-		ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(Player);
-		if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: PlayerStatePtr is null"));
-		PlayerStatePtr->SetPlayerCount(PlayerArray.Num());
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->SetPlayerCount(PlayerArray.Num());
 	}
 
 	// Should also do the same on logout...

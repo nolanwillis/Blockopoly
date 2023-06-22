@@ -10,10 +10,6 @@ class ABLPSpace;
 class ABLPPropertySpace;
 class ABLPPlayerState;
 
-// WARNING: MAX VALUE IS 16 ONLY CHANGE IF TESTING
-constexpr int GNum_ChanceCards = 16;
-constexpr int GNum_ChestCards = 16;
-
 UCLASS()
 class BLOCKOPOLY_API ABLPGameState : public AGameState
 {
@@ -22,27 +18,39 @@ class BLOCKOPOLY_API ABLPGameState : public AGameState
 	typedef void (ABLPGameState::*BLPGameStateFuncPtr)(ABLPPlayerState* PlayerStatePtr);
 	
 public:
+	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
+	ABLPSpace* GetSpaceFromId(const int& ID) const;
+	ABLPPlayerState* GetBLPPlayerStateFromId(const int& ID) const;
+
+	int GetPlayerUpId() const { return PlayerUpId; }
+	void NextPlayerUp();
+	
 	TArray<ABLPSpace*> GetSpaceList() const { return SpaceList; }
 	void AddToSpaceList(ABLPSpace* Space) { SpaceList.Add(Space); }
-	
-	int GetPlayerUpIndex() const { return PlayerUpIndex; }
-	void NextPlayerUp();
 	
 	TArray<ABLPPropertySpace*> GetAvailablePropertySpaceList () const { return AvailablePropertySpaceList; }
 	void AddToAvailablePropertySpaceList(ABLPPropertySpace* Value) { AvailablePropertySpaceList.Add(Value); }
 	void RemoveFromAvailablePropertySpaceList(ABLPPropertySpace* Value) { AvailablePropertySpaceList.Remove(Value); }
-
-	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr);
-	void DrawChestCard(ABLPPlayerState* PlayerStatePtr);
-
-	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
-	ABLPSpace* GetSpaceFromId(const int& ID) const;
-
-	void AddRollNotificationToUI(const FString& PlayerName, const int& Number);
 	
+	int GetMaxChanceCards() const { return MaxChanceCards; }
+	int GetMaxChestCards() const { return MaxChestCards; }
+
+	int GetCurrentChanceCardIndex() const { return CurrentChanceCardIndex; }
+	void SetCurrentChanceCardIndex(const int& Value) { if (Value > MaxChanceCards-1) return;  CurrentChanceCardIndex = Value; }
+	int GetCurrentChestCardIndex() const { return CurrentChestCardIndex; }
+	void SetCurrentChestCardIndex(const int& Value) { if (Value > MaxChestCards-1) return; CurrentChestCardIndex = Value; }
+	
+	void ExecuteChanceCard(ABLPPlayerState* PlayerStatePtr);
+	void ExecuteChestCard(ABLPPlayerState* PlayerStatePtr);
+	
+	void AddRollNotificationToUI(const FString& PlayerName, const int& Number);
+	void AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description);
+
+	
+
 protected:
 	virtual void BeginPlay() override;
-
+	
 private:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "General Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPSpace*> SpaceList;
@@ -51,10 +59,18 @@ private:
 	TArray<ABLPPropertySpace*> AvailablePropertySpaceList;
 	
 	// Keeps track of which player in the PlayerArray has the current turn
-	int PlayerUpIndex = 0;
+	UPROPERTY(Replicated)
+	int PlayerUpId = 0;
 
-	BLPGameStateFuncPtr PreviousChanceCard = nullptr;
-	BLPGameStateFuncPtr PreviousChestCard = nullptr;
+	UPROPERTY(Replicated)
+	int CurrentChanceCardIndex = -1;
+
+	UPROPERTY(Replicated)
+	int CurrentChestCardIndex = -1;
+
+	// WARNING: Must be changed if the number of cards change
+	const int MaxChanceCards = 16;
+	const int MaxChestCards = 16;
 	
 	// Arrays of function pointers, required for community chest and chance systems
 	TArray<BLPGameStateFuncPtr> ChanceCards {&ABLPGameState::ChanceCard0, &ABLPGameState::ChanceCard1, &ABLPGameState::ChanceCard2, &ABLPGameState::ChanceCard3,
@@ -100,9 +116,6 @@ private:
 	void ChestCard13(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard14(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard15(ABLPPlayerState* PlayerStatePtr);
-	
-	void AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description);
 
-	
 	
 };

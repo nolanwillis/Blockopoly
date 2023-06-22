@@ -33,8 +33,11 @@ public:
 
 	void RefreshPlayerList();
 
+	UFUNCTION()
+	void AddNotification(const FString& Type, const FString& Heading, const FString& Description);
+
 protected:
-	virtual bool Initialize() override;
+	virtual void NativeConstruct() override;
 
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -108,6 +111,7 @@ private:
 	void CanBuy(const bool Value);
 	UFUNCTION()
 	void HasRolled(const bool Value);
-	UFUNCTION()
-	void AddNotification(const FString& Type, const FString& Heading, const FString& Description);
+	
+	
+
 };

@@ -1,14 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "./BLPUWNotification.h"
+#include "BLPUWGameMenu.h"
+#include "Blockopoly/Framework/BLPPlayerController.h"
+#include "Blockopoly/Framework/Pawns/BLPAvatar.h"
+#include "Blockopoly/Framework/State/BLPPlayerState.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
 
-void UBLPUWNotification::Setup(const FString& Heading, const FString& Description) const
+void UBLPUWNotification::Setup(const FString& InType, const FString& Heading, const FString& Description, UBLPUWGameMenu* InParent)
 {
 	HeadingTextBlock->SetText(FText::FromString(Heading));
 	DescriptionTextBlock->SetText(FText::FromString(Description));
+	Parent = InParent;
+	Type = InType;
 }
 
 void UBLPUWNotification::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -31,7 +36,6 @@ void UBLPUWNotification::NativeConstruct()
 	MessageOpacityProgressUpdate.BindUFunction(this, FName("MessageOpacityUpdate"));
 	FOnTimelineFloat CardOpacityProgressUpdate;
 	CardOpacityProgressUpdate.BindUFunction(this, FName("CardOpacityUpdate"));
-
 	FOnTimelineEvent TitleOpacityFinishedEvent;
 	TitleOpacityFinishedEvent.BindUFunction(this, FName("TitleOpacityFinished"));
 	FOnTimelineEvent MessageOpacityFinishedEvent;
@@ -98,4 +102,31 @@ void UBLPUWNotification::CardStartOpacityFinished()
 void UBLPUWNotification::CardEndOpacityFinished()
 {
 	this->RemoveFromParent();
+	
+	if (GetOwningPlayerState<ABLPPlayerState>()->GetIsItMyTurn())
+	{
+		UWorld* World = GetWorld();
+		ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(World->GetGameState());
+		ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+		ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
+		if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerControllerPtr is null")); return; }
+		if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPGameStatePtr is null")); return; }
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerStatePtr is null")); return; }
+		
+		if (Type == "Roll")
+		{
+			ABLPAvatar* BLPAvatarPtr = GetOwningPlayerPawn<ABLPAvatar>();
+			if (!BLPAvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPAvatarPtr is null")); return; }
+			BLPPlayerControllerPtr->Server_ReflectRollInGame(BLPAvatarPtr, BLPPlayerStatePtr, BLPGameStatePtr);
+		}
+		else if (Type == "Chance")
+		{
+			BLPPlayerControllerPtr->Server_ExecuteChanceCard(BLPPlayerStatePtr, BLPGameStatePtr);
+		}
+		else if (Type == "Community Chest")
+		{
+			BLPPlayerControllerPtr->Server_ExecuteChestCard(BLPPlayerStatePtr, BLPGameStatePtr);
+		}
+	}
 }
+

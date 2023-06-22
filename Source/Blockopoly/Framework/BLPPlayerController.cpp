@@ -37,7 +37,7 @@ void ABLPPlayerController::BeginPlayingState()
 	}
 }
 
-// Server RPC that moves the Avatar to it's CurrentSpaceId
+// Server RPC that simulates a dice roll
 void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PC")); return; }
@@ -59,15 +59,48 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
 
 	if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
-	
-	RollDice(PlayerStatePtr, GameStatePtr);
-	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
-	ApplySpaceSideEffect(PlayerStatePtr, GameStatePtr);
-	CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
 
-	PlayerStatePtr->SetHasRolled(true);
+	const int DiceValue = FMath::RandRange(2, 12);
+	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
+	
+	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + DiceValue;
+	const int MaxSpaceID = GameStatePtr->GetSpaceList().Num()-1;
+
+	// If we pass go
+	if (NewSpaceID > MaxSpaceID)
+	{
+		NewSpaceID = NewSpaceID-MaxSpaceID-1;
+		PlayerStatePtr->AddToBalance(200);
+	}
+	
+	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
+
+	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
+
+	GameStatePtr->AddRollNotificationToUI(PlayerStatePtr->GetPlayerName(), DiceValue);
 }
 bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
+
+void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+{
+	TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
+	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	
+	if (GetRemoteRole() == ROLE_AutonomousProxy)
+	{
+		PlayerStatePtr->Client_SimulateMoveLocally(PlayerStatePtr->GetCurrentSpaceId());
+	}
+
+	ApplySpaceEffect(PlayerStatePtr, GameStatePtr);
+	
+	CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
+	
+	PlayerStatePtr->SetHasRolled(true);
+}
+bool ABLPPlayerController::Server_ReflectRollInGame_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+{
+	return true;
+}
 
 // Server RPC that finishes the current turn and moves to the next
 void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -199,27 +232,22 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 }
 bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr,const int& SpaceID){ return true; }
 
-// Simulates a dice roll
-void ABLPPlayerController::RollDice(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const
+// Server RPCs that invoke ExecuteCard Functions on the given player in the GameState
+void ABLPPlayerController::Server_ExecuteChanceCard_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	const int DiceValue = FMath::RandRange(1, 12);
-	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
-	
-	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + DiceValue;
-	const int MaxSpaceID = GameStatePtr->GetSpaceList().Num()-1;
-
-	// If we pass go
-	if (NewSpaceID > MaxSpaceID)
-	{
-		NewSpaceID = NewSpaceID-MaxSpaceID-1;
-		PlayerStatePtr->AddToBalance(200);
-	}
-	
-	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
-	
-	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
-
-	GameStatePtr->AddRollNotificationToUI(PlayerStatePtr->GetPlayerName(), DiceValue);
+	GameStatePtr->ExecuteChanceCard(PlayerStatePtr);
+}
+bool ABLPPlayerController::Server_ExecuteChanceCard_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+{
+	return true;
+}
+void ABLPPlayerController::Server_ExecuteChestCard_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+{
+	GameStatePtr->ExecuteChestCard(PlayerStatePtr);
+}
+bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+{
+	return true;
 }
 
 // Moves player (should always be called from the server)
@@ -272,8 +300,9 @@ void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TAr
 
 // Updates the amount of buildings on an estate property
 void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount)
-
 {
+	if (!EstatePropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: EtatePropertySpacePtr is null")); return; }
+	
 	if (BuildingCount == 1)
 	{
 		if (UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse0()) HousePtr->SetVisibility(true, false);
@@ -306,8 +335,11 @@ void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* Estate
 }
 
 // Applies correct side effect depending on what space is landed on
-void ABLPPlayerController::ApplySpaceSideEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	
 	UE_LOG(LogTemp, Warning, TEXT("ABLPPlayerController: ApplySpaceSideEffect called"));
 	const int EnteredSpaceID = PlayerStatePtr->GetCurrentSpaceId();
 	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceFromId(EnteredSpaceID);
@@ -359,14 +391,133 @@ void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABL
 	}
 }
 
+// Triggers a card to be drawn and a notifications to be sent to clients
 void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	GameStatePtr->DrawChanceCard(PlayerStatePtr);
-}
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	
+	int RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);;
+	while (RandomCardIndex == GameStatePtr->GetCurrentChanceCardIndex())
+	{
+		RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);
+	}
+	GameStatePtr->SetCurrentChanceCardIndex(RandomCardIndex);
 
-void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr)
+	FString Description;
+
+	switch (RandomCardIndex)
+	{
+		case 0:
+			Description = "Advance to Boardwalk";
+			break;
+		case 1:
+			Description = "Advance to Go, collect $200";
+			break;
+		case 2:
+			Description = "Advance to Illinois Avenue. If you pass Go, collect $200";
+			break;
+		case 3:
+			Description = "Advance to St. Charles Place. If you pass Go, collect $200";
+			break;
+		case 4:
+			Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
+								"Bank. If owned, pay the owner twice the rent";
+			break;
+		case 5:
+			Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
+								"Bank. If owned, pay the owner twice the rent";
+			break;
+		case 6:
+			Description = "Advance to the nearest Utility. If unowned, you may buy it from the"
+								"Bank. If owned, throw the dice and pay the owner ten times the amount"
+								"thrown";
+			break;
+		case 7:
+			Description = "Bank pays you a dividend of $50";
+			break;
+		case 8:
+			Description = "Get Out of Jail Free";
+			break;
+		case 9:
+			Description = "Go back 3 Spaces";
+			break;
+		case 10:
+			Description = "Go to Jail. Go directly to Jail, do not pass Go, do not collect $200.";
+			break;
+		case 11:
+			Description = "Make general repairs on all your property. For each house pay $25."
+							   "For each hotel pay $100.";
+			break;
+		case 12:
+			Description = "Speeding fine $15.";
+			break;
+		case 13:
+			Description = "Take a trip to Reading Railroad. If you pass Go, collect $200.";
+			break;
+		case 14:
+			Description = "You have been elected Chairmen of the Board. Pay each player $50.";
+			break;
+		case 15:
+			Description = "Your building loan matures. Collect $150.";
+			break;
+		default:
+			break;
+	}
+	
+	GameStatePtr->AddCardDrawNotificationToUI(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+}
+void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	GameStatePtr->DrawChestCard(PlayerStatePtr);
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+
+	int RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);;
+	while (RandomCardIndex == GameStatePtr->GetCurrentChanceCardIndex())
+	{
+		RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);
+	}
+
+	FString Description;
+	
+	switch (RandomCardIndex)
+	{
+	default:
+	case 0:
+		Description = "Advance to Go, collect $200";
+	case 1:
+		Description = "Bank error in your favor. Collect $200.";
+	case 2:
+		Description = "Doctor's fee. Pay $50.";
+	case 3:
+		Description = "Go to Jail. Go directly to jail, do not pass Go, do not collect $200.";
+	case 4:
+		Description = "Holiday fund matures. Receive $100.";
+	case 5:
+		Description = "Income tax refund. Collect $20.";
+	case 6:
+		Description = "It is your birthday! Collect $10 from every player.";
+	case 7:
+		Description = "Life insurance matures. Collect $100.";
+	case 8:
+		Description = "Pay hospital fees of $100.";
+	case 9:
+		Description = "Pay school fees of $50";
+	case 10:
+		Description = "Receive $25 consultancy fee.";
+	case 11:
+		Description = "You are assessed for street repair. $40 per house. $115 per hotel.";
+	case 12:
+		Description = "You have won second prize in a beauty contest. Collect $10.";
+	case 13:
+		Description = "You inherit $100";
+	case 14:
+		Description = "From sale of stock you get $50.";
+	case 15:
+		Description = "Get Out of Jail Free";
+	}
+	
+	GameStatePtr->AddCardDrawNotificationToUI(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
 }
 
 void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
@@ -384,4 +535,3 @@ void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerState
 		}
 	}
 }
-

@@ -31,12 +31,15 @@ class BLOCKOPOLY_API ABLPPlayerState : public APlayerState
 
 public:
 	ABLPPlayerState();
+
+	int GetBLPPlayerId() const { return BLPPlayerId; }
+	void SetBLPPlayerId(const int& Value){ BLPPlayerId = Value;}
 	
 	int GetBalance() const { return CreditBalance; }
 	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value > 0 ? CreditBalance+Value : 0; OnRep_CreditBalance();}
 	
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
-	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; OnRep_DesiredSpaceID();}
+	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value;}
 
 	FSpawnPoint* GetCurrentSpawnPoint() const { return CurrentSpawnPoint; }
 	void SetCurrentSpawnPoint(FSpawnPoint* Value){ CurrentSpawnPoint = Value; }
@@ -57,14 +60,14 @@ public:
 	void SetPlayerCount(const int& Value) { PlayerCount = Value; OnRep_PlayerCount();}
 
 	bool GetCanBuyCurrentProperty() const { return CanBuyCurrentProperty; }
-	void SetCanBuyCurrentProperty(const bool& Value) { CanBuyCurrentProperty = Value; OnRep_CanBuyCurrentProperty();}
+	void SetCanBuyCurrentProperty(const bool& Value) { CanBuyCurrentProperty = Value; OnRep_CanBuyCurrentProperty(); }
 
 	bool GetHasRolled() const { return HasRolled; }
 	void SetHasRolled(const bool& Value) { HasRolled = Value; OnRep_HasRolled(); }
-
+	
 	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
-	void AddNotification(const FString& Type, const FString& Heading, const FString& Description);
-
+	void Client_AddNotification(const FString& Type, const FString& Heading, const FString& Description);
+	
 	FItsMyTurnSignature ItsMyTurnDelegate;
 	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
@@ -75,11 +78,17 @@ public:
 	FHasRolledSignature HasRolledDelegate;
 	FNotificationSignature NotificationDelegate;
 
+	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
+	void Client_SimulateMoveLocally(const int NewSpaceId);
+
 private:
+	UPROPERTY(Replicated)
+	int BLPPlayerId; 
+	
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
 	int CreditBalance = 1000000;
 	
-	UPROPERTY(ReplicatedUsing=OnRep_DesiredSpaceID, VisibleAnywhere)
+	UPROPERTY(Replicated)
 	int CurrentSpaceId = 0;
 
 	FSpawnPoint* CurrentSpawnPoint;
@@ -113,9 +122,6 @@ private:
 	void OnRep_CreditBalance() const;
 	
 	UFUNCTION()
-	void OnRep_DesiredSpaceID();
-
-	UFUNCTION()
 	void OnRep_IsItMyTurn() const;
 
 	UFUNCTION()
@@ -135,4 +141,6 @@ private:
 
 	UFUNCTION()
 	void OnRep_HasRolled();
+
+
 };

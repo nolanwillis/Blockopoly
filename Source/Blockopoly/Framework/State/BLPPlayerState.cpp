@@ -14,29 +14,14 @@ ABLPPlayerState::ABLPPlayerState()
 	SetReplicates(true);
 }
 
-void ABLPPlayerState::AddNotification_Implementation(const FString& Type, const FString& Heading, const FString& Description)
+void ABLPPlayerState::Client_AddNotification_Implementation(const FString& Type, const FString& Heading, const FString& Description)
 {
-	NotificationDelegate.Execute(Type, Heading, Description);
+	NotificationDelegate.ExecuteIfBound(Type, Heading, Description);
 }
+bool ABLPPlayerState::Client_AddNotification_Validate(const FString& Type, const FString& Heading, const FString& Description){ return true; }
 
-bool ABLPPlayerState::AddNotification_Validate(const FString& Type, const FString& Heading, const FString& Description)
+void ABLPPlayerState::Client_SimulateMoveLocally_Implementation(const int NewSpaceId)
 {
-	return true;
-}
-
-// Notifies UI of credit change, so UI reflects correct credit amount
-void ABLPPlayerState::OnRep_CreditBalance() const
-{
-	UE_LOG(LogTemp, Warning, TEXT("New Balance: %d"), CreditBalance);
-	if (!OnBalanceChangedDelegate.IsBound()) return;
-	OnBalanceChangedDelegate.Broadcast(CreditBalance);
-}
-
-// Simulates Avatar movement locally when CurrentSpaceId is changed
-void ABLPPlayerState::OnRep_DesiredSpaceID()
-{
-	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId Updated"));
-
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(GetPawn());
 	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
 	
@@ -47,7 +32,7 @@ void ABLPPlayerState::OnRep_DesiredSpaceID()
 	
 	for (ABLPSpace* Space : SpaceList)
 	{
-		if (Space->GetSpaceID() == CurrentSpaceId)
+		if (Space->GetSpaceID() == NewSpaceId)
 		{
 			FSpawnPoint* NewSpawnPoint = nullptr;
 
@@ -72,6 +57,18 @@ void ABLPPlayerState::OnRep_DesiredSpaceID()
 		}
 	}
 }
+bool ABLPPlayerState::Client_SimulateMoveLocally_Validate(const int NewSpaceId)
+{
+	return true;
+}
+
+// Notifies UI of credit change, so UI reflects correct credit amount
+void ABLPPlayerState::OnRep_CreditBalance() const
+{
+	UE_LOG(LogTemp, Warning, TEXT("New Balance: %d"), CreditBalance);
+	if (!OnBalanceChangedDelegate.IsBound()) return;
+	OnBalanceChangedDelegate.Broadcast(CreditBalance);
+}
 
 // Notifies UI if its this players turn, so the turn UI buttons appear (roll, finish turn, etc.)
 void ABLPPlayerState::OnRep_IsItMyTurn() const 
@@ -84,7 +81,7 @@ void ABLPPlayerState::OnRep_IsItMyTurn() const
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s I finished my turn"), *GetPlayerName());
+		UE_LOG(LogTemp, Warning, TEXT("%s It's not my turn"), *GetPlayerName());
 		if (!ItsNotMyTurnDelegate.IsBound()) return;
 		ItsNotMyTurnDelegate.Broadcast();
 	}
@@ -126,6 +123,7 @@ void ABLPPlayerState::OnRep_PlayerCount()
 
 void ABLPPlayerState::OnRep_CanBuyCurrentProperty()
 {
+	
 	CanBuyDelegate.ExecuteIfBound(CanBuyCurrentProperty);
 }
 
@@ -156,5 +154,7 @@ void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABLPPlayerState, JailSkipCounter);
 	DOREPLIFETIME(ABLPPlayerState, CanBuyCurrentProperty);
 	DOREPLIFETIME(ABLPPlayerState, HasRolled);
+	DOREPLIFETIME(ABLPPlayerState, PlayerCount);
+	DOREPLIFETIME(ABLPPlayerState, BLPPlayerId);
 }
 

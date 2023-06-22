@@ -45,8 +45,6 @@ void ABLPAvatar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	PlayerInputComponent->BindAction("ListAvailableProperties", IE_Pressed, this, &ABLPAvatar::ListAvailableProperties);
 	PlayerInputComponent->BindAction("Sell", IE_Pressed, this, &ABLPAvatar::Sell);
 	PlayerInputComponent->BindAction("BuyBuilding", IE_Pressed, this, &ABLPAvatar::BuyBuilding);
-	PlayerInputComponent->BindAction("DrawChanceCard", IE_Pressed, this, &ABLPAvatar::DrawChanceCard);
-	PlayerInputComponent->BindAction("DrawChestCard", IE_Pressed, this, &ABLPAvatar::DrawChestCard);
 }
 
 // Make Avatar move a random # of spaces by calling server RPCs
@@ -134,27 +132,6 @@ void ABLPAvatar::BuyBuilding()
 	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetCurrentSpaceId());
 }
 
-void ABLPAvatar::DrawChanceCard()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerStatePtr is null")); return; }
-
-	GameStatePtr->DrawChanceCard(PlayerStatePtr);
-}
-
-void ABLPAvatar::DrawChestCard()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerStatePtr is null")); return; }
-
-	GameStatePtr->DrawChestCard(PlayerStatePtr);
-}
 
 
 
