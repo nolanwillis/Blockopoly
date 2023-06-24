@@ -17,6 +17,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
 DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FPlayerCountSignature);
+DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
 DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
 DECLARE_DELEGATE_ThreeParams(FNotificationSignature, const FString& Type, const FString& Heading, const FString& Description);
@@ -73,6 +74,7 @@ public:
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
 	FInJailSignature InJailDelegate;
 	FOutOfJailSignature OutOfJailDelegate;
+	FJailSkipSignature JailSkipDelegate;
 	FPlayerCountSignature PlayerCountDelegate;
 	FCanBuySignature CanBuyDelegate;
 	FHasRolledSignature HasRolledDelegate;

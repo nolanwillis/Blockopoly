@@ -57,6 +57,8 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* InJailText;
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* JailSkipCounterTextBlock;
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* BalanceText;
 
 	UPROPERTY(meta = (BindWidget))
@@ -111,6 +113,8 @@ private:
 	void CanBuy(const bool Value);
 	UFUNCTION()
 	void HasRolled(const bool Value);
+	UFUNCTION()
+	void UpdateJailSkipCounter(const int& JailSkipCounter);
 	
 	
 

@@ -26,6 +26,11 @@ class BLOCKOPOLY_API ABLPPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	UPROPERTY()
+	UBLPUWGameMenu* GameMenu;
+
+	FOnPlayerJoinSignature OnPlayerJoinDelegate;
+	
 	ABLPPlayerController();
 	
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
@@ -55,29 +60,19 @@ public:
 	// The following funtions must be public for the chance/chest system to work
 	void MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
 	void SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const;
-	void ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
-
-	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
-	void DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
-
-	UPROPERTY()
-	UBLPUWGameMenu* GameMenu;
-
-	FOnPlayerJoinSignature OnPlayerJoinDelegate;
-
+	void ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
+	void CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
 	
-
-	
+	void DrawChanceCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
+	void DrawChestCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
 
 protected:
 	virtual void BeginPlayingState() override;
 	
 private:
-	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount);
+	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const;
 	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	
-	void CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
-
 	// Reference to the GameMenu class
 	TSubclassOf<UUserWidget> GameMenuClass;
 };

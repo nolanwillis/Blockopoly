@@ -107,7 +107,10 @@ void ABLPGameState::ChanceCard0(ABLPPlayerState* PlayerStatePtr)
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
 	
 	PlayerStatePtr->SetCurrentSpaceId(39);
+
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(39);
+	
 	PlayerControllerPtr->ApplySpaceEffect(PlayerStatePtr, this);
 }
 void ABLPGameState::ChanceCard1(ABLPPlayerState* PlayerStatePtr)
@@ -124,7 +127,9 @@ void ABLPGameState::ChanceCard1(ABLPPlayerState* PlayerStatePtr)
 	PlayerStatePtr->AddToBalance(200);
 	
 	PlayerStatePtr->SetCurrentSpaceId(0);
+	
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(0);
 }
 void ABLPGameState::ChanceCard2(ABLPPlayerState* PlayerStatePtr)
 {
@@ -143,7 +148,10 @@ void ABLPGameState::ChanceCard2(ABLPPlayerState* PlayerStatePtr)
 	}
 		
 	PlayerStatePtr->SetCurrentSpaceId(24);
+
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(24);
+	
 	PlayerControllerPtr->ApplySpaceEffect(PlayerStatePtr, this);
 }
 void ABLPGameState::ChanceCard3(ABLPPlayerState* PlayerStatePtr)
@@ -163,12 +171,16 @@ void ABLPGameState::ChanceCard3(ABLPPlayerState* PlayerStatePtr)
 	}
 	
 	PlayerStatePtr->SetCurrentSpaceId(11);
+	
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(11);
+	
 	PlayerControllerPtr->ApplySpaceEffect(PlayerStatePtr, this);
 }
 void ABLPGameState::ChanceCard4(ABLPPlayerState* PlayerStatePtr)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Advance to the nearest Railroad. If unowned, you may buy it from the"
+	// ApplySpaceEffect not setting can buy to true if unowned.
+	UE_LOG(LogTemp, Warning, TEXT("Advance to the nearest Railroad. If unowned, you may buy it from the "
 								"Bank. If owned, pay the owner twice the rent"));
 	
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
@@ -181,30 +193,34 @@ void ABLPGameState::ChanceCard4(ABLPPlayerState* PlayerStatePtr)
 	if (CurrentSpaceID == 7)
 	{
 		PlayerStatePtr->SetCurrentSpaceId(15);
+		PlayerStatePtr->Client_SimulateMoveLocally(15);
 	}
 	else if (CurrentSpaceID == 22)
 	{
 		PlayerStatePtr->SetCurrentSpaceId(25);
+		PlayerStatePtr->Client_SimulateMoveLocally(25);
 	}
 	else
 	{
 		PlayerStatePtr->SetCurrentSpaceId(5);
+		PlayerStatePtr->Client_SimulateMoveLocally(5);
 	}
-	
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+
+	const ABLPPropertySpace* CurrentRailroad =  Cast<ABLPPropertySpace>(GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId()));
+
+	if (!CurrentRailroad){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: Current railroad is null")); return; }
 	
-	const ABLPPropertySpace* CurrentRailroad = Cast<ABLPPropertySpace>(GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId()));
 	ABLPPlayerState* OwningPlayer = GetOwnerOfProperty(CurrentRailroad);
 	
-	if (!CurrentRailroad){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: Current railroad is null")); return; }
-	if (!OwningPlayer){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: Current railroad has no owner")); return; }
-
-	// Will apply the standard rent
+	if (OwningPlayer)
+	{
+		// If property is owned charge double
+		PlayerStatePtr->AddToBalance(-200);
+		OwningPlayer->AddToBalance(200);
+	}
+	
 	PlayerControllerPtr->ApplySpaceEffect(PlayerStatePtr, this);
-
-	// Charges rent twice (railroads have fixed rent)
-	PlayerStatePtr->AddToBalance(-200);
-	OwningPlayer->AddToBalance(200);
 }
 void ABLPGameState::ChanceCard5(ABLPPlayerState* PlayerStatePtr)
 {
@@ -222,31 +238,38 @@ void ABLPGameState::ChanceCard5(ABLPPlayerState* PlayerStatePtr)
 	if (CurrentSpaceID <= 7)
 	{
 		PlayerStatePtr->SetCurrentSpaceId(12);
+		PlayerStatePtr->Client_SimulateMoveLocally(12);
 	}
 	else if (CurrentSpaceID < 22 && CurrentSpaceID > 7)
 	{
 		PlayerStatePtr->SetCurrentSpaceId(28);
+		PlayerStatePtr->Client_SimulateMoveLocally(15);
 	}
 	else
 	{
 		PlayerStatePtr->SetCurrentSpaceId(12);
+		PlayerStatePtr->Client_SimulateMoveLocally(15);
 	}
-	
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	
 	const ABLPPropertySpace* CurrentUtility = Cast<ABLPPropertySpace>(GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId()));
-	ABLPPlayerState* OwningPlayer = GetOwnerOfProperty(CurrentUtility);
 	
 	if (!CurrentUtility){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: Current utility is null")); return; }
-	if (!OwningPlayer){ UE_LOG(LogTemp, Warning, TEXT("BLPGameState: Current utility has no owner")); return; }
-
-	const int DiceRoll = FMath::RandRange(2, 12);
-	const int AmountPaid = DiceRoll * 10;
-	UE_LOG(LogTemp, Warning, TEXT("You rolled a %d, so you owe %d"), DiceRoll, AmountPaid);
-
-	PlayerStatePtr->AddToBalance(-AmountPaid);
-	OwningPlayer->AddToBalance(AmountPaid);
 	
+	ABLPPlayerState* OwningPlayer = GetOwnerOfProperty(CurrentUtility);
+	
+	if (OwningPlayer)
+	{
+		const int DiceRoll = FMath::RandRange(2, 12);
+		const int AmountPaid = DiceRoll * 9;
+		UE_LOG(LogTemp, Warning, TEXT("You rolled a %d, so you owe %d"), DiceRoll, AmountPaid);
+		PlayerStatePtr->AddToBalance(-AmountPaid);
+		OwningPlayer->AddToBalance(AmountPaid);
+	}
+	else
+	{
+		PlayerControllerPtr->CheckIfPropertyIsForSale(PlayerStatePtr, this);
+	}
 }
 void ABLPGameState::ChanceCard6(ABLPPlayerState* PlayerStatePtr)
 {
@@ -272,15 +295,19 @@ void ABLPGameState::ChanceCard8(ABLPPlayerState* PlayerStatePtr)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Go back 3 Spaces"));
 	
-	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
+	const ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(PlayerStatePtr->GetPlayerController());
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
 
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: AvatarPtr is null")); return; }
 	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: PlayerControllerPtr is null")); return; }
 	
 	const int CurrentSpaceId = PlayerStatePtr->GetCurrentSpaceId();
-	PlayerStatePtr->SetCurrentSpaceId(CurrentSpaceId-3);
+	const int NewSpaceId = CurrentSpaceId - 3;
+	PlayerStatePtr->SetCurrentSpaceId(NewSpaceId);
+
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(NewSpaceId);
+
 	PlayerControllerPtr->ApplySpaceEffect(PlayerStatePtr, this);
 }
 void ABLPGameState::ChanceCard9(ABLPPlayerState* PlayerStatePtr)
@@ -342,6 +369,7 @@ void ABLPGameState::ChanceCard12(ABLPPlayerState* PlayerStatePtr)
 		
 	PlayerStatePtr->SetCurrentSpaceId(5);
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(5);
 	PlayerControllerPtr->ApplySpaceEffect(PlayerStatePtr, this);
 	
 }
@@ -352,9 +380,11 @@ void ABLPGameState::ChanceCard13(ABLPPlayerState* PlayerStatePtr)
 	const int PlayerCount = PlayerArray.Num();
 	for (int i = 0; i < PlayerCount; i++)
 	{
-		if (i == PlayerUpId) continue;
-		ABLPPlayerState* OtherPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[i]);
-		OtherPlayerStatePtr->AddToBalance(50);
+		if (i != PlayerUpId)
+		{
+			ABLPPlayerState* OtherBLPPlayerStatePtr = Cast<ABLPPlayerState>(GetBLPPlayerStateFromId(i));
+			OtherBLPPlayerStatePtr->AddToBalance(50);
+		}
 	}
 	PlayerStatePtr->AddToBalance((PlayerCount-1) * -50);
 }
@@ -380,7 +410,9 @@ void ABLPGameState::ChestCard0(ABLPPlayerState* PlayerStatePtr)
 	PlayerStatePtr->AddToBalance(200);
 	
 	PlayerStatePtr->SetCurrentSpaceId(0);
+
 	PlayerControllerPtr->MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(0);
 }
 void ABLPGameState::ChestCard1(ABLPPlayerState* PlayerStatePtr)
 {
@@ -423,10 +455,13 @@ void ABLPGameState::ChestCard6(ABLPPlayerState* PlayerStatePtr)
 	const int PlayerCount = PlayerArray.Num();
 	for (int i = 0; i < PlayerCount; i++)
 	{
-		if (i == PlayerUpId) continue;
-		ABLPPlayerState* OtherPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[i]);
-		OtherPlayerStatePtr->AddToBalance(-10);
+		if (i != PlayerUpId)
+		{
+			ABLPPlayerState* OtherBLPPlayerStatePtr = Cast<ABLPPlayerState>(GetBLPPlayerStateFromId(i));
+			OtherBLPPlayerStatePtr->AddToBalance(-10);
+		}
 	}
+	
 	PlayerStatePtr->AddToBalance((PlayerCount-1) * 10);
 }
 void ABLPGameState::ChestCard7(ABLPPlayerState* PlayerStatePtr)

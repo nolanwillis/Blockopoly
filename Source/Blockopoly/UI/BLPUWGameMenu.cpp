@@ -63,13 +63,11 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	PlayerStatePtr->OnBalanceChangedDelegate.AddUObject(this, &UBLPUWGameMenu::UpdateBalance);
 	PlayerStatePtr->InJailDelegate.BindUObject(this, &UBLPUWGameMenu::InJail);
 	PlayerStatePtr->OutOfJailDelegate.BindUObject(this, &UBLPUWGameMenu::OutOfJail);
+	PlayerStatePtr->JailSkipDelegate.BindUObject(this, &UBLPUWGameMenu::UpdateJailSkipCounter);
 	PlayerStatePtr->PlayerCountDelegate.BindUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
 	PlayerStatePtr->CanBuyDelegate.BindUObject(this, &UBLPUWGameMenu::CanBuy);
 	PlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
 	PlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
-
-	if (PlayerStatePtr->NotificationDelegate.IsBound()) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: NotificationDelegate Bound!"));
-	if (!PlayerStatePtr->NotificationDelegate.IsBound()) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: NotificationDelegate IS NOT Bound!"));
 	
 	// Required to initially setup the player list
 	RefreshPlayerList();
@@ -218,6 +216,19 @@ void UBLPUWGameMenu::HasRolled(const bool Value)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Finish button should NOT be visible"));
 		FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void UBLPUWGameMenu::UpdateJailSkipCounter(const int& Value)
+{
+	if (Value == 0)
+	{
+		JailSkipCounterTextBlock->SetVisibility(ESlateVisibility::Hidden);
+	}
+	else
+	{
+		JailSkipCounterTextBlock->SetVisibility(ESlateVisibility::Visible);
+		JailSkipCounterTextBlock->SetText(FText::FromString("Get Out Of Jail Cards: " + FString::FromInt(Value))); 
 	}
 }
 

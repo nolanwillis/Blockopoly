@@ -60,7 +60,7 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 
 	if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
 
-	const int DiceValue = FMath::RandRange(2, 12);
+	const int DiceValue = 2;
 	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
 	
 	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + DiceValue;
@@ -92,8 +92,6 @@ void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* A
 	}
 
 	ApplySpaceEffect(PlayerStatePtr, GameStatePtr);
-	
-	CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
 	
 	PlayerStatePtr->SetHasRolled(true);
 }
@@ -296,10 +294,11 @@ void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TAr
 	PlayerStatePtr->SetJailCounter(3);
 	PlayerStatePtr->SetCurrentSpaceId(10);
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+	PlayerStatePtr->Client_SimulateMoveLocally(10);
 }
 
 // Updates the amount of buildings on an estate property
-void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount)
+void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const
 {
 	if (!EstatePropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: EtatePropertySpacePtr is null")); return; }
 	
@@ -335,7 +334,7 @@ void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* Estate
 }
 
 // Applies correct side effect depending on what space is landed on
-void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
@@ -352,6 +351,7 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Property Space Entered"));
 		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
+		CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
 		ChargeRent(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
 	}
 	else if (Cast<ABLPChanceSpace>(EnteredSpace))
@@ -392,12 +392,12 @@ void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABL
 }
 
 // Triggers a card to be drawn and a notifications to be sent to clients
-void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+void ABLPPlayerController::DrawChanceCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
 	
-	int RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);;
+	int RandomCardIndex = FMath::RandRange(0,GameStatePtr->GetMaxChanceCards()-1);
 	while (RandomCardIndex == GameStatePtr->GetCurrentChanceCardIndex())
 	{
 		RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);
@@ -467,54 +467,72 @@ void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPG
 	
 	GameStatePtr->AddCardDrawNotificationToUI(PlayerStatePtr->GetPlayerName(), "Chance", Description);
 }
-void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+void ABLPPlayerController::DrawChestCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
 
-	int RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);;
-	while (RandomCardIndex == GameStatePtr->GetCurrentChanceCardIndex())
+	int RandomCardIndex = FMath::RandRange(2,12);
+	while (RandomCardIndex == GameStatePtr->GetCurrentChestCardIndex())
 	{
-		RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChanceCards()-1);
+		RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChestCards()-1);
 	}
+	GameStatePtr->SetCurrentChestCardIndex(RandomCardIndex);
 
 	FString Description;
 	
 	switch (RandomCardIndex)
 	{
-	default:
 	case 0:
 		Description = "Advance to Go, collect $200";
+		break;
 	case 1:
 		Description = "Bank error in your favor. Collect $200.";
+		break;
 	case 2:
 		Description = "Doctor's fee. Pay $50.";
+		break;
 	case 3:
 		Description = "Go to Jail. Go directly to jail, do not pass Go, do not collect $200.";
+		break;
 	case 4:
 		Description = "Holiday fund matures. Receive $100.";
+		break;
 	case 5:
 		Description = "Income tax refund. Collect $20.";
+		break;
 	case 6:
 		Description = "It is your birthday! Collect $10 from every player.";
+		break;
 	case 7:
 		Description = "Life insurance matures. Collect $100.";
+		break;
 	case 8:
 		Description = "Pay hospital fees of $100.";
+		break;
 	case 9:
 		Description = "Pay school fees of $50";
+		break;
 	case 10:
 		Description = "Receive $25 consultancy fee.";
+		break;
 	case 11:
 		Description = "You are assessed for street repair. $40 per house. $115 per hotel.";
+		break;
 	case 12:
 		Description = "You have won second prize in a beauty contest. Collect $10.";
+		break;
 	case 13:
 		Description = "You inherit $100";
+		break;
 	case 14:
 		Description = "From sale of stock you get $50.";
+		break;
 	case 15:
 		Description = "Get Out of Jail Free";
+		break;
+	default:
+		break;
 	}
 	
 	GameStatePtr->AddCardDrawNotificationToUI(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);

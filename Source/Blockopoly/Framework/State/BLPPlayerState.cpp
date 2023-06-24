@@ -114,6 +114,7 @@ void ABLPPlayerState::OnRep_JailCounter()
 void ABLPPlayerState::OnRep_JailSkipCounter()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Get Out of Jail Free Card added"));
+	JailSkipDelegate.ExecuteIfBound(JailSkipCounter);
 }
 
 void ABLPPlayerState::OnRep_PlayerCount()

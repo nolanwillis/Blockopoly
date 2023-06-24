@@ -46,8 +46,6 @@ public:
 	void AddRollNotificationToUI(const FString& PlayerName, const int& Number);
 	void AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description);
 
-	
-
 protected:
 	virtual void BeginPlay() override;
 	
@@ -116,6 +114,4 @@ private:
 	void ChestCard13(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard14(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard15(ABLPPlayerState* PlayerStatePtr);
-
-	
 };
