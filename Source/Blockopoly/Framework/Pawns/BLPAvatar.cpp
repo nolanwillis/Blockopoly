@@ -2,147 +2,23 @@
 
 
 #include "BLPAvatar.h"
-#include "../State/BLPGameState.h"
-#include "../BLPPlayerController.h"
-#include "../State/BLPPlayerState.h"
-#include "../../Items/Spaces/BLPSpace.h"
-#include "../../Items/Spaces/BLPPropertySpace.h"
 
-#include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ABLPAvatar::ABLPAvatar()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	
+	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collider"));
+	RootComponent = BoxCollider;
 
 	Shape = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shape"));
-	RootComponent = Shape;
+	Shape->SetupAttachment(RootComponent);
 
 	if (HasAuthority())
 	{
 		SetReplicates(true);
 		AActor::SetReplicateMovement(true);
-	} 
-}
-
-// Called every frame
-void ABLPAvatar::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-// Called to bind functionality to input
-void ABLPAvatar::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAction("TakeTurn", IE_Pressed, this, &ABLPAvatar::TakeTurn);
-	PlayerInputComponent->BindAction("FinishTurn", IE_Pressed, this, &ABLPAvatar::FinishTurn);
-	PlayerInputComponent->BindAction("Purchase", IE_Pressed, this, &ABLPAvatar::Purchase);
-	PlayerInputComponent->BindAction("ListAvailableProperties", IE_Pressed, this, &ABLPAvatar::ListAvailableProperties);
-	PlayerInputComponent->BindAction("Sell", IE_Pressed, this, &ABLPAvatar::Sell);
-	PlayerInputComponent->BindAction("BuyBuilding", IE_Pressed, this, &ABLPAvatar::BuyBuilding);
-}
-
-// Make Avatar move a random # of spaces by calling server RPCs
-void ABLPAvatar::TakeTurn()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
-	
-	const TArray<ABLPSpace*> LocalSpaceList = GameStatePtr->GetSpaceList();
-	PlayerControllerPtr->Server_Roll(this, PlayerStatePtr, GameStatePtr);
-	
-}
-
-void ABLPAvatar::Purchase()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
-
-	PlayerControllerPtr->Server_BuyPropertySpace(PlayerStatePtr, GameStatePtr);
-}
-
-void ABLPAvatar::FinishTurn()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
-
-	// TODO: Attach this to a button in the UI, its here for testing
-	PlayerControllerPtr->Server_FinishTurn(PlayerStatePtr, GameStatePtr);
-}
-
-void ABLPAvatar::ListAvailableProperties()
-{
-	const ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from Avatar")); return; }
-	
-	UE_LOG(LogTemp, Warning, TEXT("Available Property List: "));
-	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
-	TArray<ABLPPropertySpace*> LocalAvailablePropertySpaceList = GameStatePtr->GetAvailablePropertySpaceList();
-	for (ABLPPropertySpace* Property : LocalAvailablePropertySpaceList)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Name: %s | Rent: %d]"), *Property->GetName(), Property->GetRent());
 	}
-	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
 }
-
-void ABLPAvatar::Sell()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
-
-	PlayerControllerPtr->Server_SellPropertySpace(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetCurrentSpaceId());
-}
-
-void ABLPAvatar::BuyBuilding()
-{
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwner());
-	ABLPPlayerState* PlayerStatePtr = Cast<ABLPPlayerState>(GetPlayerState());
-	
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: GameStatePtr is null")); return; }
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerController Ptr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPAvatar: PlayerState Ptr is null")); return; }
-	
-	PlayerControllerPtr->Server_BuyBuilding(PlayerStatePtr, GameStatePtr, PlayerStatePtr->GetCurrentSpaceId());
-}
-
-
-
-
-
-
-
-	
-	
-
-
-
-
-
 

@@ -6,6 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "BLPAvatar.generated.h"
 
+class ABLPCameraManager;
 class UBoxComponent;
 
 UCLASS()
@@ -17,29 +18,13 @@ public:
 	// Sets default values for this pawn's properties
 	ABLPAvatar();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 private:
-	void TakeTurn();
-	void FinishTurn();
-	void Purchase();
-	
-	// For testing 
-	void ListAvailableProperties();
-	void Sell();
-	void BuyBuilding();
-	void DrawChanceCard();
-	void DrawChestCard();
-
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
-	UBoxComponent* Root;
+	UBoxComponent* BoxCollider;
 	
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Shape;
 
-	
+	UPROPERTY()
+	ABLPCameraManager* CameraManager;
 };

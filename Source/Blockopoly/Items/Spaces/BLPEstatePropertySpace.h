@@ -20,10 +20,13 @@ class BLOCKOPOLY_API ABLPEstatePropertySpace : public ABLPPropertySpace
 public:
 	ABLPEstatePropertySpace();
 
+	FString GetFamilyColor() const { return FamilyColor; }
 	int GetBuildingCount() const { return BuildingCount; }
 	void SetBuildingCount(const int& Value) { if (Value < 0 || Value > 5) return; BuildingCount = Value; }
 	int GetBuildingCost() const { return BuildingCost; }
-	int GetSetRent() const { return SetRent; }
+	void SetCanBuild(const bool& Value) { CanBuild = Value; }
+	bool GetCanBuild() const { return CanBuild; }
+	int GetFamilyRent() const { return FamilyRent; }
 	int GetRent1Houses() const { return Rent1Houses; }
 	int GetRent2Houses() const { return Rent2Houses; }
 	int GetRent3Houses() const { return Rent3Houses; }
@@ -59,13 +62,19 @@ private:
 	UStaticMeshComponent* Hotel;
 
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
+	FString FamilyColor;
+	
+	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	UMaterial* Color;
 
+	UPROPERTY(meta = (AllowPrivateAccess = true))
+	bool CanBuild = false;
+	
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	int BuildingCost;
 	
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
-	int SetRent;
+	int FamilyRent;
 
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	int Rent1Houses;
@@ -82,7 +91,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	int RentHotel;
 
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	int BuildingCount = 0;
 	
 };

@@ -6,6 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "BLPGameState.generated.h"
 
+class ABLPCameraManager;
 class ABLPSpace;
 class ABLPPropertySpace;
 class ABLPPlayerState;
@@ -18,6 +19,8 @@ class BLOCKOPOLY_API ABLPGameState : public AGameState
 	typedef void (ABLPGameState::*BLPGameStateFuncPtr)(ABLPPlayerState* PlayerStatePtr);
 	
 public:
+	ABLPCameraManager* GetCameraManager() const { return BLPCameraManagerPtr; }
+	
 	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
 	ABLPSpace* GetSpaceFromId(const int& ID) const;
 	ABLPPlayerState* GetBLPPlayerStateFromId(const int& ID) const;
@@ -46,10 +49,14 @@ public:
 	void AddRollNotificationToUI(const FString& PlayerName, const int& Number);
 	void AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description);
 
+
 protected:
 	virtual void BeginPlay() override;
 	
 private:
+	UPROPERTY()
+	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "General Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPSpace*> SpaceList;
 

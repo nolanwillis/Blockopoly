@@ -4,9 +4,12 @@
 #include "BLPPlayerState.h"
 #include "../BLPPlayerController.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
-#include "Blockopoly/Framework/Pawns/BLPAvatar.h"
-#include "Blockopoly/Items/Spaces/BLPEstatePropertySpace.h"
+#include "../Pawns/BLPAvatar.h"
+#include "../../Items/Spaces/BLPEstatePropertySpace.h"
+#include "../../BLPCameraManager.h"
+
 #include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
 
 void ABLPGameState::BeginPlay()
 {
@@ -19,6 +22,11 @@ void ABLPGameState::BeginPlay()
 		if (!FirstPlayer) return;
 		FirstPlayer->SetIsItMyTurn(true);
 	}
+	
+	const UWorld* World = GetWorld();
+	if (!World) return;
+	BLPCameraManagerPtr = Cast<ABLPCameraManager>(UGameplayStatics::GetActorOfClass(World, ABLPCameraManager::StaticClass()));
+	if (!BLPCameraManagerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPCameraManagerPtr is null")); return; } 
 }
 
 // Returns the player state of the owner of a given property

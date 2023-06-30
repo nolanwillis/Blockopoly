@@ -11,16 +11,16 @@ struct FSpawnPoint;
 class ABLPPropertySpace;
 class ABLPPlayerState;
 
-DECLARE_MULTICAST_DELEGATE(FItsMyTurnSignature);
-DECLARE_MULTICAST_DELEGATE(FItsNotMyTurnSignature);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
-DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FPlayerCountSignature);
+DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
 DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
 DECLARE_DELEGATE_ThreeParams(FNotificationSignature, const FString& Type, const FString& Heading, const FString& Description);
+DECLARE_MULTICAST_DELEGATE(FItsMyTurnSignature);
+DECLARE_MULTICAST_DELEGATE(FItsNotMyTurnSignature);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
 
 /**
  * 
@@ -40,7 +40,7 @@ public:
 	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value > 0 ? CreditBalance+Value : 0; OnRep_CreditBalance();}
 	
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
-	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value;}
+	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; }
 
 	FSpawnPoint* GetCurrentSpawnPoint() const { return CurrentSpawnPoint; }
 	void SetCurrentSpawnPoint(FSpawnPoint* Value){ CurrentSpawnPoint = Value; }

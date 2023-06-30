@@ -11,7 +11,6 @@
 ABLPPropertySpace::ABLPPropertySpace()
 {
 	bReplicates = true;
-	
 }
 
 // Called when the game starts or when spawned

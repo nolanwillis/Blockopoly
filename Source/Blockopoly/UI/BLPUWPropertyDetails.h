@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
+#include "Components/Button.h"
 #include "BLPUWPropertyDetails.generated.h"
 
 class ABLPPropertySpace;
 class UTextBlock;
+class UButton;
 class UBorder;
+class UWidgetSwitcher;
 
 /**
  * 
@@ -19,7 +22,7 @@ class BLOCKOPOLY_API UBLPUWPropertyDetails : public UBLPUserWidget
 	GENERATED_BODY()
 
 public:
-	void Refresh(ABLPPropertySpace* PropertySpace) const;
+	void Refresh(const bool& IsItMyTurn, ABLPPropertySpace* PropertySpace, UButton* BuildBtn, UTextBlock* MortgageBtnText) const;
 	
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -27,9 +30,11 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PropertyNameText;
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* Rent0Text;
+	UTextBlock* CurrentRentText;
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* SetRentText;
+	UTextBlock* BaseRentText;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* FamilyRentText;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Rent1Text;
 	UPROPERTY(meta = (BindWidget))
@@ -41,8 +46,12 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Rent5Text;
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* MortgageText;
+	UTextBlock* MortgagePriceText;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MortgageDescText;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* BuildingCostText;
+	UPROPERTY(meta = (BindWidget))
+	UWidgetSwitcher* WidgetSwitcher;
 	
 };

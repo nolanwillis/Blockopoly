@@ -20,12 +20,15 @@ public:
 	// Accessors
 	int32 GetOwnerID() const { return OwnerID; }
 	void SetOwnerID(const int32& Value) { OwnerID = Value; }
-	int GetRent() const { return Rent; }
-	void SetRent(const int& Value) { Rent = Value; }
+	int GetCurrentRent() const { return CurrentRent; }
+	void SetCurrentRent(const int& Value) { CurrentRent = Value; }
+	int GetBaseRent() const { return BaseRent; }
 	int GetPurchaseCost() const { return PurchaseCost; }
 	void SetPurchaseCost (const int& Value) { PurchaseCost = Value; }
 	int GetMortgageValue() const { return MortgageValue; }
 	void SetMortgageValue(const int& Value) { MortgageValue = Value; }
+	bool GetIsMortgaged() const { return IsMortgaged; }
+	void SetIsMortgaged(const bool& Value) { IsMortgaged = Value; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -37,12 +40,18 @@ private:
 	int32 OwnerID = -1;
 
 	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
-	int Rent;
+	int BaseRent;
+	
+	UPROPERTY()
+	int CurrentRent;
 
 	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
 	int PurchaseCost;
 	
 	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
 	int MortgageValue;
+
+	UPROPERTY()
+	bool IsMortgaged;
 };
 

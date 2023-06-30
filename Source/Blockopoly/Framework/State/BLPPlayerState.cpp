@@ -94,7 +94,7 @@ void ABLPPlayerState::OnRep_OwnedPropertyList() const
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
 	for (ABLPPropertySpace* Property : OwnedPropertyList)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("|Name: %s | Rent: %d|"), *Property->GetName(), Property->GetRent());
+		UE_LOG(LogTemp, Warning, TEXT("|Name: %s | Rent: %d|"), *Property->GetName(), Property->GetCurrentRent());
 	}
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
 }

@@ -4,8 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
+#include "Components/Button.h"
 #include "BLPUWPropertyMenu.generated.h"
 
+class UTextBlock;
+class UBLPUWPropertyTitle;
+class ABLPPlayerState;
+class ABLPGameState;
+class ABLPPlayerController;
 class ABLPPropertySpace;
 class UButton;
 class UWrapBox;
@@ -25,14 +31,24 @@ public:
 
 	UFUNCTION()
 	void RefreshPropertyWrapBox();
-	
-	void RefreshPropertyDetails(ABLPPropertySpace* PropertySpace) const;
 
+	UFUNCTION()
+	void RefreshPropertyDetails() const;
+
+	void SetSelectedPropertySpace(ABLPPropertySpace* Value) { SelectedPropertySpace = Value; }
+	
+	void SetSelectedPropertyTitle(UBLPUWPropertyTitle* Value) { SelectedPropertyTitle = Value; }
 
 protected:
-	virtual bool Initialize();
+	virtual void NativeConstruct() override;
 
 private:
+	UPROPERTY()
+	ABLPPropertySpace* SelectedPropertySpace;
+
+	UPROPERTY()
+	UBLPUWPropertyTitle* SelectedPropertyTitle;
+	
 	UPROPERTY(meta = (BindWidget))
 	UButton* BackBtn;
 	
@@ -41,6 +57,9 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* MortgageBtn;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MortgageBtnText;
 
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox* PropertyWrapBox;
@@ -65,7 +84,4 @@ private:
 
 	UFUNCTION()
 	void ItsNotMyTurn();
-	
-	
-	
 };

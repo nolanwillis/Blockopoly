@@ -17,5 +17,8 @@ void UBLPUWPropertyTitle::Setup(UBLPUWPropertyMenu* InParent, ABLPPropertySpace*
 
 void UBLPUWPropertyTitle::OnClick()
 {
-	Parent->RefreshPropertyDetails(AssociatedProperty);
+	Parent->SetSelectedPropertySpace(AssociatedProperty);
+	Parent->SetSelectedPropertyTitle(this);
+	Parent->RefreshPropertyDetails();
 }
+

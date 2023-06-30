@@ -30,10 +30,7 @@ class BLOCKOPOLY_API ABLPSpace : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABLPSpace();
-
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	
 	// Accessors
 	FString GetName() { return Name; }
 	int GetSpaceID() const { return SpaceID; }

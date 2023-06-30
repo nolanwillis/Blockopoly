@@ -10,23 +10,22 @@ void ABLPGMClassic::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	const ABLPGameState* GameStatePtr = GetGameState<ABLPGameState>();
-	
-	TArray<TObjectPtr<APlayerState>> PlayerArray = GameStatePtr->PlayerArray;
+	const ABLPGameState* BLPGameStatePtr = GetGameState<ABLPGameState>();
+	ABLPPlayerState* BLPPlayerStatePtr = NewPlayer->GetPlayerState<ABLPPlayerState>();
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPGameStatePtr is null")); return; }
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
 
-	ABLPPlayerState* NewBLPPlayerStatePtr = NewPlayer->GetPlayerState<ABLPPlayerState>();
-	if (!NewBLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
-	NewBLPPlayerStatePtr->SetBLPPlayerId(PlayerArray.Num()-1);
+	TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
+
+	BLPPlayerStatePtr->SetBLPPlayerId(PlayerArray.Num()-1);
 
 	// Tell all the player controllers to update their UI when a new player enters
-	for (APlayerState* PlayerStatePtr : PlayerArray)
+	for (APlayerState* PlayerState : PlayerArray)
 	{
-		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
-		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
-		BLPPlayerStatePtr->SetPlayerCount(PlayerArray.Num());
+		ABLPPlayerState* BLPPlayerState = Cast<ABLPPlayerState>(PlayerState);
+		if (!BLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerState->SetPlayerCount(PlayerArray.Num());
 	}
-
-	// Should also do the same on logout...
 }
 
 

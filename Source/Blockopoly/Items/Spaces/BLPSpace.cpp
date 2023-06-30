@@ -12,7 +12,7 @@
 ABLPSpace::ABLPSpace()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	Root = CreateDefaultSubobject<UBoxComponent>(TEXT("Root"));
 	RootComponent = Root;
@@ -41,32 +41,22 @@ void ABLPSpace::BeginPlay()
 	Super::BeginPlay();
 
 	// Set the location of spawn points
-	SpawnPoint0.Transform.SetLocation(FVector(0, -75, 20));
 	SpawnPoint0.Index = 0;
 	SpawnPoint0.Taken = false;
-	SpawnPoint1.Transform.SetLocation(FVector(0, 75, 20));
 	SpawnPoint1.Index = 1;
 	SpawnPoint1.Taken = false;
-	SpawnPoint2.Transform.SetLocation(FVector(-110, -75, 20));
 	SpawnPoint2.Index = 2;
 	SpawnPoint2.Taken = false;
-	SpawnPoint3.Transform.SetLocation(FVector(-110, 75, 20));
 	SpawnPoint3.Index = 3;
 	SpawnPoint3.Taken = false;
 
 	// Add self to SpaceList in GameState
-	ABLPGameState* GameState = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	if (GameState)
+	ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+	if (BLPGameStatePtr)
 	{
-		GameState->AddToSpaceList(this);
+		BLPGameStatePtr->AddToSpaceList(this);
 	}
 }
 
-// Called every frame
-void ABLPSpace::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 

@@ -7,6 +7,7 @@
 #include "BLPUWPropertyTitle.h"
 #include "../Framework/BLPPlayerController.h"
 #include "../Framework/State/BLPPlayerState.h"
+#include "../Framework/State/BLPGameState.h"
 #include "../Items/Spaces/BLPPropertySpace.h"
 #include "../Items/Spaces/BLPEstatePropertySpace.h"
 
@@ -25,56 +26,51 @@ UBLPUWPropertyMenu::UBLPUWPropertyMenu()
 	PropertyTitleClass = WBP_PropertyTitle.Class;
 }
 
-bool UBLPUWPropertyMenu::Initialize()
+void UBLPUWPropertyMenu::NativeConstruct()
 {
-	// Call parent version of function and store result in variable
-	const bool Success = Super::Initialize();
-	if (!Success) return false;
+	// Call parent version of function
+	Super::NativeConstruct();
 
 	// Bind button callbacks
-	if (!BackBtn) return false;
+	if (!BackBtn) return;
 	BackBtn->OnClicked.AddDynamic(this, &UBLPUWPropertyMenu::BackBtnClicked);
-	if (!BuildBtn) return false;
+	if (!BuildBtn) return;
 	BuildBtn->OnClicked.AddDynamic(this, &UBLPUWPropertyMenu::BuildBtnClicked);
-	if (!MortgageBtn) return false;
+	if (!MortgageBtn) return;
 	MortgageBtn->OnClicked.AddDynamic(this, &UBLPUWPropertyMenu::MortgageBtnClicked);
 
-	// Bind functions to delegates in PlayerState
-	ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null")); return false; }
-	
-	PlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWPropertyMenu::ItsMyTurn);
-	PlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWPropertyMenu::ItsNotMyTurn);
-	
-	return true;
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
+
+	BLPPlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWPropertyMenu::ItsMyTurn);
+	BLPPlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWPropertyMenu::ItsNotMyTurn);
 }
 
 void UBLPUWPropertyMenu::RefreshPropertyWrapBox()
 {
 	PropertyWrapBox->ClearChildren();
+
+	UWorld* WorldPtr = GetWorld();
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+
+	if (!WorldPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWPropertyMenu: World is null")); return; }
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
 	
-	// Note: call this function whenever the property menu is opened from main hud class
-	UWorld* World = GetWorld();
-	if (!World) return;
-	const ABLPPlayerController* PlayerController = Cast<ABLPPlayerController> (GetOwningLocalPlayer()->GetPlayerController(World));
-	if (!PlayerController) return;
-	const ABLPPlayerState* PlayerState = PlayerController->GetPlayerState<ABLPPlayerState>();
-	if (!PlayerState) return;
-	
-	TArray<ABLPPropertySpace*> OwnedPropertyList = PlayerState->GetOwnedPropertyList();
+	TArray<ABLPPropertySpace*> OwnedPropertyList = BLPPlayerStatePtr->GetOwnedPropertyList();
 	for (ABLPPropertySpace* Property : OwnedPropertyList)
 	{
-		UBLPUWPropertyTitle* PropertyTitle = CreateWidget<UBLPUWPropertyTitle>(World, PropertyTitleClass);
+		UBLPUWPropertyTitle* PropertyTitle = CreateWidget<UBLPUWPropertyTitle>(WorldPtr, PropertyTitleClass);
 		if (!PropertyTitle) return;
 
 		PropertyTitle->Setup(this, Property);
 		PropertyTitle->PropertyNameText->SetText(FText::FromString(Property->GetName()));
 
 		// Only set the color of the inner border if it's an EstateProperty
-		if (const ABLPEstatePropertySpace* EstateProperty = Cast<ABLPEstatePropertySpace>(Property))
+		if (const ABLPEstatePropertySpace* EstatePropertySpace = Cast<ABLPEstatePropertySpace>(Property))
 		{
 			FLinearColor CurrColor;
-			EstateProperty->GetColor()->GetMaterial()->GetVectorParameterValue(TEXT("Color"), CurrColor);
+			EstatePropertySpace->GetColor()->GetMaterial()->GetVectorParameterValue(TEXT("Color"), CurrColor);
 
 			PropertyTitle->InnerBorder->SetBrushColor(CurrColor);
 		}
@@ -83,9 +79,14 @@ void UBLPUWPropertyMenu::RefreshPropertyWrapBox()
 	}
 }
 
-void UBLPUWPropertyMenu::RefreshPropertyDetails(ABLPPropertySpace* PropertySpace) const
+void UBLPUWPropertyMenu::RefreshPropertyDetails() const
 {
-	PropertyDetails->Refresh(PropertySpace);
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
+	
+	if (!SelectedPropertySpace) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: SelectedPropertySpace is null")); return; }
+	PropertyDetails->Refresh(BLPPlayerStatePtr->GetIsItMyTurn(), SelectedPropertySpace, BuildBtn, MortgageBtnText);
 }
 
 void UBLPUWPropertyMenu::BackBtnClicked()
@@ -101,19 +102,73 @@ void UBLPUWPropertyMenu::BackBtnClicked()
 
 void UBLPUWPropertyMenu::BuildBtnClicked()
 {
+	UWorld* WorldPtr = GetWorld();
+	if (!WorldPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWPropertyMenu: World is null")); return; }
+	ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
+	ABLPGameState* BLPGameStatePtr = WorldPtr->GetGameState<ABLPGameState>();
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 
+	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerControllerPtr is null")); return; }
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null")); return; }	
+
+	if (!BLPPlayerStatePtr->GetIsItMyTurn()) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: It's not your turn")); return; }
+
+	if (const ABLPEstatePropertySpace* EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(SelectedPropertySpace))
+	{
+		if (!EstatePropertySpacePtr->GetCanBuild()) { UE_LOG(LogTemp, Warning, TEXT("BLPUWPropertyMenu: You're not allowed to build on the selected estate property")); return;}
+		
+		BLPPlayerControllerPtr->Server_BuyBuilding(BLPPlayerStatePtr, BLPGameStatePtr, EstatePropertySpacePtr->GetSpaceID());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Estate property not selected"));
+	}
 	UE_LOG(LogTemp, Warning, TEXT("BuildBtn Clicked1"));
 }
 
 void UBLPUWPropertyMenu::MortgageBtnClicked()
 {
+	UWorld* WorldPtr = GetWorld();
+	if (!WorldPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWPropertyMenu: World is null")); return; }
+	ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
+	ABLPGameState* BLPGameStatePtr = WorldPtr->GetGameState<ABLPGameState>();
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+
+	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerControllerPtr is null")); return; }
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null")); return; }	
+
+	if (!BLPPlayerStatePtr->GetIsItMyTurn()) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: It's not your turn")); return; }
+
+	if (!SelectedPropertySpace) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: No property was selected")); return; }
+	
+	// If property is already mortgaged this button should unmortgage the property
+	if (SelectedPropertySpace->GetIsMortgaged())
+	{
+		BLPPlayerControllerPtr->Server_UnMortgagePropertySpace(BLPPlayerStatePtr, BLPGameStatePtr, SelectedPropertySpace->GetSpaceID());
+	}
+	else
+	{
+		BLPPlayerControllerPtr->Server_MortgagePropertySpace(BLPPlayerStatePtr, BLPGameStatePtr, SelectedPropertySpace->GetSpaceID());
+	}
+	
+	
 	UE_LOG(LogTemp, Warning, TEXT("MortgageBtn Clicked"));
+
+	RefreshPropertyDetails();
 }
 
 void UBLPUWPropertyMenu::ItsMyTurn()
 {
 	MortgageBtn->SetVisibility(ESlateVisibility::Visible);
-	BuildBtn->SetVisibility(ESlateVisibility::Visible);
+	if (const ABLPEstatePropertySpace* EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(SelectedPropertySpace))
+	{
+		if (EstatePropertySpacePtr->GetCanBuild())
+		{
+			BuildBtn->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
 }
 
 void UBLPUWPropertyMenu::ItsNotMyTurn()
