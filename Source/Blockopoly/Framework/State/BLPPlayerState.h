@@ -10,6 +10,7 @@
 struct FSpawnPoint;
 class ABLPPropertySpace;
 class ABLPPlayerState;
+class ABLPCameraManager;
 
 DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FPlayerCountSignature);
@@ -120,6 +121,9 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_HasRolled)
 	bool HasRolled = false;
 
+	UPROPERTY()
+	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
+	
 	UFUNCTION()
 	void OnRep_CreditBalance() const;
 	

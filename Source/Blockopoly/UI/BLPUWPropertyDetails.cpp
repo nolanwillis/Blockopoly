@@ -16,6 +16,7 @@ void UBLPUWPropertyDetails::Refresh(const bool& IsItMyTurn, ABLPPropertySpace* P
 	
 	PropertyNameText->SetText(FText::FromString(PropertySpace->GetName()));
 	CurrentRentText->SetText(FText::AsNumber(PropertySpace->GetCurrentRent()));
+	BaseRentText->SetText(FText::AsNumber(PropertySpace->GetBaseRent()));
 	MortgagePriceText->SetText(FText::AsNumber(PropertySpace->GetMortgageValue()));
 	const FString MortgageDescription = "Pay " + FString::FromInt(PropertySpace->GetMortgageValue()) + "M to reacquire";
 	MortgageDescText->SetText(FText::FromString(MortgageDescription));
@@ -25,8 +26,6 @@ void UBLPUWPropertyDetails::Refresh(const bool& IsItMyTurn, ABLPPropertySpace* P
 		FLinearColor CurrColor;
 		EstatePropertySpace->GetColor()->GetMaterial()->GetVectorParameterValue(TEXT("Color"), CurrColor);
 		InnerBorder->SetBrushColor(CurrColor);
-		
-		FamilyRentText->SetText(FText::AsNumber(EstatePropertySpace->GetFamilyRent()));
 		Rent1Text->SetText(FText::AsNumber(EstatePropertySpace->GetRent1Houses()));
 		Rent2Text->SetText(FText::AsNumber(EstatePropertySpace->GetRent2Houses()));
 		Rent3Text->SetText(FText::AsNumber(EstatePropertySpace->GetRent3Houses()));

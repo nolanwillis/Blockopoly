@@ -34,8 +34,6 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* BaseRentText;
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* FamilyRentText;
-	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Rent1Text;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Rent2Text;

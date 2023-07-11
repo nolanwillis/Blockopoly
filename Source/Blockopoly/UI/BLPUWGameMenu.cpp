@@ -117,6 +117,8 @@ void UBLPUWGameMenu::RollBtnClicked()
 	ABLPAvatar* AvatarPtr = GetOwningPlayerPawn<ABLPAvatar>();
 	
 	PlayerControllerPtr->Server_Roll(AvatarPtr, PlayerStatePtr, GameStatePtr);
+
+	RollBtn->SetVisibility(ESlateVisibility::Hidden);
 	
 	UE_LOG(LogTemp, Warning, TEXT("Roll button clicked"));
 }
@@ -143,18 +145,27 @@ void UBLPUWGameMenu::ItsMyTurn()
 	
 	YourTurnText->SetText(FText::FromString("It's your turn"));
 
-	if (PlayerStatePtr->GetJailCounter() == 0) RollBtn->SetVisibility(ESlateVisibility::Visible);
+	if (PlayerStatePtr->GetJailCounter() == 0)
+	{
+		// Only let RollBtn be visible if not in jail.
+		RollBtn->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		// If in jail, pass true in to HasRolled() so FinishTurnBtn becomes visible.
+		HasRolled(true);
+	}
 }
 
 void UBLPUWGameMenu::ItsNotMyTurn()
 {
 	const UWorld* World = GetWorld();
 	if (!World) return;
-	ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>();
+	const ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>();
 	if (!GameStatePtr) return;
 	
 	const int PlayerUpIndex = GameStatePtr->GetPlayerUpId();
-	ABLPPlayerState* PlayerUpBLPPlayerState = GameStatePtr->GetBLPPlayerStateFromId(PlayerUpIndex);
+	const ABLPPlayerState* PlayerUpBLPPlayerState = GameStatePtr->GetBLPPlayerStateFromId(PlayerUpIndex);
 
 	if (!PlayerUpBLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerUpBLPPlayerState is null")); return; }
 	const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
@@ -185,6 +196,7 @@ void UBLPUWGameMenu::InJail(const int TurnsLeft)
 	InJailText->SetText( FText::FromString(Message));
 	InJailText->SetVisibility(ESlateVisibility::Visible);
 	InJailImage->SetVisibility(ESlateVisibility::Visible);
+	RollBtn->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UBLPUWGameMenu::OutOfJail()

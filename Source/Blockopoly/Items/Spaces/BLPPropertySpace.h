@@ -39,7 +39,7 @@ private:
 	UPROPERTY(Replicated, EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
 	int32 OwnerID = -1;
 
-	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
 	int BaseRent;
 	
 	UPROPERTY()

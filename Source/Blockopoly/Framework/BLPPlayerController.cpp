@@ -12,6 +12,7 @@
 #include "../Items/Spaces/BLPGoToJailSpace.h"
 #include "../Items/Spaces/BLPJailSpace.h"
 #include "../UI/BLPUWGameMenu.h"
+#include "Blockopoly/Items/Spaces/BLPTaxSpace.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
@@ -42,12 +43,15 @@ void ABLPPlayerController::BeginPlayingState()
 void ABLPPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Required, otherwise the camera target will sometimes default to player pawn. 
+	bAutoManageActiveCameraTarget=false;
 	
 	const UWorld* World = GetWorld();
 	if (!World) return;
 	BLPCameraManagerPtr = Cast<ABLPCameraManager>(UGameplayStatics::GetActorOfClass(World, ABLPCameraManager::StaticClass()));
-
-	SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(0), 0.2f);
+	
+	SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(0), 0.0f);
 }
 
 // Server RPC that simulates a dice roll
@@ -60,6 +64,12 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 	if (!PlayerStatePtr->GetIsItMyTurn())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
+		return;
+	}
+
+	if (PlayerStatePtr->GetHasRolled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You've already rolled!"));
 		return;
 	}
 
@@ -86,27 +96,23 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 	}
 	
 	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
+	PlayerStatePtr->SetHasRolled(true);
 
 	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
 
 	GameStatePtr->AddRollNotificationToUI(PlayerStatePtr->GetPlayerName(), DiceValue);
-
-
 }
 bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
 void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
+	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	
 	if (GetRemoteRole() == ROLE_AutonomousProxy)
 	{
 		PlayerStatePtr->Client_SimulateMoveLocally(PlayerStatePtr->GetCurrentSpaceId());
 	}
-
-	// Camera changing 
-	SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(PlayerStatePtr->GetCurrentSpaceId()/10), 0.8f);
 	
 	ApplySpaceEffect(PlayerStatePtr, GameStatePtr);
 	
@@ -295,7 +301,7 @@ bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* Pla
 }
 
 // Moves player (should always be called from the server)
-void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
+void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)
 {
 	for (ABLPSpace* Space : SpaceList)
 	{
@@ -325,13 +331,14 @@ void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 			
 			UE_LOG(LogTemp, Warning, TEXT("SpawnPointId: %d, Location: %s" ), NewSpawnPoint->Index, *(NewSpawnPoint->Transform).ToString());
 			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
-			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator();
+			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator(); 
 			AvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
+			SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(PlayerStatePtr->GetCurrentSpaceId()/10), 0.8f);
 		}
 	}
 }
 
-void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList) const
+void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)
 {
 	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(PlayerStatePtr->GetPawn());
 	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: AvatarPtr is null")); return; }
@@ -442,7 +449,7 @@ void ABLPPlayerController::UpdateRent(ABLPEstatePropertySpace* EstatePropertySpa
 }
 
 // Applies correct side effect depending on what space is landed on
-void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const
+void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
@@ -476,6 +483,11 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GO TO JAIL!!"));
 		SendToJail(PlayerStatePtr, GameStatePtr->GetSpaceList());
+	}
+	else if (Cast<ABLPTaxSpace>(EnteredSpace))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Taxes Collected"));
+		PlayerStatePtr->AddToBalance(-100);
 	}
 }
 

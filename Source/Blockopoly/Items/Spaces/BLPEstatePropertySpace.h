@@ -26,7 +26,6 @@ public:
 	int GetBuildingCost() const { return BuildingCost; }
 	void SetCanBuild(const bool& Value) { CanBuild = Value; }
 	bool GetCanBuild() const { return CanBuild; }
-	int GetFamilyRent() const { return FamilyRent; }
 	int GetRent1Houses() const { return Rent1Houses; }
 	int GetRent2Houses() const { return Rent2Houses; }
 	int GetRent3Houses() const { return Rent3Houses; }
@@ -72,9 +71,6 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	int BuildingCost;
-	
-	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
-	int FamilyRent;
 
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	int Rent1Houses;
@@ -93,5 +89,4 @@ private:
 
 	UPROPERTY()
 	int BuildingCount = 0;
-	
 };

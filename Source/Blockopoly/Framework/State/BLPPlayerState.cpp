@@ -6,6 +6,8 @@
 #include "../../Items/Spaces/BLPSpace.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
 #include "../../Items/Spaces/BLPJailSpace.h"
+#include "../../BLPCameraManager.h"
+#include "Blockopoly/Framework/BLPPlayerController.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -22,13 +24,13 @@ bool ABLPPlayerState::Client_AddNotification_Validate(const FString& Type, const
 
 void ABLPPlayerState::Client_SimulateMoveLocally_Implementation(const int NewSpaceId)
 {
-	ABLPAvatar* AvatarPtr = Cast<ABLPAvatar>(GetPawn());
-	ABLPGameState* GameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+	ABLPAvatar* BLPAvatarPtr = Cast<ABLPAvatar>(GetPawn());
+	const ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
 	
-	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PS")); return; }
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("AvatarPtr is null, from PS")); return; }
+	if (!BLPAvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerState: BLPAvatarPtr is null")); return; }
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerState: BLPGameStatePtr is null")); return; }
 
-	TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
+	TArray<ABLPSpace*> SpaceList = BLPGameStatePtr->GetSpaceList();
 	
 	for (ABLPSpace* Space : SpaceList)
 	{
@@ -53,7 +55,7 @@ void ABLPPlayerState::Client_SimulateMoveLocally_Implementation(const int NewSpa
 			
 			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
 			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator();
-			AvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
+			BLPAvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
 		}
 	}
 }
@@ -61,6 +63,8 @@ bool ABLPPlayerState::Client_SimulateMoveLocally_Validate(const int NewSpaceId)
 {
 	return true;
 }
+
+
 
 // Notifies UI of credit change, so UI reflects correct credit amount
 void ABLPPlayerState::OnRep_CreditBalance() const

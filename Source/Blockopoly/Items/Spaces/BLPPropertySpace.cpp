@@ -33,6 +33,9 @@ void ABLPPropertySpace::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("WorldPtr is null, from PropertySpace"));
 	}
+
+	// Initialize the rent for the property to the value of BaseRent 
+	CurrentRent = BaseRent;
 }
 
 void ABLPPropertySpace::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
