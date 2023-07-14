@@ -19,6 +19,9 @@ class BLOCKOPOLY_API ABLPGameState : public AGameState
 	typedef void (ABLPGameState::*BLPGameStateFuncPtr)(ABLPPlayerState* PlayerStatePtr);
 	
 public:
+	TArray<int> GetReadyStatusArray() const { return ReadyStatusArray; }
+	void SetReadyStatusArray(const TArray<int>& Value) { ReadyStatusArray = Value; OnRep_ReadyStatusArray(); }
+    	
 	ABLPCameraManager* GetCameraManager() const { return BLPCameraManagerPtr; }
 	
 	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
@@ -54,6 +57,12 @@ protected:
 	virtual void BeginPlay() override;
 	
 private:
+	UPROPERTY(ReplicatedUsing=OnRep_ReadyStatusArray)
+	TArray<int> ReadyStatusArray = {0, 0, 0, 0};
+	
+	UFUNCTION()
+	void OnRep_ReadyStatusArray();
+	
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
 	

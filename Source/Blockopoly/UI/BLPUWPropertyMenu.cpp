@@ -5,7 +5,7 @@
 
 #include "BLPUWPropertyDetails.h"
 #include "BLPUWPropertyTitle.h"
-#include "../Framework/BLPPlayerController.h"
+#include "../Framework/Controllers/BLPPlayerController.h"
 #include "../Framework/State/BLPPlayerState.h"
 #include "../Framework/State/BLPGameState.h"
 #include "../Items/Spaces/BLPPropertySpace.h"

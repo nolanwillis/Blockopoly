@@ -2,7 +2,7 @@
 
 #include "BLPGameState.h"
 #include "BLPPlayerState.h"
-#include "../BLPPlayerController.h"
+#include "../Controllers/BLPPlayerController.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
 #include "../Pawns/BLPAvatar.h"
 #include "../../Items/Spaces/BLPEstatePropertySpace.h"
@@ -27,6 +27,16 @@ void ABLPGameState::BeginPlay()
 	if (!World) return;
 	BLPCameraManagerPtr = Cast<ABLPCameraManager>(UGameplayStatics::GetActorOfClass(World, ABLPCameraManager::StaticClass()));
 	if (!BLPCameraManagerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPCameraManagerPtr is null")); return; } 
+}
+
+void ABLPGameState::OnRep_ReadyStatusArray()
+{
+	for (APlayerState* PlayerStatePtr : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameStateLobby: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->Client_RefreshUI();
+	}
 }
 
 // Returns the player state of the owner of a given property
@@ -586,4 +596,5 @@ void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ABLPGameState, CurrentChanceCardIndex);
 	DOREPLIFETIME(ABLPGameState, CurrentChestCardIndex);
 	DOREPLIFETIME(ABLPGameState, PlayerUpId);
+	DOREPLIFETIME(ABLPGameState, ReadyStatusArray);
 }

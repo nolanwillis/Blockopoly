@@ -6,7 +6,7 @@
 #include "BLPUWPropertyMenu.h"
 #include "BLPUWPlayerCard.h"
 #include "../Framework/Pawns/BLPAvatar.h"
-#include "../Framework/BLPPlayerController.h"
+#include "../Framework/Controllers/BLPPlayerController.h"
 #include "../Framework/State/BLPGameState.h"
 #include "../Framework/State/BLPPlayerState.h"
 
@@ -58,13 +58,13 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null")); return; }
 	
+	PlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
 	PlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsMyTurn);
 	PlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsNotMyTurn);
 	PlayerStatePtr->OnBalanceChangedDelegate.AddUObject(this, &UBLPUWGameMenu::UpdateBalance);
 	PlayerStatePtr->InJailDelegate.BindUObject(this, &UBLPUWGameMenu::InJail);
 	PlayerStatePtr->OutOfJailDelegate.BindUObject(this, &UBLPUWGameMenu::OutOfJail);
 	PlayerStatePtr->JailSkipDelegate.BindUObject(this, &UBLPUWGameMenu::UpdateJailSkipCounter);
-	PlayerStatePtr->PlayerCountDelegate.BindUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
 	PlayerStatePtr->CanBuyDelegate.BindUObject(this, &UBLPUWGameMenu::CanBuy);
 	PlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
 	PlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);

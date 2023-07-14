@@ -14,7 +14,12 @@ UCLASS()
 class BLOCKOPOLY_API ABLPGMClassic : public ABLPGameMode
 {
 	GENERATED_BODY()
+	
+public:
+	void StartGame();
 
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void Logout(AController* Exiting) override;
+	
 };

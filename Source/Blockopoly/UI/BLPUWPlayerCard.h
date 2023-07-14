@@ -20,7 +20,4 @@ class BLOCKOPOLY_API UBLPUWPlayerCard : public UBLPUserWidget
 public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PlayerNameText;
-
-	UPROPERTY(meta = (BindWidget))
-	UBorder* InnerBorder;
 };

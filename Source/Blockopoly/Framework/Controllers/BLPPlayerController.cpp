@@ -1,18 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-#include "BLPPlayerController.h"
-#include "../BLPCameraManager.h"
-#include "./Pawns/BLPAvatar.h"
-#include "./State/BLPGameState.h"
-#include "./State/BLPPlayerState.h"
-#include "../Items/Spaces/BLPSpace.h"
-#include "../Items/Spaces/BLPChanceSpace.h"
-#include "../Items/Spaces/BLPChestSpace.h"
-#include "../Items/Spaces/BLPPropertySpace.h"
-#include "../Items/Spaces/BLPEstatePropertySpace.h"
-#include "../Items/Spaces/BLPGoToJailSpace.h"
-#include "../Items/Spaces/BLPJailSpace.h"
-#include "../UI/BLPUWGameMenu.h"
-#include "Blockopoly/Items/Spaces/BLPTaxSpace.h"
+#include "./BLPPlayerController.h"
+#include "../../BLPCameraManager.h"
+#include "../Pawns/BLPAvatar.h"
+#include "../State/BLPGameState.h"
+#include "../State/BLPPlayerState.h"
+#include "../../Items/Spaces/BLPSpace.h"
+#include "../../Items/Spaces/BLPChanceSpace.h"
+#include "../../Items/Spaces/BLPChestSpace.h"
+#include "../../Items/Spaces/BLPPropertySpace.h"
+#include "../../Items/Spaces/BLPEstatePropertySpace.h"
+#include "../../Items/Spaces/BLPGoToJailSpace.h"
+#include "../../Items/Spaces/BLPJailSpace.h"
+#include "../..//Items/Spaces/BLPTaxSpace.h"
+#include "../../UI/BLPUWGameMenu.h"
+#include "../../UI/BLPUWLobbyMenu.h"
+#include "../GameModes/BLPGMClassic.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
@@ -24,6 +26,11 @@ ABLPPlayerController::ABLPPlayerController()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_GameMenu(TEXT("/Game/Core/UI/WBP_GameMenu"));
 	if (!WBP_GameMenu.Class) return;
 	GameMenuClass = WBP_GameMenu.Class;
+
+	// Gets reference to WBP_GameMenu.
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LobbyMenu(TEXT("/Game/Core/UI/WBP_LobbyMenu"));
+	if (!WBP_LobbyMenu.Class) return;
+	LobbyMenuClass = WBP_LobbyMenu.Class;
 }
 
 void ABLPPlayerController::BeginPlayingState()
@@ -32,18 +39,18 @@ void ABLPPlayerController::BeginPlayingState()
 
 	if (IsLocalPlayerController())
 	{
-		// Construct the a WBP_GameMenu
-		if (!GameMenuClass) return;
-		GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
-		if (!GameMenu) return;
-		GameMenu->Setup();
+		// Construct a WBP_LobbyMenu
+		if (!LobbyMenuClass) return;
+		LobbyMenu = CreateWidget<UBLPUWLobbyMenu>(this, LobbyMenuClass);
+		if (!LobbyMenu) return;
+		LobbyMenu->Setup();
 	}
 }
 
 void ABLPPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	// Required, otherwise the camera target will sometimes default to player pawn. 
 	bAutoManageActiveCameraTarget=false;
 	
@@ -53,6 +60,56 @@ void ABLPPlayerController::BeginPlay()
 	
 	SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(0), 0.0f);
 }
+
+// void ABLPPlayerController::PostSeamlessTravel()
+// {
+// 	Super::PostSeamlessTravel();
+//
+// 	// Remove the WBP_LobbyMenu
+// 	if (LobbyMenu) LobbyMenu->Remove();
+// 		
+// 	// Construct a WBP_GameMenu
+// 	if (!GameMenuClass) return;
+// 	GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
+// 	if (!GameMenu) return;
+// 	GameMenu->Setup();
+// }
+
+// Server RPC that starts the game from the lobby
+void ABLPPlayerController::Server_PlayGame_Implementation(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr)
+{
+	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerControllerLobby: BLPPlayerStateLobbyInPtr is null")); return; }
+	if (!BLPGameStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerControllerLobby: BLPGameStateLobbyInPtr is null")); return; }
+    	
+	if (!(BLPPlayerStateInPtr->GetLocalRole() == ROLE_Authority)) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerControllerLobby: Player dosen't have authority")); return; }
+    
+	TArray<int> ReadyStatusArray = BLPGameStateInPtr->GetReadyStatusArray();
+	int Count = 0;
+	for (const int& i : ReadyStatusArray) if(i) Count++;
+	if (Count != BLPGameStateInPtr->PlayerArray.Num()) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerControllerLobby: All players are not ready")); return; }
+	
+	UWorld* World = GetWorld();
+	if (!World) return;
+	ABLPGMClassic* BLPGMClassicPtr = Cast<ABLPGMClassic>(World->GetAuthGameMode());
+	BLPGMClassicPtr->StartGame();
+}
+bool ABLPPlayerController::Server_PlayGame_Validate(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr){ return true;}
+
+// Server RPC that toggles a players ready status for in the gamestate
+void ABLPPlayerController::Server_ToggleIsReady_Implementation(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr)
+{
+	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
+	if (!BLPGameStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPGameStatePtr is null")); return; }
+    
+	TArray<int> LocalReadyStatusArray = BLPGameStateInPtr->GetReadyStatusArray();
+	const int BLPPlayerId = BLPPlayerStateInPtr->GetBLPPlayerId();
+    
+	if (LocalReadyStatusArray[BLPPlayerId]) LocalReadyStatusArray[BLPPlayerId] = 0;
+	else LocalReadyStatusArray[BLPPlayerId] = 1;
+    
+	BLPGameStateInPtr->SetReadyStatusArray(LocalReadyStatusArray);
+}
+bool ABLPPlayerController::Server_ToggleIsReady_Validate(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr){ return true; }
 
 // Server RPC that simulates a dice roll
 void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -104,6 +161,7 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 }
 bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
+// Server RPC that fires when the dice roll notification is finished
 void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();

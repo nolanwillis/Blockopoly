@@ -20,12 +20,12 @@ const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 UBLPGameInstance::UBLPGameInstance(const FObjectInitializer& ObjectInitializer)
 {
 	// Gets reference to WBP_MainMenu
-	ConstructorHelpers::FClassFinder<UUserWidget> WBP_MainMenu(TEXT("/Game/Core/UI/WBP_MainMenu"));
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_MainMenu(TEXT("/Game/Core/UI/WBP_MainMenu"));
 	if (!WBP_MainMenu.Class) return;
 	MainMenuClass = WBP_MainMenu.Class;
 
 	// Gets reference to WBP_PauseMenu
-	ConstructorHelpers::FClassFinder<UUserWidget> WBP_PauseMenu(TEXT("/Game/Core/UI/WBP_PauseMenu"));
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_PauseMenu(TEXT("/Game/Core/UI/WBP_PauseMenu"));
 	if (!WBP_PauseMenu.Class) return;
 	PauseMenuClass = WBP_PauseMenu.Class;
 }

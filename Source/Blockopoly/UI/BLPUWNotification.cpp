@@ -2,7 +2,7 @@
 
 #include "./BLPUWNotification.h"
 #include "BLPUWGameMenu.h"
-#include "Blockopoly/Framework/BLPPlayerController.h"
+#include "../Framework/Controllers/BLPPlayerController.h"
 #include "Blockopoly/Framework/Pawns/BLPAvatar.h"
 #include "Blockopoly/Framework/State/BLPPlayerState.h"
 #include "Components/TextBlock.h"

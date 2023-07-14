@@ -6,8 +6,6 @@
 #include "../../Items/Spaces/BLPSpace.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
 #include "../../Items/Spaces/BLPJailSpace.h"
-#include "../../BLPCameraManager.h"
-#include "Blockopoly/Framework/BLPPlayerController.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -15,6 +13,12 @@ ABLPPlayerState::ABLPPlayerState()
 {
 	SetReplicates(true);
 }
+
+void ABLPPlayerState::Client_RefreshUI_Implementation()
+{
+	RefreshUIDelegate.Broadcast();
+}
+bool ABLPPlayerState::Client_RefreshUI_Validate(){ return true; }
 
 void ABLPPlayerState::Client_AddNotification_Implementation(const FString& Type, const FString& Heading, const FString& Description)
 {
@@ -59,12 +63,7 @@ void ABLPPlayerState::Client_SimulateMoveLocally_Implementation(const int NewSpa
 		}
 	}
 }
-bool ABLPPlayerState::Client_SimulateMoveLocally_Validate(const int NewSpaceId)
-{
-	return true;
-}
-
-
+bool ABLPPlayerState::Client_SimulateMoveLocally_Validate(const int NewSpaceId){ return true; }
 
 // Notifies UI of credit change, so UI reflects correct credit amount
 void ABLPPlayerState::OnRep_CreditBalance() const
@@ -123,7 +122,7 @@ void ABLPPlayerState::OnRep_JailSkipCounter()
 
 void ABLPPlayerState::OnRep_PlayerCount()
 {
-	PlayerCountDelegate.ExecuteIfBound();
+	RefreshUIDelegate.Broadcast();
 }
 
 void ABLPPlayerState::OnRep_CanBuyCurrentProperty()

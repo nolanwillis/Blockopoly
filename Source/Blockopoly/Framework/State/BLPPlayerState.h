@@ -11,9 +11,8 @@ struct FSpawnPoint;
 class ABLPPropertySpace;
 class ABLPPlayerState;
 class ABLPCameraManager;
-
 DECLARE_DELEGATE(FOutOfJailSignature);
-DECLARE_DELEGATE(FPlayerCountSignature);
+DECLARE_MULTICAST_DELEGATE(FRefreshUISignature);
 DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
@@ -69,24 +68,28 @@ public:
 	
 	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
 	void Client_AddNotification(const FString& Type, const FString& Heading, const FString& Description);
-	
+
+	UFUNCTION(Client, Unreliable, WithValidation)
+	void Client_RefreshUI();
+    
+    UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
+	void Client_SimulateMoveLocally(const int NewSpaceId);
+
 	FItsMyTurnSignature ItsMyTurnDelegate;
 	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
 	FInJailSignature InJailDelegate;
 	FOutOfJailSignature OutOfJailDelegate;
 	FJailSkipSignature JailSkipDelegate;
-	FPlayerCountSignature PlayerCountDelegate;
+	FRefreshUISignature RefreshUIDelegate;
 	FCanBuySignature CanBuyDelegate;
 	FHasRolledSignature HasRolledDelegate;
 	FNotificationSignature NotificationDelegate;
 
-	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
-	void Client_SimulateMoveLocally(const int NewSpaceId);
 
 private:
-	UPROPERTY(Replicated)
-	int BLPPlayerId; 
+	UPROPERTY(Replicated, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	int BLPPlayerId;  
 	
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
 	int CreditBalance = 1000000;

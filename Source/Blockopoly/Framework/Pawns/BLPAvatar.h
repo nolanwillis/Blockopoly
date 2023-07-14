@@ -17,12 +17,13 @@ class BLOCKOPOLY_API ABLPAvatar : public APawn
 public:
 	// Sets default values for this pawn's properties
 	ABLPAvatar();
+	UStaticMeshComponent* GetShape() const { return Shape; }
 
 private:
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UBoxComponent* BoxCollider;
 	
-	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Shape;
 
 	UPROPERTY()

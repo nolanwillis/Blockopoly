@@ -35,4 +35,6 @@ void UBLPUserWidget::Remove()
 	FInputModeGameOnly InputModeData;
 	PlayerController->SetInputMode(InputModeData);
 	PlayerController->bShowMouseCursor = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("BLPUserWidget: Remove successful!"));
 }

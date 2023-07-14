@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blockopoly/Items/Spaces/BLPEstatePropertySpace.h"
+#include "../../Items/Spaces/BLPEstatePropertySpace.h"
 #include "GameFramework/PlayerController.h"
-#include "State/BLPGameState.h"
+#include "../State/BLPGameState.h"
 #include "BLPPlayerController.generated.h"
 
 class ABLPAvatar;
@@ -16,6 +16,7 @@ class ABLPPropertySpace;
 class ABLPSpace;
 class ABLPCameraManager;
 class UBLPUWGameMenu;
+class UBLPUWLobbyMenu;
 
 DECLARE_DELEGATE_OneParam(FOnPlayerJoinSignature, ABLPGameState* GameState);
 
@@ -30,11 +31,22 @@ class BLOCKOPOLY_API ABLPPlayerController : public APlayerController
 public:
 	UPROPERTY()
 	UBLPUWGameMenu* GameMenu;
+	UPROPERTY()
+	UBLPUWLobbyMenu* LobbyMenu;
 
 	FOnPlayerJoinSignature OnPlayerJoinDelegate;
 	
 	ABLPPlayerController();
-	
+
+	// Lobby RPCs
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	void Server_ToggleIsReady(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr);
+
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	void Server_PlayGame(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr);
+
+
+	// Game RPCs
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_Roll(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
@@ -73,6 +85,7 @@ public:
 protected:
 	virtual void BeginPlayingState() override;
 	virtual void BeginPlay() override;
+//	virtual void PostSeamlessTravel() override;
 	
 private:
 	void UpdateCanBuild(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const ABLPPlayerState* BLPPlayerStatePtr) const;
@@ -80,8 +93,11 @@ private:
 	void UpdateRent(ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const;
 	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
 	
-	// Reference to the GameMenu class
+	// Reference to WBP_GameMenu
 	TSubclassOf<UUserWidget> GameMenuClass;
+
+	// Reference to WBP_LobbyMenu 
+	TSubclassOf<UUserWidget> LobbyMenuClass;
 
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr;
