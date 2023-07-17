@@ -150,6 +150,4 @@ private:
 
 	UFUNCTION()
 	void OnRep_HasRolled();
-
-
 };

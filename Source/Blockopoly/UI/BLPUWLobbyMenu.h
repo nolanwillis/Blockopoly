@@ -18,7 +18,10 @@ class BLOCKOPOLY_API UBLPUWLobbyMenu : public UBLPUserWidget
 
 public:
 	UBLPUWLobbyMenu();
-	
+
+	UFUNCTION()
+	void Refresh();
+
 protected:
 	virtual void NativeConstruct() override;
 
@@ -47,8 +50,6 @@ private:
 	UFUNCTION()
 	void PlayBtnClicked();
 
-	UFUNCTION()
-	void Refresh();
 
 	UFUNCTION()
 	void RefreshPlayerList();

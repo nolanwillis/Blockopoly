@@ -78,14 +78,12 @@ void ABLPPlayerState::OnRep_IsItMyTurn() const
 {
 	if (IsItMyTurn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s: It's my turn!"), *GetPlayerName());
-		if (!ItsMyTurnDelegate.IsBound()) return;
+		UE_LOG(LogTemp, Warning, TEXT("%s: It's my turn"), *GetPlayerName());
 		ItsMyTurnDelegate.Broadcast();
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s It's not my turn"), *GetPlayerName());
-		if (!ItsNotMyTurnDelegate.IsBound()) return;
+		UE_LOG(LogTemp, Warning, TEXT("%s: It's not my turn"), *GetPlayerName());
 		ItsNotMyTurnDelegate.Broadcast();
 	}
 }

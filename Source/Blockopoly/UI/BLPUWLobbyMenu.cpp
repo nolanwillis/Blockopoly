@@ -30,19 +30,11 @@ void UBLPUWLobbyMenu::NativeConstruct()
 	ReadyBtn->OnClicked.AddDynamic(this, &UBLPUWLobbyMenu::ReadyBtnClicked);
 	if (!PlayBtn) return;
 	PlayBtn->OnClicked.AddDynamic(this, &UBLPUWLobbyMenu::PlayBtnClicked);
-
+	
 	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu: BLPPlayerStatePtr is null")); return; }
 
 	BLPPlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWLobbyMenu::Refresh);
-
-	UWorld* World = GetWorld();
-	if (!World) return;
-	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
-	if (!BLPGameStatePtr) return;
-
-	// Required for initial setup
-	Refresh();
 }
 
 void UBLPUWLobbyMenu::ReadyBtnClicked()
@@ -102,15 +94,16 @@ void UBLPUWLobbyMenu::RefreshPlayerList()
 	UWorld* World = GetWorld();
 	if (!World) return;
 	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
-	if (!BLPGameStatePtr) return;
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu: BLPGameStatePtr is null"));  return; };
 
-	TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
+	const TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
 	TArray<int> ReadyStatusArray = BLPGameStatePtr->GetReadyStatusArray();
     	
-	for (int i = 0; i < PlayerArray.Num(); i++)
+	for (APlayerState* PlayerStatePtr : PlayerArray)
 	{
-		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[i]);
-		if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu: BLPPlayerStatePtr is null")); return; }
+		if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu: PlayerStatePtr is null"));
+		const ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu 111: BLPPlayerStatePtr is null")); return; }
     
 		UBLPUWLobbyPlayerCard* LobbyPlayerCard = CreateWidget<UBLPUWLobbyPlayerCard>(World, LobbyPlayerCardClass);
 		if (!LobbyPlayerCard) return;

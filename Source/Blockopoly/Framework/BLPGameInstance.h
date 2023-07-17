@@ -11,6 +11,10 @@
 class UUserWidget;
 class UBLPUWMainMenu;
 class UBLPUWPauseMenu;
+class UBLPUWLobbyMenu;
+class UBLPUWGameMenu;
+class UBLPUWPlayerCard;
+class UBLPUWPlayerCardLobby;
 
 /**
  * 
@@ -26,39 +30,54 @@ public:
 	virtual void Init();
 
 	UFUNCTION(BlueprintCallable)
-		void LoadMainMenu();
+	void LoadMainMenu();
 
 	UFUNCTION(BlueprintCallable)
-		void LoadPauseMenu();
+	void LoadPauseMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void LoadLobbyMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void LoadGameMenu();
 
 	UFUNCTION()
-		void QuitToMainMenu();
+	void QuitToMainMenu();
 
 	UFUNCTION()
-		void QuitGame();
+	void QuitGame();
 
 	UFUNCTION(exec)
-		void HostSession(FString ServerName);
+	void HostSession(FString ServerName);
 
 	UFUNCTION(exec)
-		void JoinSession(uint32 Index);
+	void JoinSession(uint32 Index);
 
 	// Method that searches for available sessions
 	UFUNCTION()
-		void RefreshSessionList();
+	void RefreshSessionList();
 
 	// Method that starts the created session so no more clients can join
 	void StartSession();
 
 private:
 	// UI
-	// Reference to the class of each user widget
+	// Reference widget blueprints
 	TSubclassOf<UUserWidget> MainMenuClass;
 	TSubclassOf<UUserWidget> PauseMenuClass;
-	// References to created user widgets
-	UBLPUWMainMenu* MainMenu;
-	UBLPUWPauseMenu* PauseMenu;
+	TSubclassOf<UUserWidget> GameMenuClass;
+	TSubclassOf<UUserWidget> LobbyMenuClass;
 
+	// References to created user widgets
+	UPROPERTY()
+	UBLPUWMainMenu* MainMenu;
+	UPROPERTY()
+	UBLPUWPauseMenu* PauseMenu;
+	UPROPERTY()
+	UBLPUWGameMenu* GameMenu;
+	UPROPERTY()
+	UBLPUWLobbyMenu* LobbyMenu;
+    	
 	// Pointer to the current session interface being used
 	IOnlineSessionPtr SessionInterface;
 

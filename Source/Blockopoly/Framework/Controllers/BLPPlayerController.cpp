@@ -14,7 +14,7 @@
 #include "../..//Items/Spaces/BLPTaxSpace.h"
 #include "../../UI/BLPUWGameMenu.h"
 #include "../../UI/BLPUWLobbyMenu.h"
-#include "../GameModes/BLPGMClassic.h"
+#include "../GameModes/BLPGameMode.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
@@ -33,47 +33,65 @@ ABLPPlayerController::ABLPPlayerController()
 	LobbyMenuClass = WBP_LobbyMenu.Class;
 }
 
-void ABLPPlayerController::BeginPlayingState()
-{
-	Super::BeginPlayingState();
-
-	if (IsLocalPlayerController())
-	{
-		// Construct a WBP_LobbyMenu
-		if (!LobbyMenuClass) return;
-		LobbyMenu = CreateWidget<UBLPUWLobbyMenu>(this, LobbyMenuClass);
-		if (!LobbyMenu) return;
-		LobbyMenu->Setup();
-	}
-}
-
 void ABLPPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// Required, otherwise the camera target will sometimes default to player pawn. 
+	// Required, otherwise the camera target will sometimes default to the player pawn. 
 	bAutoManageActiveCameraTarget=false;
 	
 	const UWorld* World = GetWorld();
 	if (!World) return;
 	BLPCameraManagerPtr = Cast<ABLPCameraManager>(UGameplayStatics::GetActorOfClass(World, ABLPCameraManager::StaticClass()));
-	
-	SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(0), 0.0f);
+	if (!BLPCameraManagerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPCameraManagerPtr is null")); return; }
+	AActor* Camera = BLPCameraManagerPtr->GetCamera(0);
+	if (!Camera) return;
+	SetViewTargetWithBlend(Camera, 0.0f);
 }
 
-// void ABLPPlayerController::PostSeamlessTravel()
-// {
-// 	Super::PostSeamlessTravel();
-//
-// 	// Remove the WBP_LobbyMenu
-// 	if (LobbyMenu) LobbyMenu->Remove();
-// 		
-// 	// Construct a WBP_GameMenu
-// 	if (!GameMenuClass) return;
-// 	GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
-// 	if (!GameMenu) return;
-// 	GameMenu->Setup();
-// }
+void ABLPPlayerController::LoadLobbyMenu()
+{
+	// Create a WBP_LobbyMenu
+	if (!LobbyMenuClass) return;
+	LobbyMenu = CreateWidget<UBLPUWLobbyMenu>(this, LobbyMenuClass);
+	if (!LobbyMenu) return;
+	LobbyMenu->Setup();
+	LobbyMenu->Refresh();
+	UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Load Lobby Menu called"));
+}
+
+void ABLPPlayerController::LoadGameMenu()
+{
+	// Create a WBP_GameMenu
+	if (!GameMenuClass) return;
+	GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
+	if (!GameMenu) return;
+
+	// Remove lobby menu
+	if (LobbyMenu) LobbyMenu->Remove();
+
+	GameMenu->Setup();
+	GameMenu->RefreshPlayerList();
+	UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Load Game Menu called"));
+}
+
+void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayerState* BLPPlayerStateInPtr)
+{
+	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
+	if (BLPPlayerStateInPtr->GetBLPPlayerId() == 0)
+	{
+		BLPPlayerStateInPtr->SetIsItMyTurn(true);
+	}
+	else
+	{
+		BLPPlayerStateInPtr->SetIsItMyTurn(false);
+	}
+}
+
+bool ABLPPlayerController::Server_SetInitialTurnStatus_Validate(ABLPPlayerState* BLPPlayerStateInPtr)
+{
+	return true;
+}
 
 // Server RPC that starts the game from the lobby
 void ABLPPlayerController::Server_PlayGame_Implementation(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr)
@@ -90,12 +108,13 @@ void ABLPPlayerController::Server_PlayGame_Implementation(ABLPPlayerState* BLPPl
 	
 	UWorld* World = GetWorld();
 	if (!World) return;
-	ABLPGMClassic* BLPGMClassicPtr = Cast<ABLPGMClassic>(World->GetAuthGameMode());
-	BLPGMClassicPtr->StartGame();
+	ABLPGameMode* BLPGameModePtr = Cast<ABLPGameMode>(World->GetAuthGameMode());
+	if (!BLPGameModePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerControllerLobby: BLPGameModePtr is null")); return; }
+	BLPGameModePtr->StartGame();
 }
 bool ABLPPlayerController::Server_PlayGame_Validate(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr){ return true;}
 
-// Server RPC that toggles a players ready status for in the gamestate
+// Server RPC that toggles a players ready status for in the game state
 void ABLPPlayerController::Server_ToggleIsReady_Implementation(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr)
 {
 	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
@@ -164,6 +183,10 @@ bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlaye
 // Server RPC that fires when the dice roll notification is finished
 void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	if (!AvatarPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: AvatarPtr is null, ReflectRollInGame()")); return; }
+     
 	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
 	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	
@@ -391,7 +414,10 @@ void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
 			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator(); 
 			AvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
-			SetViewTargetWithBlend(BLPCameraManagerPtr->GetCamera(PlayerStatePtr->GetCurrentSpaceId()/10), 0.8f);
+
+			AActor* NewCamera = BLPCameraManagerPtr->GetCamera(PlayerStatePtr->GetCurrentSpaceId()/10);
+			if (!NewCamera) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Camera not found when moving player")); return; }
+			SetViewTargetWithBlend(NewCamera, 0.8f);
 		}
 	}
 }

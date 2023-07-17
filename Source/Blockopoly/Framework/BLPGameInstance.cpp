@@ -5,7 +5,9 @@
 #include "../UI/BLPUserWidget.h"
 #include "../UI/BLPUWMainMenu.h"
 #include "../UI/BLPUWPauseMenu.h"
-#include "../Framework/GameModes/BLPGMClassic.h"
+#include "../UI/BLPUWGameMenu.h"
+#include "../UI/BLPUWLobbyMenu.h"
+#include "../Framework/GameModes/BLPGameMode.h"
 #include "../Framework/State/BLPGameState.h"
 
 #include "UObject/ConstructorHelpers.h"
@@ -28,6 +30,16 @@ UBLPGameInstance::UBLPGameInstance(const FObjectInitializer& ObjectInitializer)
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_PauseMenu(TEXT("/Game/Core/UI/WBP_PauseMenu"));
 	if (!WBP_PauseMenu.Class) return;
 	PauseMenuClass = WBP_PauseMenu.Class;
+
+	// Gets reference to WBP_GameMenu
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_GameMenu(TEXT("/Game/Core/UI/WBP_GameMenu"));
+	if (!WBP_GameMenu.Class) return;
+	GameMenuClass = WBP_GameMenu.Class;
+
+	// Gets reference to WBP_GameMenu.
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LobbyMenu(TEXT("/Game/Core/UI/WBP_LobbyMenu"));
+	if (!WBP_LobbyMenu.Class) return;
+	LobbyMenuClass = WBP_LobbyMenu.Class;
 }
 
 void UBLPGameInstance::Init()
@@ -62,7 +74,7 @@ void UBLPGameInstance::Init()
 
 void UBLPGameInstance::LoadMainMenu()
 {
-	// Creates a WBP_MainMenu and adds it to the viewport
+	// Create a WBP_MainMenu
 	if (!MainMenuClass) return;
 	MainMenu = CreateWidget<UBLPUWMainMenu>(this, MainMenuClass);
 	if (!MainMenu) return;
@@ -72,11 +84,31 @@ void UBLPGameInstance::LoadMainMenu()
 
 void UBLPGameInstance::LoadPauseMenu()
 {
-	// Creates a WBP_Pause and adds it to the viewport
+	// Create a WBP_PauseMenu
 	if (!PauseMenuClass) return;
 	PauseMenu = CreateWidget<UBLPUWPauseMenu>(this, PauseMenuClass);
 	if (!PauseMenu) return;
 	PauseMenu->Setup();
+}
+
+void UBLPGameInstance::LoadLobbyMenu()
+{
+	// Create a WBP_LobbyMenu
+	if (!LobbyMenuClass) return;
+	LobbyMenu = CreateWidget<UBLPUWLobbyMenu>(this, LobbyMenuClass);
+	if (!LobbyMenu) return;
+	LobbyMenu->Setup();
+	LobbyMenu->Refresh();
+	UE_LOG(LogTemp, Warning, TEXT("BLPGameInstance: Load Lobby Menu called"));
+}
+
+void UBLPGameInstance::LoadGameMenu()
+{
+	// Create a WBP_GameMenu
+	if (!GameMenuClass) return;
+	GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
+	if (!GameMenu) return;
+	GameMenu->Setup();
 }
 
 void UBLPGameInstance::QuitToMainMenu()

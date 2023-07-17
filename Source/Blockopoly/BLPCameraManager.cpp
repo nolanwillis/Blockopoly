@@ -3,6 +3,8 @@
 
 #include "BLPCameraManager.h"
 
+#include "Kismet/GameplayStatics.h"
+
 AActor* ABLPCameraManager::GetCamera(const int& Index) const
 {
 	switch(Index)
@@ -22,6 +24,8 @@ AActor* ABLPCameraManager::GetCamera(const int& Index) const
 	default:
 		break;
 	}
-	return Camera0;
+	UE_LOG(LogTemp, Warning, TEXT("No camera found!"));
+	return nullptr;
 }
+
 

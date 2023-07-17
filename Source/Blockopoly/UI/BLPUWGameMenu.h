@@ -31,6 +31,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UWidgetSwitcher* WidgetSwitcher;
 
+	UFUNCTION()
 	void RefreshPlayerList();
 
 	UFUNCTION()
@@ -76,16 +77,10 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	USizeBox* BannerNotificationSlotR;
 
-	// PlayerCard class reference
+	// References to widget blueprints
 	TSubclassOf<UUserWidget> PlayerCardClass;
-
-	// ChestCardNotification class reference
 	TSubclassOf<UUserWidget> ChanceCardNotificationClass;
-
-	// ChanceCardNotification class reference
 	TSubclassOf<UUserWidget> ChestCardNotificationClass;
-
-	// RollNotification class reference
 	TSubclassOf<UUserWidget> RollNotificationClass;
 
 	// Button handlers

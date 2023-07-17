@@ -38,6 +38,12 @@ public:
 	
 	ABLPPlayerController();
 
+	UFUNCTION(BlueprintCallable)
+	void LoadLobbyMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void LoadGameMenu();
+	
 	// Lobby RPCs
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_ToggleIsReady(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr);
@@ -45,8 +51,10 @@ public:
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_PlayGame(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr);
 
-
 	// Game RPCs
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	void Server_SetInitialTurnStatus(ABLPPlayerState* BLPPlayerStateInPtr);
+
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_Roll(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
@@ -83,9 +91,7 @@ public:
 	void DrawChestCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
 
 protected:
-	virtual void BeginPlayingState() override;
 	virtual void BeginPlay() override;
-//	virtual void PostSeamlessTravel() override;
 	
 private:
 	void UpdateCanBuild(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const ABLPPlayerState* BLPPlayerStatePtr) const;

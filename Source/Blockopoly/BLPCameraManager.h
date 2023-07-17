@@ -14,7 +14,6 @@ class BLOCKOPOLY_API ABLPCameraManager : public AActor
 public:	
 	AActor* GetCamera(const int& Index) const;
 	
-private:
 	UPROPERTY(EditAnywhere)
 	AActor* Camera0;
 	UPROPERTY(EditAnywhere)
@@ -23,4 +22,5 @@ private:
 	AActor* Camera2;
 	UPROPERTY(EditAnywhere)
 	AActor* Camera3;
+	
 };

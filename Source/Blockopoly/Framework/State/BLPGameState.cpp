@@ -15,13 +15,15 @@ void ABLPGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (HasAuthority())
-	{
-		// Set first turn to first player to connect to the game
-		ABLPPlayerState* FirstPlayer = Cast<ABLPPlayerState>(PlayerArray[0]);
-		if (!FirstPlayer) return;
-		FirstPlayer->SetIsItMyTurn(true);
-	}
+	// for (APlayerState* PlayerStatePtr : PlayerArray)
+	// {
+	// 	ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+	// 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+	// 	if (BLPPlayerStatePtr->GetBLPPlayerId() == 0)
+	// 	{
+	// 		BLPPlayerStatePtr->SetIsItMyTurn(true);
+	// 	}
+	// }
 	
 	const UWorld* World = GetWorld();
 	if (!World) return;

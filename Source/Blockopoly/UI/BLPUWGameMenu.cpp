@@ -50,34 +50,26 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	RollBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::RollBtnClicked);
 	if (!FinishTurnBtn) return ;
 	FinishTurnBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::FinishTurnBtnClicked);
-
-	ABLPPlayerController* PlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
-	if (!PlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerControllerPtr is null")); return; }
 	
-	// Bind functions to delegates in PlayerState
-	ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null")); return; }
+	ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
+	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerControllerPtr is null")); return; }
 	
-	PlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
-	PlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsMyTurn);
-	PlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsNotMyTurn);
-	PlayerStatePtr->OnBalanceChangedDelegate.AddUObject(this, &UBLPUWGameMenu::UpdateBalance);
-	PlayerStatePtr->InJailDelegate.BindUObject(this, &UBLPUWGameMenu::InJail);
-	PlayerStatePtr->OutOfJailDelegate.BindUObject(this, &UBLPUWGameMenu::OutOfJail);
-	PlayerStatePtr->JailSkipDelegate.BindUObject(this, &UBLPUWGameMenu::UpdateJailSkipCounter);
-	PlayerStatePtr->CanBuyDelegate.BindUObject(this, &UBLPUWGameMenu::CanBuy);
-	PlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
-	PlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
 	
-	// Required to initially setup the player list
-	RefreshPlayerList();
+	BLPPlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
+	BLPPlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsMyTurn);
+	BLPPlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsNotMyTurn);
+	BLPPlayerStatePtr->OnBalanceChangedDelegate.AddUObject(this, &UBLPUWGameMenu::UpdateBalance);
+	BLPPlayerStatePtr->InJailDelegate.BindUObject(this, &UBLPUWGameMenu::InJail);
+	BLPPlayerStatePtr->OutOfJailDelegate.BindUObject(this, &UBLPUWGameMenu::OutOfJail);
+	BLPPlayerStatePtr->JailSkipDelegate.BindUObject(this, &UBLPUWGameMenu::UpdateJailSkipCounter);
+	BLPPlayerStatePtr->CanBuyDelegate.BindUObject(this, &UBLPUWGameMenu::CanBuy);
+	BLPPlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
+	BLPPlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
 	
-	// If not on server, ItsNotMyTurn won't be called initially, since this function is only automatically
-	// called when the PlayerUpId changes (the host will always be first).
-	if (GetOwningPlayer()->GetLocalRole() < ROLE_Authority)
-	{
-		ItsNotMyTurn();
-	}
+	// Set initial turn status for the owner of this menu.
+	BLPPlayerControllerPtr->Server_SetInitialTurnStatus(BLPPlayerStatePtr);
 }
 
 void UBLPUWGameMenu::PropertyMenuBtnClicked()
@@ -140,10 +132,11 @@ void UBLPUWGameMenu::FinishTurnBtnClicked()
 
 void UBLPUWGameMenu::ItsMyTurn()
 {
+	YourTurnText->SetText(FText::FromString("It's your turn"));
+
 	const ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null"));
 	
-	YourTurnText->SetText(FText::FromString("It's your turn"));
 
 	if (PlayerStatePtr->GetJailCounter() == 0)
 	{
@@ -161,11 +154,11 @@ void UBLPUWGameMenu::ItsNotMyTurn()
 {
 	const UWorld* World = GetWorld();
 	if (!World) return;
-	const ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>();
-	if (!GameStatePtr) return;
+	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null")); return; }
 	
-	const int PlayerUpIndex = GameStatePtr->GetPlayerUpId();
-	const ABLPPlayerState* PlayerUpBLPPlayerState = GameStatePtr->GetBLPPlayerStateFromId(PlayerUpIndex);
+	const int PlayerUpIndex = BLPGameStatePtr->GetPlayerUpId();
+	const ABLPPlayerState* PlayerUpBLPPlayerState = BLPGameStatePtr->GetBLPPlayerStateFromId(PlayerUpIndex);
 
 	if (!PlayerUpBLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerUpBLPPlayerState is null")); return; }
 	const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
@@ -283,15 +276,15 @@ void UBLPUWGameMenu::RefreshPlayerList()
 	
 	UWorld* World = GetWorld();
 	if (!World) return;
-	ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>();
-	if (!GameStatePtr) return;
+	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null ")); return;}
 	
-	TArray<TObjectPtr<APlayerState>> PlayerArray = GameStatePtr->PlayerArray;
-	for (int i = 0; i < PlayerArray.Num(); i++)
+	const TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
+	for (const APlayerState* PlayerStatePtr : PlayerArray)
 	{
 		UBLPUWPlayerCard* PlayerCard = CreateWidget<UBLPUWPlayerCard>(World, PlayerCardClass);
 		if (!PlayerCard) return;
-		PlayerCard->PlayerNameText->SetText(FText::FromString(PlayerArray[i]->GetPlayerName()));
+		PlayerCard->PlayerNameText->SetText(FText::FromString(PlayerStatePtr->GetPlayerName()));
 		PlayerCardWrapBox->AddChild(PlayerCard);
 	}
 }
