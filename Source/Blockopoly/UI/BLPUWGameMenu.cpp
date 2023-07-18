@@ -70,6 +70,7 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	
 	// Set initial turn status for the owner of this menu.
 	BLPPlayerControllerPtr->Server_SetInitialTurnStatus(BLPPlayerStatePtr);
+	
 }
 
 void UBLPUWGameMenu::PropertyMenuBtnClicked()

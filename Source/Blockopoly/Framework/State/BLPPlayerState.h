@@ -92,7 +92,7 @@ private:
 	int BLPPlayerId;  
 	
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
-	int CreditBalance = 1000000;
+	int CreditBalance = 1500;
 	
 	UPROPERTY(Replicated)
 	int CurrentSpaceId = 0;

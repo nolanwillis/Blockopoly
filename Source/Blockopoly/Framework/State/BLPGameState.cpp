@@ -82,9 +82,8 @@ void ABLPGameState::NextPlayerUp()
 	const int PlayerCount = PlayerArray.Num();
 	const int LastPlayerUpId = PlayerUpId;
 
-	if (PlayerUpId >= PlayerCount-1)
+	if (PlayerUpId == PlayerCount-1)
 	{
-		
 		PlayerUpId = 0;
 	}
 	else
@@ -93,13 +92,7 @@ void ABLPGameState::NextPlayerUp()
 	}
 
 	if (ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(PlayerUpId)) BLPPlayerStatePtr->SetIsItMyTurn(true);
-
-	if (LastPlayerUpId <= PlayerCount-1)
-	{
-		ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(LastPlayerUpId);
-		if (!BLPPlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null"));
-		BLPPlayerStatePtr->SetIsItMyTurn(false);
-	}
+	if (ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(LastPlayerUpId)) BLPPlayerStatePtr->SetIsItMyTurn(false);
 }
 
 void ABLPGameState::ExecuteChanceCard(ABLPPlayerState* PlayerStatePtr)
