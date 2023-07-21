@@ -75,27 +75,17 @@ void ABLPPlayerState::Client_DisplayWinScreen_Implementation(const FString& Winn
 }
 bool ABLPPlayerState::Client_DisplayWinScreen_Validate(const FString& WinnersName){ return true; }
 
+void ABLPPlayerState::OnRep_PlayerUpId() const
+{
+	PlayerUpIdDelegate.Broadcast();
+}
+
 // Notifies UI of credit change, so UI reflects correct credit amount
 void ABLPPlayerState::OnRep_CreditBalance() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("New Balance: %d"), CreditBalance);
 	if (!OnBalanceChangedDelegate.IsBound()) return;
 	OnBalanceChangedDelegate.Broadcast(CreditBalance);
-}
-
-// Notifies UI if its this players turn, so the turn UI buttons appear (roll, finish turn, etc.)
-void ABLPPlayerState::OnRep_IsItMyTurn() const 
-{
-	if (IsItMyTurn)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s: It's my turn"), *GetPlayerName());
-		ItsMyTurnDelegate.Broadcast();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s: It's not my turn"), *GetPlayerName());
-		ItsNotMyTurnDelegate.Broadcast();
-	}
 }
 
 void ABLPPlayerState::OnRep_OwnedPropertyList() const
@@ -157,9 +147,9 @@ void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	// Here we list the variables we want to replicate
+	DOREPLIFETIME(ABLPPlayerState, PlayerUpId);
 	DOREPLIFETIME(ABLPPlayerState, CreditBalance);
 	DOREPLIFETIME(ABLPPlayerState, CurrentSpaceId);
-	DOREPLIFETIME(ABLPPlayerState, IsItMyTurn);
 	DOREPLIFETIME(ABLPPlayerState, OwnedPropertyList);
 	DOREPLIFETIME(ABLPPlayerState, JailCounter);
 	DOREPLIFETIME(ABLPPlayerState, JailSkipCounter);
@@ -167,5 +157,6 @@ void ABLPPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ABLPPlayerState, HasRolled);
 	DOREPLIFETIME(ABLPPlayerState, PlayerCount);
 	DOREPLIFETIME(ABLPPlayerState, BLPPlayerId);
+	DOREPLIFETIME(ABLPPlayerState, IsLeaving);
 }
 

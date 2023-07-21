@@ -80,11 +80,8 @@ public:
 	void Server_BuyPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
 	UFUNCTION(Server, Unreliable, WithValidation)
-	void Server_MortgagePropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
+	void Server_ToggleMortgageStatus(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
 	
-	UFUNCTION(Server, Unreliable, WithValidation)
-	void Server_UnMortgagePropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
-
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_BuyBuilding(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
 

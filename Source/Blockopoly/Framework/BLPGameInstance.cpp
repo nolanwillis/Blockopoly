@@ -2,12 +2,12 @@
 
 
 #include "BLPGameInstance.h"
+
 #include "../UI/BLPUserWidget.h"
 #include "../UI/BLPUWMainMenu.h"
 #include "../UI/BLPUWPauseMenu.h"
-#include "../UI/BLPUWGameMenu.h"
-#include "../UI/BLPUWLobbyMenu.h"
 #include "./Controllers/BLPPlayerController.h"
+#include "./State/BLPPlayerState.h"
 
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
@@ -95,6 +95,7 @@ void UBLPGameInstance::QuitToMainMenu(ABLPPlayerController* BLPPlayerControllerP
 	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameInstance: BLPPlayerControllerPtr is null")); return; }
 	// Tells current player controller to travel to a different map
 	BLPPlayerControllerPtr->ClientTravel("/Game/Maps/LVL_MainMenu", ETravelType::TRAVEL_Absolute);
+
 }
 
 void UBLPGameInstance::QuitGame()
@@ -188,6 +189,7 @@ void UBLPGameInstance::StartSession()
 		SessionInterface->StartSession(SESSION_NAME);
 	}
 }
+
 
 void UBLPGameInstance::OnCreateSessionComplete(FName SessionName, bool Success)
 {

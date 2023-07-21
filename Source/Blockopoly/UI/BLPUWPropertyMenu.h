@@ -80,8 +80,5 @@ private:
 	void MortgageBtnClicked();
 
 	UFUNCTION()
-	void ItsMyTurn();
-
-	UFUNCTION()
-	void ItsNotMyTurn();
+	void PlayerUpId();
 };

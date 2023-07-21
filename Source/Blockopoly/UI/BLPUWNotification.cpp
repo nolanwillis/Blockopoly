@@ -102,16 +102,17 @@ void UBLPUWNotification::CardStartOpacityFinished()
 void UBLPUWNotification::CardEndOpacityFinished()
 {
 	this->RemoveFromParent();
+
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerStatePtr is null")); return; }
 	
-	if (GetOwningPlayerState<ABLPPlayerState>()->GetIsItMyTurn())
+	if (BLPPlayerStatePtr->GetPlayerUpId() == BLPPlayerStatePtr->GetBLPPlayerId())
 	{
 		UWorld* World = GetWorld();
 		ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(World->GetGameState());
-		ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 		ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
 		if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerControllerPtr is null")); return; }
 		if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPGameStatePtr is null")); return; }
-		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerStatePtr is null")); return; }
 		
 		if (Type == "Roll")
 		{

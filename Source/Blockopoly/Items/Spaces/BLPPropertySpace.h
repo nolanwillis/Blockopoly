@@ -26,9 +26,12 @@ public:
 	int GetPurchaseCost() const { return PurchaseCost; }
 	void SetPurchaseCost (const int& Value) { PurchaseCost = Value; }
 	int GetMortgageValue() const { return MortgageValue; }
-	void SetMortgageValue(const int& Value) { MortgageValue = Value; }
+	void SetMortgageValue(const int& Value){ MortgageValue = Value; }
 	bool GetIsMortgaged() const { return IsMortgaged; }
-	void SetIsMortgaged(const bool& Value) { IsMortgaged = Value; }
+	void SetIsMortgaged(const bool& Value)
+	{
+		IsMortgaged = Value;
+	}
 
 protected:
 	// Called when the game starts or when spawned
@@ -51,7 +54,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = PropertyData, meta = (AllowPrivateAccess = true))
 	int MortgageValue;
 
-	UPROPERTY()
-	bool IsMortgaged;
+	UPROPERTY(Replicated)
+	bool IsMortgaged = false;
 };
 

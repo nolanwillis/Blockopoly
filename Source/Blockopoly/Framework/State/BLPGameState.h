@@ -31,7 +31,7 @@ public:
 	ABLPSpace* GetSpaceFromId(const int& ID) const;
 	ABLPPlayerState* GetBLPPlayerStateFromId(const int& ID) const;
 
-	int GetPlayerUpId() const { return PlayerUpId; }
+	int GetPlayerUpId() const { return GSPlayerUpId; }
 	void NextPlayerUp();
 
 	void SetWinnersPlayerId(const int& Value) { WinnersPlayerId = Value; WinnersPlayerIdCallback(); }
@@ -80,8 +80,8 @@ private:
 	TArray<ABLPPropertySpace*> AvailablePropertySpaceList;
 	
 	// Keeps track of which player in the PlayerArray has the current turn
-	UPROPERTY(Replicated)
-	int PlayerUpId = 0;
+	UPROPERTY()
+	int GSPlayerUpId = 0;
 
 	UPROPERTY()
 	int WinnersPlayerId = -1;

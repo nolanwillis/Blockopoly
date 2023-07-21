@@ -16,7 +16,6 @@
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/WrapBox.h"
-#include "Interfaces/IHttpResponse.h"
 
 UBLPUWGameMenu::UBLPUWGameMenu()
 {
@@ -70,9 +69,8 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
 	
+	BLPPlayerStatePtr->PlayerUpIdDelegate.AddUObject(this, &UBLPUWGameMenu::PlayerUpId);
 	BLPPlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWGameMenu::RefreshPlayerList);
-	BLPPlayerStatePtr->ItsMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsMyTurn);
-	BLPPlayerStatePtr->ItsNotMyTurnDelegate.AddUObject(this, &UBLPUWGameMenu::ItsNotMyTurn);
 	BLPPlayerStatePtr->OnBalanceChangedDelegate.AddUObject(this, &UBLPUWGameMenu::UpdateBalance);
 	BLPPlayerStatePtr->InJailDelegate.BindUObject(this, &UBLPUWGameMenu::InJail);
 	BLPPlayerStatePtr->OutOfJailDelegate.BindUObject(this, &UBLPUWGameMenu::OutOfJail);
@@ -179,46 +177,49 @@ void UBLPUWGameMenu::ForfeitBtnClicked()
 	UE_LOG(LogTemp, Warning, TEXT("Forfeit button clicked"));
 }
 
-void UBLPUWGameMenu::ItsMyTurn()
-{
-	YourTurnText->SetText(FText::FromString("It's your turn"));
-
-	const ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
-	if (!PlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null"));
-	
-
-	if (PlayerStatePtr->GetJailCounter() == 0)
-	{
-		// Only let RollBtn be visible if not in jail.
-		RollBtn->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		// If in jail, pass true in to HasRolled() so FinishTurnBtn becomes visible.
-		HasRolled(true);
-		RollBtn->SetVisibility(ESlateVisibility::Hidden);
-		if (PlayerStatePtr->GetJailSkipCounter() >= 1) SkipJailBtn->SetVisibility(ESlateVisibility::Visible);
-	}
-}
-
-void UBLPUWGameMenu::ItsNotMyTurn()
+void UBLPUWGameMenu::PlayerUpId()
 {
 	const UWorld* World = GetWorld();
 	if (!World) return;
 	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null")); return; }
-	
-	const int PlayerUpIndex = BLPGameStatePtr->GetPlayerUpId();
-	const ABLPPlayerState* PlayerUpBLPPlayerState = BLPGameStatePtr->GetBLPPlayerStateFromId(PlayerUpIndex);
+	if (!BLPPlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null"));
+    	
+	// If its my turn
+	if (BLPPlayerStatePtr->GetBLPPlayerId() == BLPPlayerStatePtr->GetPlayerUpId())
+	{
+		FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
+		YourTurnText->SetText(FText::FromString("It's your turn"));
 
-	if (!PlayerUpBLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerUpBLPPlayerState is null")); return; }
-	const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
-	
-	YourTurnText->SetText(FText::FromString(PlayerUpName + " is up"));
-	RollBtn->SetVisibility(ESlateVisibility::Hidden);
-	FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
-	BuyBtn->SetVisibility(ESlateVisibility::Hidden);
-	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
+		if (BLPPlayerStatePtr->GetJailCounter() == 0)
+		{
+			// Only let RollBtn be visible if not in jail.
+			RollBtn->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			// If in jail, pass true in to HasRolled() so FinishTurnBtn becomes visible.
+			HasRolled(true);
+			RollBtn->SetVisibility(ESlateVisibility::Hidden);
+			if (BLPPlayerStatePtr->GetJailSkipCounter() >= 1) SkipJailBtn->SetVisibility(ESlateVisibility::Visible);
+
+		}		
+	}
+	// If its not my turn
+	else
+	{
+    	const ABLPPlayerState* PlayerUpBLPPlayerState = BLPGameStatePtr->GetBLPPlayerStateFromId(BLPPlayerStatePtr->GetPlayerUpId());
+		if (!PlayerUpBLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerUpBLPPlayerState is null")); return; }
+
+		const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
+    	
+    	YourTurnText->SetText(FText::FromString(PlayerUpName + " is up"));
+    	RollBtn->SetVisibility(ESlateVisibility::Hidden);
+    	FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
+    	BuyBtn->SetVisibility(ESlateVisibility::Hidden);
+    	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void UBLPUWGameMenu::UpdateBalance(const int NewBalance)
@@ -330,31 +331,43 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 	{
 		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChanceCardNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Type, Heading, Description, this);
+		CardNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Community Chest")
 	{
 		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChestCardNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Type, Heading, Description, this);
+		CardNotificationSlot->AddChild(Notification);
+        
 	}
 	else if (Type == "Roll")
 	{
 		BannerNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, RollNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Type, Heading, Description, this);
+		BannerNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Forfeit")
 	{
 		BannerNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ForfeitNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Type, Heading, Description, this);
+		BannerNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Leave")
 	{
 		BannerNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, LeaveNotificationClass);
+		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+		Notification->Setup(Type, Heading, Description, this);
+		BannerNotificationSlot->AddChild(Notification);
 	}
-	
-	if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-	Notification->Setup(Type, Heading, Description, this);
-	BannerNotificationSlot->AddChild(Notification);
 }
 
 void UBLPUWGameMenu::RefreshPlayerList()

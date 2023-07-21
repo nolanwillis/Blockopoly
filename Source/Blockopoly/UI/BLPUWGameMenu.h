@@ -112,9 +112,7 @@ private:
 
 	// Functions bound to delegates in PlayerState
 	UFUNCTION()
-	void ItsMyTurn();
-	UFUNCTION()
-	void ItsNotMyTurn();
+	void PlayerUpId();
 	UFUNCTION()
 	void UpdateBalance(const int NewBalance);
 	UFUNCTION()

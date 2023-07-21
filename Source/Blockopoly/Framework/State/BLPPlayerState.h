@@ -13,14 +13,13 @@ class ABLPPlayerState;
 class ABLPCameraManager;
 DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FForfeitSignature);
+DECLARE_MULTICAST_DELEGATE(FPlayerUpIdSignature);
 DECLARE_MULTICAST_DELEGATE(FRefreshUISignature);
 DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
 DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
 DECLARE_DELEGATE_ThreeParams(FNotificationSignature, const FString& Type, const FString& Heading, const FString& Description);
-DECLARE_MULTICAST_DELEGATE(FItsMyTurnSignature);
-DECLARE_MULTICAST_DELEGATE(FItsNotMyTurnSignature);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
 
 /**
@@ -37,6 +36,9 @@ public:
 	int GetBLPPlayerId() const { return BLPPlayerId; }
 	void SetBLPPlayerId(const int& Value){ BLPPlayerId = Value;}
 	
+	int GetPlayerUpId() const { return PlayerUpId; }
+	void SetPlayerUpId(const int& Value){ PlayerUpId = Value; OnRep_PlayerUpId(); }
+	
 	int GetBalance() const { return CreditBalance; }
 	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value; OnRep_CreditBalance();}
 	
@@ -46,9 +48,6 @@ public:
 	FSpawnPoint* GetCurrentSpawnPoint() const { return CurrentSpawnPoint; }
 	void SetCurrentSpawnPoint(FSpawnPoint* Value){ CurrentSpawnPoint = Value; }
 	
-	bool GetIsItMyTurn() const { return IsItMyTurn; }
-	void SetIsItMyTurn(const bool& Value) { IsItMyTurn = Value; OnRep_IsItMyTurn();}
-
 	TArray<ABLPPropertySpace*> GetOwnedPropertyList() const { return OwnedPropertyList; }
 	void AddToOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Add(Value); OnRep_OwnedPropertyList();}
 	void RemoveFromOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Remove(Value); OnRep_OwnedPropertyList();}
@@ -80,8 +79,7 @@ public:
     UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
 	void Client_SimulateMoveLocally(const int NewSpaceId);
 	
-	FItsMyTurnSignature ItsMyTurnDelegate;
-	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
+	FPlayerUpIdSignature PlayerUpIdDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
 	FInJailSignature InJailDelegate;
 	FOutOfJailSignature OutOfJailDelegate;
@@ -95,6 +93,9 @@ public:
 private:
 	UPROPERTY(Replicated, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	int BLPPlayerId;  
+
+	UPROPERTY(ReplicatedUsing=OnRep_PlayerUpId)
+	int PlayerUpId = -1;
 	
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
 	int CreditBalance = 1500;
@@ -103,9 +104,6 @@ private:
 	int CurrentSpaceId = 0;
 
 	FSpawnPoint* CurrentSpawnPoint;
-	
-	UPROPERTY(ReplicatedUsing=OnRep_IsItMyTurn)
-	bool IsItMyTurn = false;
 
 	UPROPERTY(Replicated)
 	bool IsLeaving = false;
@@ -136,12 +134,12 @@ private:
 	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
 
 	TSubclassOf<UUserWidget> WinScreenClass;
+
+	UFUNCTION()
+	void OnRep_PlayerUpId() const;
 	
 	UFUNCTION()
 	void OnRep_CreditBalance() const;
-	
-	UFUNCTION()
-	void OnRep_IsItMyTurn() const;
 
 	UFUNCTION()
 	void OnRep_OwnedPropertyList() const;
@@ -160,6 +158,5 @@ private:
 
 	UFUNCTION()
 	void OnRep_HasRolled();
-	
 	
 };

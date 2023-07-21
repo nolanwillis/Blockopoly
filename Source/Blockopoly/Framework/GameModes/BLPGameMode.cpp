@@ -77,8 +77,9 @@ void ABLPGameMode::Logout(AController* Exiting)
 	BLPGameStatePtr->SetForfeitedPlayersArray(NewForfeitedPlayersArray);
 
 	// Check if there's only one player left, if there is they win
-	if (PlayerArray.Num()-1 == 1)
+	if (PlayerArray.Num() == 1)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Winner declared in BLPGameMode 82!"));
 		const ABLPPlayerState* WinnersPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[0]);
 		BLPGameStatePtr->SetWinnersPlayerId(WinnersPlayerStatePtr->GetBLPPlayerId());
 	}

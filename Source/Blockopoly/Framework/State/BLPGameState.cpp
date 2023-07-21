@@ -59,6 +59,7 @@ void ABLPGameState::CheckForWinner()
     			
 			if (!ForfeitedPlayersArray.Contains(Id))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Winner declared in BLPGameState!"));
 				SetWinnersPlayerId(Id);
 				break;
 			}	
@@ -117,19 +118,22 @@ ABLPPlayerState* ABLPGameState::GetBLPPlayerStateFromId(const int& ID) const
 void ABLPGameState::NextPlayerUp() 
 {
 	const int PlayerCount = PlayerArray.Num();
-	const int LastPlayerUpId = PlayerUpId;
-
-	if (PlayerUpId == PlayerCount-1)
+	
+	if (GSPlayerUpId == PlayerCount-1)
 	{
-		PlayerUpId = 0;
+		GSPlayerUpId = 0;
 	}
 	else
 	{
-		PlayerUpId += 1;
+		GSPlayerUpId += 1;
 	}
-	
-	if (ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(PlayerUpId)) BLPPlayerStatePtr->SetIsItMyTurn(true);
-	if (ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(LastPlayerUpId)) BLPPlayerStatePtr->SetIsItMyTurn(false);
+
+	for (APlayerState* PlayerStatePtr : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->SetPlayerUpId(GSPlayerUpId);
+	}
 }
 
 void ABLPGameState::ExecuteChanceCard(ABLPPlayerState* PlayerStatePtr)
@@ -430,7 +434,7 @@ void ABLPGameState::ChanceCard13(ABLPPlayerState* PlayerStatePtr)
 	const int PlayerCount = PlayerArray.Num();
 	for (int i = 0; i < PlayerCount; i++)
 	{
-		if (i != PlayerUpId)
+		if (i != GSPlayerUpId)
 		{
 			ABLPPlayerState* OtherBLPPlayerStatePtr = Cast<ABLPPlayerState>(GetBLPPlayerStateFromId(i));
 			OtherBLPPlayerStatePtr->AddToBalance(50);
@@ -505,7 +509,7 @@ void ABLPGameState::ChestCard6(ABLPPlayerState* PlayerStatePtr)
 	const int PlayerCount = PlayerArray.Num();
 	for (int i = 0; i < PlayerCount; i++)
 	{
-		if (i != PlayerUpId)
+		if (i != GSPlayerUpId)
 		{
 			ABLPPlayerState* OtherBLPPlayerStatePtr = Cast<ABLPPlayerState>(GetBLPPlayerStateFromId(i));
 			OtherBLPPlayerStatePtr->AddToBalance(-10);
@@ -605,9 +609,6 @@ void ABLPGameState::AddCardDrawNotificationToUI(const FString& Type, const FStri
 	{
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
-
-		
-		
 		BLPPlayerStatePtr->Client_AddNotification(Type, Heading, Description);
 	}
 }
@@ -655,7 +656,6 @@ void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	// Here we list the variables we want to replicate
 	DOREPLIFETIME(ABLPGameState, CurrentChanceCardIndex);
 	DOREPLIFETIME(ABLPGameState, CurrentChestCardIndex);
-	DOREPLIFETIME(ABLPGameState, PlayerUpId);
 	DOREPLIFETIME(ABLPGameState, ReadyStatusArray);
 	DOREPLIFETIME(ABLPGameState, AvailablePropertySpaceList);
 	DOREPLIFETIME(ABLPGameState, ForfeitedPlayersArray);

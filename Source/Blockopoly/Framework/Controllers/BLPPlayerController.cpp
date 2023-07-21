@@ -107,14 +107,7 @@ void ABLPPlayerController::LoadWinScreen(const FString& WinnersName)
 void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayerState* BLPPlayerStateInPtr)
 {
 	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
-	if (BLPPlayerStateInPtr->GetBLPPlayerId() == 0)
-	{
-		BLPPlayerStateInPtr->SetIsItMyTurn(true);
-	}
-	else
-	{
-		BLPPlayerStateInPtr->SetIsItMyTurn(false);
-	}
+	BLPPlayerStateInPtr->SetPlayerUpId(0);
 }
 bool ABLPPlayerController::Server_SetInitialTurnStatus_Validate(ABLPPlayerState* BLPPlayerStateInPtr){ return true; }
 
@@ -162,7 +155,7 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PC")); return; }
 
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
 		return;
@@ -232,7 +225,7 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PC")); return; }
 
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
 		return;
@@ -259,7 +252,7 @@ void ABLPPlayerController::Server_SkipJail_Implementation(ABLPPlayerState* Playe
 {
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
     
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
 		return;
@@ -307,7 +300,7 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("GameStatePtr is null, from PC")); return; }
 	
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
 		return;
@@ -342,14 +335,14 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 }
 bool ABLPPlayerController::Server_BuyPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr){ return true; }
 
-// Server RPC that allows a user to sell a property
-void ABLPPlayerController::Server_MortgagePropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
+// Server RPC that allows a user to mortgage/unmortgage a property
+void ABLPPlayerController::Server_ToggleMortgageStatus_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
 	if (SpaceID < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SpaceID invalid")); return; }
 	
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: It's not your turn!"))
 		return;
@@ -365,37 +358,18 @@ void ABLPPlayerController::Server_MortgagePropertySpace_Implementation(ABLPPlaye
 		return;
 	}
 
-	PropertySpacePtr->SetIsMortgaged(true);
-	PlayerStatePtr->AddToBalance(PropertySpacePtr->GetMortgageValue());
-}
-bool ABLPPlayerController::Server_MortgagePropertySpace_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
-
-void ABLPPlayerController::Server_UnMortgagePropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
-{
-	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
-	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
-	if (SpaceID < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SpaceID invalid")); return; }
-	
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (PropertySpacePtr->GetIsMortgaged())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: It's not your turn!"))
-		return;
+		PropertySpacePtr->SetIsMortgaged(false);
+		PlayerStatePtr->AddToBalance(-PropertySpacePtr->GetMortgageValue());
 	}
-	
-	ABLPPropertySpace* PropertySpacePtr = Cast<ABLPPropertySpace>(GameStatePtr->GetSpaceFromId(SpaceID));
-
-	if (!PropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not a property!")); return; }
-	
-	if (PlayerStatePtr->GetPlayerId() != PropertySpacePtr->GetOwnerID())
+	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this property!"))
-		return;
+		PropertySpacePtr->SetIsMortgaged(true);
+		PlayerStatePtr->AddToBalance(PropertySpacePtr->GetMortgageValue());
 	}
-
-	PropertySpacePtr->SetIsMortgaged(false);
-	PlayerStatePtr->AddToBalance(-PropertySpacePtr->GetMortgageValue());
 }
-bool ABLPPlayerController::Server_UnMortgagePropertySpace_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
+bool ABLPPlayerController::Server_ToggleMortgageStatus_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
 
 // Server RPC that enables a user to build a building on a property
 void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
@@ -404,7 +378,7 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
 	if (SpaceID < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SpaceID invalid")); return; }
 	
-	if (!PlayerStatePtr->GetIsItMyTurn())
+	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: It's not your turn!"))
 		return;
@@ -451,7 +425,6 @@ bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* Pla
 {
 	return true;
 }
-
 
 // Moves player (should always be called from the server)
 void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)
