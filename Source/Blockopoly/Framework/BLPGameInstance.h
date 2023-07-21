@@ -15,6 +15,7 @@ class UBLPUWLobbyMenu;
 class UBLPUWGameMenu;
 class UBLPUWPlayerCard;
 class UBLPUWPlayerCardLobby;
+class ABLPPlayerController;
 
 /**
  * 
@@ -34,15 +35,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LoadPauseMenu();
-
-	UFUNCTION(BlueprintCallable)
-	void LoadLobbyMenu();
-
-	UFUNCTION(BlueprintCallable)
-	void LoadGameMenu();
-
+	
 	UFUNCTION()
-	void QuitToMainMenu();
+	void QuitToMainMenu(ABLPPlayerController* BLPPlayerControllerPtr);
 
 	UFUNCTION()
 	void QuitGame();

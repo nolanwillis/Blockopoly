@@ -14,10 +14,13 @@
 #include "../..//Items/Spaces/BLPTaxSpace.h"
 #include "../../UI/BLPUWGameMenu.h"
 #include "../../UI/BLPUWLobbyMenu.h"
+#include "../../UI/BLPUWWinScreen.h"
 #include "../GameModes/BLPGameMode.h"
+#include "Blockopoly/Framework/BLPGameInstance.h"
 
 #include "GameFramework/Controller.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 
 ABLPPlayerController::ABLPPlayerController()
@@ -31,6 +34,11 @@ ABLPPlayerController::ABLPPlayerController()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LobbyMenu(TEXT("/Game/Core/UI/WBP_LobbyMenu"));
 	if (!WBP_LobbyMenu.Class) return;
 	LobbyMenuClass = WBP_LobbyMenu.Class;
+
+	// Gets reference to WBP_WinScreen.
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_WinScreen(TEXT("/Game/Core/UI/WBP_WinScreen"));
+	if (!WBP_WinScreen.Class) return;
+	WinScreenClass = WBP_WinScreen.Class;
 }
 
 void ABLPPlayerController::BeginPlay()
@@ -59,7 +67,6 @@ void ABLPPlayerController::LoadLobbyMenu()
 	LobbyMenu->Refresh();
 	UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Load Lobby Menu called"));
 }
-
 void ABLPPlayerController::LoadGameMenu()
 {
 	// Create a WBP_GameMenu
@@ -74,6 +81,28 @@ void ABLPPlayerController::LoadGameMenu()
 	GameMenu->RefreshPlayerList();
 	UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Load Game Menu called"));
 }
+void ABLPPlayerController::LoadPauseMenu()
+{
+	UE_LOG(LogTemp, Warning, TEXT("LoadPauseMenu clicked!"));
+	UBLPGameInstance* BLPGameInstancePtr = GetGameInstance<UBLPGameInstance>();
+	if (!BLPGameInstancePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerContoller: BLPGameInstancePtr is null")); return; }
+	BLPGameInstancePtr->LoadPauseMenu();
+}
+void ABLPPlayerController::LoadWinScreen(const FString& WinnersName)
+{
+	// Create a WBP_WinScreen
+	if (!WinScreenClass) return;
+	WinScreen = CreateWidget<UBLPUWWinScreen>(this, WinScreenClass);
+	if (!WinScreen) return;
+
+	// Remove game menu
+	if (GameMenu) GameMenu->Remove();
+
+	const FString WinnerDescription = "Congratulations to " + WinnersName;
+	WinScreen->SetOwningPlayer(this);
+	WinScreen->WinnerText->SetText(FText::FromString(WinnerDescription));
+	WinScreen->Setup();
+}
 
 void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayerState* BLPPlayerStateInPtr)
 {
@@ -87,11 +116,7 @@ void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayer
 		BLPPlayerStateInPtr->SetIsItMyTurn(false);
 	}
 }
-
-bool ABLPPlayerController::Server_SetInitialTurnStatus_Validate(ABLPPlayerState* BLPPlayerStateInPtr)
-{
-	return true;
-}
+bool ABLPPlayerController::Server_SetInitialTurnStatus_Validate(ABLPPlayerState* BLPPlayerStateInPtr){ return true; }
 
 // Server RPC that starts the game from the lobby
 void ABLPPlayerController::Server_PlayGame_Implementation(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr)
@@ -176,7 +201,7 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 
 	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
 
-	GameStatePtr->AddRollNotificationToUI(PlayerStatePtr->GetPlayerName(), DiceValue);
+	GameStatePtr->AddRollNotificationToUI(DiceValue, PlayerStatePtr);
 }
 bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
@@ -229,6 +254,52 @@ void ABLPPlayerController::Server_FinishTurn_Implementation(ABLPPlayerState* Pla
 	PlayerStatePtr->SetHasRolled(false);
 }
 bool ABLPPlayerController::Server_FinishTurn_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
+
+void ABLPPlayerController::Server_SkipJail_Implementation(ABLPPlayerState* PlayerStatePtr)
+{
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("PlayerStatePtr is null, from PC")); return; }
+    
+	if (!PlayerStatePtr->GetIsItMyTurn())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
+		return;
+	}
+	
+	if (PlayerStatePtr->GetJailSkipCounter() >= 1)
+	{
+		PlayerStatePtr->SetJailCounter(0);
+		PlayerStatePtr->SetJailSkipCounter(PlayerStatePtr->GetJailSkipCounter()-1);
+		PlayerStatePtr->SetHasRolled(true);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You have no get out of jail free cards!"));
+	}
+    	
+}
+bool ABLPPlayerController::Server_SkipJail_Validate(ABLPPlayerState* PlayerStatePtr){ return true; }
+
+void ABLPPlayerController::Server_Forfeit_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
+{
+	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
+	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
+	
+	TArray<int> NewForfeitedPlayersArray = GameStatePtr->GetForfeitedPlayersArray();
+	NewForfeitedPlayersArray.Add(PlayerStatePtr->GetBLPPlayerId());
+	GameStatePtr->SetForfeitedPlayersArray(NewForfeitedPlayersArray);
+
+	// Reset ownership of properties
+	for (ABLPPropertySpace* PropertySpace : PlayerStatePtr->GetOwnedPropertyList())
+	{
+		PropertySpace->SetOwnerID(-1);
+		GameStatePtr->AddToAvailablePropertySpaceList(PropertySpace);
+	}
+
+	GameStatePtr->AddForfeitNotificationToUI(PlayerStatePtr);
+	
+	GameStatePtr->NextPlayerUp();
+}
+bool ABLPPlayerController::Server_Forfeit_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
 // Server RPC that allows a user to buy a property that has no owner
 void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
@@ -380,6 +451,7 @@ bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* Pla
 {
 	return true;
 }
+
 
 // Moves player (should always be called from the server)
 void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)
@@ -595,7 +667,7 @@ void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABL
 }
 
 // Triggers a card to be drawn and a notifications to be sent to clients
-void ABLPPlayerController::DrawChanceCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
+void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
@@ -668,14 +740,14 @@ void ABLPPlayerController::DrawChanceCard(const ABLPPlayerState* PlayerStatePtr,
 			break;
 	}
 	
-	GameStatePtr->AddCardDrawNotificationToUI(PlayerStatePtr->GetPlayerName(), "Chance", Description);
+	GameStatePtr->AddCardDrawNotificationToUI("Chance", Description, PlayerStatePtr);
 }
-void ABLPPlayerController::DrawChestCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
+void ABLPPlayerController::DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
 
-	int RandomCardIndex = FMath::RandRange(2,12);
+	int RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChestCards()-1);
 	while (RandomCardIndex == GameStatePtr->GetCurrentChestCardIndex())
 	{
 		RandomCardIndex = FMath::RandRange(0, GameStatePtr->GetMaxChestCards()-1);
@@ -738,7 +810,7 @@ void ABLPPlayerController::DrawChestCard(const ABLPPlayerState* PlayerStatePtr, 
 		break;
 	}
 	
-	GameStatePtr->AddCardDrawNotificationToUI(PlayerStatePtr->GetPlayerName(), "Community Chest", Description);
+	GameStatePtr->AddCardDrawNotificationToUI("Community Chest", Description, PlayerStatePtr);
 }
 
 void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const

@@ -3,21 +3,20 @@
 
 #include "BLPUWPauseMenu.h"
 #include "../Framework/BLPGameInstance.h"
+#include "../Framework/Controllers/BLPPlayerController.h"
 
 #include "Components/Button.h"
 
-bool UBLPUWPauseMenu::Initialize()
+void UBLPUWPauseMenu::NativeConstruct()
 {
 	// Call parent version of function and store result in variable
-	bool Success = Super::Initialize();
-	if (!Success) return false;
+	Super::NativeConstruct();
 
 	// Bind host/join server functions to OnClicked delegate of host/join button
-	if (!MainMenuBtn) return false;
+	if (!MainMenuBtn) return;
 	MainMenuBtn->OnClicked.AddDynamic(this, &UBLPUWPauseMenu::MainMenuBtnClicked);
-	if (!BackBtn) return false;
+	if (!BackBtn) return;
 	BackBtn->OnClicked.AddDynamic(this, &UBLPUWPauseMenu::BackBtnClicked);
-	return true;
 }
 
 void UBLPUWPauseMenu::BackBtnClicked()
@@ -27,9 +26,11 @@ void UBLPUWPauseMenu::BackBtnClicked()
 
 void UBLPUWPauseMenu::MainMenuBtnClicked()
 {
-	UBLPGameInstance* GameInstance = Cast<UBLPGameInstance>(GetGameInstance());
-	if (GameInstance)
-	{
-		GameInstance->QuitToMainMenu();
-	}
+	UBLPGameInstance* BLPGameInstancePtr = GetGameInstance<UBLPGameInstance>();
+	ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
+    
+	if (!BLPGameInstancePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerState: BLPGameInstancePtr is null")); return; }
+	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerState: BLPPlayerControllerPtr is null")); return; }
+    	
+	BLPGameInstancePtr->QuitToMainMenu(BLPPlayerControllerPtr);
 }

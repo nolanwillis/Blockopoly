@@ -29,7 +29,10 @@ public:
 	UBLPUWGameMenu();
 	
 	UPROPERTY(meta = (BindWidget))
-	UWidgetSwitcher* WidgetSwitcher;
+	UWidgetSwitcher* MainWidgetSwitcher;
+
+	UPROPERTY(meta = (BindWidget))
+	UWidgetSwitcher* LargeNotificationWidgetSwitcher;
 
 	UFUNCTION()
 	void RefreshPlayerList();
@@ -52,6 +55,12 @@ private:
 	UButton* RollBtn;
 	UPROPERTY(meta = (BindWidget))
 	UButton* FinishTurnBtn;
+	UPROPERTY(meta = (BindWidget))
+	UButton* SkipJailBtn;
+	UPROPERTY(meta = (BindWidget))
+	UButton* ForfeitBtn;
+	UPROPERTY(meta = (BindWidget))
+	UButton* JailSkipCounterContainer;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* YourTurnText;
@@ -61,9 +70,14 @@ private:
 	UTextBlock* JailSkipCounterTextBlock;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* BalanceText;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* BankruptText; 
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* InJailImage;
+	
+	UPROPERTY(meta = (BindWidget))
+	UImage* JailSkipCounterImage;
 
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox* PlayerCardWrapBox;
@@ -72,16 +86,15 @@ private:
 	USizeBox* CardNotificationSlot;
 
 	UPROPERTY(meta = (BindWidget))
-	USizeBox* BannerNotificationSlotL;
-
-	UPROPERTY(meta = (BindWidget))
-	USizeBox* BannerNotificationSlotR;
-
+	USizeBox* BannerNotificationSlot;
+	
 	// References to widget blueprints
 	TSubclassOf<UUserWidget> PlayerCardClass;
 	TSubclassOf<UUserWidget> ChanceCardNotificationClass;
 	TSubclassOf<UUserWidget> ChestCardNotificationClass;
 	TSubclassOf<UUserWidget> RollNotificationClass;
+	TSubclassOf<UUserWidget> ForfeitNotificationClass;
+	TSubclassOf<UUserWidget> LeaveNotificationClass;
 
 	// Button handlers
 	UFUNCTION()
@@ -92,6 +105,10 @@ private:
 	void RollBtnClicked();
 	UFUNCTION()
 	void FinishTurnBtnClicked();
+	UFUNCTION()
+	void SkipJailBtnClicked();
+	UFUNCTION()
+	void ForfeitBtnClicked();
 
 	// Functions bound to delegates in PlayerState
 	UFUNCTION()
@@ -110,7 +127,7 @@ private:
 	void HasRolled(const bool Value);
 	UFUNCTION()
 	void UpdateJailSkipCounter(const int& JailSkipCounter);
-	
-	
+	UFUNCTION()
+	void CheckBankruptcyStatus() const;
 
 };

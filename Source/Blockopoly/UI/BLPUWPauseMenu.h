@@ -14,8 +14,8 @@ class BLOCKOPOLY_API UBLPUWPauseMenu : public UBLPUserWidget
 	GENERATED_BODY()
 
 protected:
-	virtual bool Initialize();
-
+	virtual void NativeConstruct() override;
+	
 private:
 	UPROPERTY(meta = (BindWidget))
 		UButton* MainMenuBtn;

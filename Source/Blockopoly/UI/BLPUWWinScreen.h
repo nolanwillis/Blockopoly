@@ -4,23 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
-#include "BLPUWPlayerCard.generated.h"
+#include "BLPUWWinScreen.generated.h"
 
-class UButton;
 class UTextBlock;
+class UButton;
 
 /**
  * 
  */
 UCLASS()
-class BLOCKOPOLY_API UBLPUWPlayerCard : public UBLPUserWidget
+class BLOCKOPOLY_API UBLPUWWinScreen : public UBLPUserWidget
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(meta = (BindWidget))
-	UButton* Container;
+	UTextBlock* WinnerText;
+
+protected:
+	virtual void NativeConstruct() override;
 	
+private:
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* PlayerNameText;
+	UButton* ExitBtn;
+	
+	UFUNCTION()
+	void ExitBtnClicked();
 };

@@ -32,9 +32,10 @@ void UBLPUserWidget::Remove()
 	if (!PlayerController) return;
 
 	// Settings that enable a user to interace with the menu via mouse
-	FInputModeGameOnly InputModeData;
+	FInputModeUIOnly InputModeData;
 	PlayerController->SetInputMode(InputModeData);
 	PlayerController->bShowMouseCursor = false;
 
 	UE_LOG(LogTemp, Warning, TEXT("BLPUserWidget: Remove successful!"));
 }
+

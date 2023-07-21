@@ -15,20 +15,10 @@ void ABLPGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// for (APlayerState* PlayerStatePtr : PlayerArray)
-	// {
-	// 	ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
-	// 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
-	// 	if (BLPPlayerStatePtr->GetBLPPlayerId() == 0)
-	// 	{
-	// 		BLPPlayerStatePtr->SetIsItMyTurn(true);
-	// 	}
-	// }
-	
 	const UWorld* World = GetWorld();
 	if (!World) return;
 	BLPCameraManagerPtr = Cast<ABLPCameraManager>(UGameplayStatics::GetActorOfClass(World, ABLPCameraManager::StaticClass()));
-	if (!BLPCameraManagerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPCameraManagerPtr is null")); return; } 
+	if (!BLPCameraManagerPtr) UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPCameraManagerPtr is null")); 
 }
 
 void ABLPGameState::OnRep_ReadyStatusArray()
@@ -39,6 +29,53 @@ void ABLPGameState::OnRep_ReadyStatusArray()
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameStateLobby: BLPPlayerStatePtr is null")); return; }
 		BLPPlayerStatePtr->Client_RefreshUI();
 	}
+}
+
+void ABLPGameState::WinnersPlayerIdCallback()
+{
+	const ABLPPlayerState* WinnersPlayerStatePtr = GetBLPPlayerStateFromId(WinnersPlayerId);
+	if (!WinnersPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: WinnersPlayerStatePtr is null")); return; }
+	
+	// Add win screen to all clients
+	for (APlayerState* PlayerStatePtr : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->Client_DisplayWinScreen(WinnersPlayerStatePtr->GetPlayerName());
+    }	
+}
+
+void ABLPGameState::CheckForWinner()
+{
+	// Check for win condition (all players forfeit except 1)
+	if (ForfeitedPlayersArray.Num() == PlayerArray.Num()-1)
+	{
+		for (APlayerState* PlayerStatePtr : PlayerArray)
+		{
+			const ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+			if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+
+			const int Id = BLPPlayerStatePtr->GetBLPPlayerId();
+    			
+			if (!ForfeitedPlayersArray.Contains(Id))
+			{
+				SetWinnersPlayerId(Id);
+				break;
+			}	
+		}
+	}
+}
+
+void ABLPGameState::OnRep_ForfeitedPlayersArray()
+{
+	for (APlayerState* PlayerStatePtr : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->Client_RefreshUI();
+	}
+	
+	CheckForWinner();
 }
 
 // Returns the player state of the owner of a given property
@@ -90,7 +127,7 @@ void ABLPGameState::NextPlayerUp()
 	{
 		PlayerUpId += 1;
 	}
-
+	
 	if (ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(PlayerUpId)) BLPPlayerStatePtr->SetIsItMyTurn(true);
 	if (ABLPPlayerState* BLPPlayerStatePtr = GetBLPPlayerStateFromId(LastPlayerUpId)) BLPPlayerStatePtr->SetIsItMyTurn(false);
 }
@@ -558,28 +595,56 @@ void ABLPGameState::ChestCard15(ABLPPlayerState* PlayerStatePtr)
 	}
 }
 
+
 // UI Notification Functions
-void ABLPGameState::AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description)
+void ABLPGameState::AddCardDrawNotificationToUI(const FString& Type, const FString& Description, const ABLPPlayerState* BLPPlayerStateInPtr)
 {
-	const FString Heading = PlayerName + " Took a " + Type + " Card";
+	const FString Heading = BLPPlayerStateInPtr->GetPlayerName() + " Took a " + Type + " Card";
 	
 	for (TObjectPtr<APlayerState> PlayerState : PlayerArray)
 	{
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
-		const ABLPPlayerController* BLPPlayerControllerPtr = Cast<ABLPPlayerController>(BLPPlayerStatePtr->GetPlayerController());
+
+		
+		
 		BLPPlayerStatePtr->Client_AddNotification(Type, Heading, Description);
 	}
 }
-void ABLPGameState::AddRollNotificationToUI(const FString& PlayerName, const int& Number)
+
+void ABLPGameState::AddRollNotificationToUI(const int& Number, const ABLPPlayerState* BLPPlayerStateInPtr)
 {
-	const FString Heading = PlayerName + " Rolled a ";
+	const FString Heading = BLPPlayerStateInPtr->GetPlayerName() + " Rolled a ";
 	
 	for (TObjectPtr<APlayerState> PlayerState : PlayerArray)
 	{
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
 		BLPPlayerStatePtr->Client_AddNotification("Roll", Heading, FString::FromInt(Number));
+	}
+}
+
+void ABLPGameState::AddForfeitNotificationToUI(const ABLPPlayerState* BLPPlayerStateInPtr)
+{
+	const FString Description = BLPPlayerStateInPtr->GetPlayerName() + " has forfeit";
+    	
+	for (TObjectPtr<APlayerState> PlayerState : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->Client_AddNotification("Forfeit", "", Description);
+	}
+}
+
+void ABLPGameState::AddLeaveNotificationToUI(const ABLPPlayerState* BLPPlayerStateInPtr)
+{
+	const FString Description = BLPPlayerStateInPtr->GetPlayerName() + " has left the game";
+	for (TObjectPtr<APlayerState> PlayerState : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
+
+		BLPPlayerStatePtr->Client_AddNotification("Leave", "", Description);
 	}
 }
 
@@ -592,4 +657,6 @@ void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ABLPGameState, CurrentChestCardIndex);
 	DOREPLIFETIME(ABLPGameState, PlayerUpId);
 	DOREPLIFETIME(ABLPGameState, ReadyStatusArray);
+	DOREPLIFETIME(ABLPGameState, AvailablePropertySpaceList);
+	DOREPLIFETIME(ABLPGameState, ForfeitedPlayersArray);
 }

@@ -16,5 +16,5 @@ class BLOCKOPOLY_API UBLPUserWidget : public UUserWidget
 	
 public:
 	void Setup();
-	void Remove();
+	virtual void Remove();
 };

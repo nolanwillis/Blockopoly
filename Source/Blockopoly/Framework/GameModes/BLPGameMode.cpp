@@ -49,4 +49,37 @@ void ABLPGameMode::PostLogin(APlayerController* NewPlayer)
 void ABLPGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
+
+	ABLPGameState* BLPGameStatePtr = GetGameState<ABLPGameState>();
+	ABLPPlayerState* PlayerStateOfLeaver = Exiting->GetPlayerState<ABLPPlayerState>();  
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPGameStatePtr is null")); return; }
+	if (!PlayerStateOfLeaver) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: PlayerStateOfLeaver is null")); return; }
+	
+	TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
+
+	if (PlayerStateOfLeaver->GetBLPPlayerId() == 0) return;
+
+	PlayerStateOfLeaver->SetIsLeaving(true);
+	
+	// Tell all the player states to update their UI when a player exits
+	for (APlayerState* PlayerState : PlayerArray)
+	{
+		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
+		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
+		BLPPlayerStatePtr->SetPlayerCount(PlayerArray.Num()-1);
+		const FString Description = PlayerStateOfLeaver->GetPlayerName() + " has left the game";
+		BLPPlayerStatePtr->Client_AddNotification("Leave", "", Description);
+	}
+
+	// Remove Id from forfeited players array to ensure win condition can still be met
+	TArray<int> NewForfeitedPlayersArray = BLPGameStatePtr->GetForfeitedPlayersArray();
+	NewForfeitedPlayersArray.Remove(PlayerStateOfLeaver->GetBLPPlayerId());
+	BLPGameStatePtr->SetForfeitedPlayersArray(NewForfeitedPlayersArray);
+
+	// Check if there's only one player left, if there is they win
+	if (PlayerArray.Num()-1 == 1)
+	{
+		const ABLPPlayerState* WinnersPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[0]);
+		BLPGameStatePtr->SetWinnersPlayerId(WinnersPlayerStatePtr->GetBLPPlayerId());
+	}
 }

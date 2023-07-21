@@ -8,6 +8,7 @@
 #include "../State/BLPGameState.h"
 #include "BLPPlayerController.generated.h"
 
+class UBLPUWWinScreen;
 class ABLPAvatar;
 class ABLPEstatePropertySpace;
 class ABLPGameState; 
@@ -33,6 +34,8 @@ public:
 	UBLPUWGameMenu* GameMenu;
 	UPROPERTY()
 	UBLPUWLobbyMenu* LobbyMenu;
+	UPROPERTY()
+	UBLPUWWinScreen* WinScreen;
 
 	FOnPlayerJoinSignature OnPlayerJoinDelegate;
 	
@@ -40,9 +43,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void LoadLobbyMenu();
-
 	UFUNCTION(BlueprintCallable)
 	void LoadGameMenu();
+	UFUNCTION(BlueprintCallable)
+	void LoadPauseMenu();
+	UFUNCTION(BlueprintCallable)
+	void LoadWinScreen(const FString& WinnersName);
 	
 	// Lobby RPCs
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
@@ -64,6 +70,12 @@ public:
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_FinishTurn(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	void Server_SkipJail(ABLPPlayerState* PlayerStatePtr);
+
+	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	void Server_Forfeit(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
+	
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_BuyPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
@@ -87,25 +99,24 @@ public:
 	void SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList);
 	void ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	void CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const;
-	void DrawChanceCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
-	void DrawChestCard(const ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
+	void DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
+	void DrawChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const;
 
 protected:
 	virtual void BeginPlay() override;
 	
 private:
+	// WBP References
+	TSubclassOf<UUserWidget> GameMenuClass;
+	TSubclassOf<UUserWidget> LobbyMenuClass;
+	TSubclassOf<UUserWidget> WinScreenClass;
+
+	UPROPERTY()
+	ABLPCameraManager* BLPCameraManagerPtr;
+
 	void UpdateCanBuild(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const ABLPPlayerState* BLPPlayerStatePtr) const;
 	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const;
 	void UpdateRent(ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const;
 	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
-	
-	// Reference to WBP_GameMenu
-	TSubclassOf<UUserWidget> GameMenuClass;
-
-	// Reference to WBP_LobbyMenu 
-	TSubclassOf<UUserWidget> LobbyMenuClass;
-
-	UPROPERTY()
-	ABLPCameraManager* BLPCameraManagerPtr;
-	
+    	
 };

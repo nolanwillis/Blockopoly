@@ -6,6 +6,8 @@
 #include "../../Items/Spaces/BLPSpace.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
 #include "../../Items/Spaces/BLPJailSpace.h"
+#include "Blockopoly/Framework/BLPGameInstance.h"
+#include "Blockopoly/Framework/Controllers/BLPPlayerController.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -64,6 +66,14 @@ void ABLPPlayerState::Client_SimulateMoveLocally_Implementation(const int NewSpa
 	}
 }
 bool ABLPPlayerState::Client_SimulateMoveLocally_Validate(const int NewSpaceId){ return true; }
+
+void ABLPPlayerState::Client_DisplayWinScreen_Implementation(const FString& WinnersName)
+{
+	ABLPPlayerController* BLPPlayerControllerPtr = Cast<ABLPPlayerController>(GetPlayerController()); 
+	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerState: BLPPlayerControllerPtr is null")); return; }
+	BLPPlayerControllerPtr->LoadWinScreen(WinnersName);
+}
+bool ABLPPlayerState::Client_DisplayWinScreen_Validate(const FString& WinnersName){ return true; }
 
 // Notifies UI of credit change, so UI reflects correct credit amount
 void ABLPPlayerState::OnRep_CreditBalance() const
@@ -125,7 +135,6 @@ void ABLPPlayerState::OnRep_PlayerCount()
 
 void ABLPPlayerState::OnRep_CanBuyCurrentProperty()
 {
-	
 	CanBuyDelegate.ExecuteIfBound(CanBuyCurrentProperty);
 }
 

@@ -7,8 +7,7 @@
 #include "../UI/BLPUWPauseMenu.h"
 #include "../UI/BLPUWGameMenu.h"
 #include "../UI/BLPUWLobbyMenu.h"
-#include "../Framework/GameModes/BLPGameMode.h"
-#include "../Framework/State/BLPGameState.h"
+#include "./Controllers/BLPPlayerController.h"
 
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
@@ -91,32 +90,11 @@ void UBLPGameInstance::LoadPauseMenu()
 	PauseMenu->Setup();
 }
 
-void UBLPGameInstance::LoadLobbyMenu()
+void UBLPGameInstance::QuitToMainMenu(ABLPPlayerController* BLPPlayerControllerPtr)
 {
-	// Create a WBP_LobbyMenu
-	if (!LobbyMenuClass) return;
-	LobbyMenu = CreateWidget<UBLPUWLobbyMenu>(this, LobbyMenuClass);
-	if (!LobbyMenu) return;
-	LobbyMenu->Setup();
-	LobbyMenu->Refresh();
-	UE_LOG(LogTemp, Warning, TEXT("BLPGameInstance: Load Lobby Menu called"));
-}
-
-void UBLPGameInstance::LoadGameMenu()
-{
-	// Create a WBP_GameMenu
-	if (!GameMenuClass) return;
-	GameMenu = CreateWidget<UBLPUWGameMenu>(this, GameMenuClass);
-	if (!GameMenu) return;
-	GameMenu->Setup();
-}
-
-void UBLPGameInstance::QuitToMainMenu()
-{
-	APlayerController* PlayerController = GetFirstLocalPlayerController();
-	if (!PlayerController) return;
+	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameInstance: BLPPlayerControllerPtr is null")); return; }
 	// Tells current player controller to travel to a different map
-	PlayerController->ClientTravel("/Game/Maps/LVL_MainMenu", ETravelType::TRAVEL_Absolute);
+	BLPPlayerControllerPtr->ClientTravel("/Game/Maps/LVL_MainMenu", ETravelType::TRAVEL_Absolute);
 }
 
 void UBLPGameInstance::QuitGame()

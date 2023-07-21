@@ -95,7 +95,7 @@ void UBLPUWLobbyMenu::RefreshPlayerList()
 	if (!World) return;
 	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
 	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu: BLPGameStatePtr is null"));  return; };
-
+	
 	const TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
 	TArray<int> ReadyStatusArray = BLPGameStatePtr->GetReadyStatusArray();
     	

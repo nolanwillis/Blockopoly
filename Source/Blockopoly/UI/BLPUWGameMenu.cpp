@@ -16,6 +16,7 @@
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/WrapBox.h"
+#include "Interfaces/IHttpResponse.h"
 
 UBLPUWGameMenu::UBLPUWGameMenu()
 {
@@ -35,6 +36,14 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_RollNotification(TEXT("/Game/Core/UI/WBP_RollNotification"));
 	if (!WBP_RollNotification.Class) return;
 	RollNotificationClass = WBP_RollNotification.Class;
+
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_ForfeitNotification(TEXT("/Game/Core/UI/WBP_ForfeitNotification"));
+	if (!WBP_ForfeitNotification.Class) return;
+	ForfeitNotificationClass = WBP_ForfeitNotification.Class;
+	
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LeaveNotification(TEXT("/Game/Core/UI/WBP_LeaveNotification"));
+	if (!WBP_LeaveNotification.Class) return;
+	LeaveNotificationClass = WBP_LeaveNotification.Class;
 }
 
  void UBLPUWGameMenu::NativeConstruct()
@@ -48,9 +57,13 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	BuyBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::BuyBtnClicked);
 	if (!RollBtn) return;
 	RollBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::RollBtnClicked);
-	if (!FinishTurnBtn) return ;
+	if (!FinishTurnBtn) return;
 	FinishTurnBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::FinishTurnBtnClicked);
-	
+	if (!SkipJailBtn) return;
+	SkipJailBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::SkipJailBtnClicked);
+	if (!ForfeitBtn) return;
+	ForfeitBtn->OnClicked.AddDynamic(this, &UBLPUWGameMenu::ForfeitBtnClicked);
+    	
 	ABLPPlayerController* BLPPlayerControllerPtr = GetOwningPlayer<ABLPPlayerController>();
 	if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerControllerPtr is null")); return; }
 	
@@ -70,12 +83,11 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	
 	// Set initial turn status for the owner of this menu.
 	BLPPlayerControllerPtr->Server_SetInitialTurnStatus(BLPPlayerStatePtr);
-	
 }
 
 void UBLPUWGameMenu::PropertyMenuBtnClicked()
 {
-	WidgetSwitcher->SetActiveWidgetIndex(1);
+	MainWidgetSwitcher->SetActiveWidgetIndex(1);
 	PropertyMenu->RefreshPropertyWrapBox();
 	
 	UE_LOG(LogTemp, Warning, TEXT("Property menu button clicked"));
@@ -131,6 +143,42 @@ void UBLPUWGameMenu::FinishTurnBtnClicked()
 	UE_LOG(LogTemp, Warning, TEXT("Finish turn button clicked"));
 }
 
+void UBLPUWGameMenu::SkipJailBtnClicked()
+{
+	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
+ 	if (!PlayerControllerPtr) return;
+ 	
+ 	const UWorld* World = GetWorld();
+ 	if (!World) return;
+ 	ABLPGameState* GameStatePtr = World->GetGameState<ABLPGameState>(); 
+ 	ABLPPlayerState* PlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+ 	
+ 	PlayerControllerPtr->Server_SkipJail(PlayerStatePtr);
+
+	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
+	LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(0);
+ 	UE_LOG(LogTemp, Warning, TEXT("Finish turn button clicked"));
+}
+
+void UBLPUWGameMenu::ForfeitBtnClicked()
+{
+	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
+	if (!PlayerControllerPtr) return;
+    
+	const UWorld* World = GetWorld();
+	if (!World) return;
+	ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>(); 
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+    	
+	PlayerControllerPtr->Server_Forfeit(BLPPlayerStatePtr, BLPGameStatePtr);
+
+	BankruptText->SetText(FText::FromString("You have forfeit!"));
+
+	ForfeitBtn->SetVisibility(ESlateVisibility::Hidden);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Forfeit button clicked"));
+}
+
 void UBLPUWGameMenu::ItsMyTurn()
 {
 	YourTurnText->SetText(FText::FromString("It's your turn"));
@@ -148,6 +196,8 @@ void UBLPUWGameMenu::ItsMyTurn()
 	{
 		// If in jail, pass true in to HasRolled() so FinishTurnBtn becomes visible.
 		HasRolled(true);
+		RollBtn->SetVisibility(ESlateVisibility::Hidden);
+		if (PlayerStatePtr->GetJailSkipCounter() >= 1) SkipJailBtn->SetVisibility(ESlateVisibility::Visible);
 	}
 }
 
@@ -168,11 +218,13 @@ void UBLPUWGameMenu::ItsNotMyTurn()
 	RollBtn->SetVisibility(ESlateVisibility::Hidden);
 	FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
 	BuyBtn->SetVisibility(ESlateVisibility::Hidden);
+	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UBLPUWGameMenu::UpdateBalance(const int NewBalance)
 {
 	BalanceText->SetText(FText::AsNumber(NewBalance));
+	CheckBankruptcyStatus();
 }
 
 void UBLPUWGameMenu::InJail(const int TurnsLeft)
@@ -188,15 +240,13 @@ void UBLPUWGameMenu::InJail(const int TurnsLeft)
 		Message.Append(" MORE TURNS");
 	}
 	InJailText->SetText( FText::FromString(Message));
-	InJailText->SetVisibility(ESlateVisibility::Visible);
-	InJailImage->SetVisibility(ESlateVisibility::Visible);
-	RollBtn->SetVisibility(ESlateVisibility::Visible);
+	LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(1);
+	RollBtn->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UBLPUWGameMenu::OutOfJail()
 {
-	InJailText->SetVisibility(ESlateVisibility::Hidden);
-	InJailImage->SetVisibility(ESlateVisibility::Hidden);
+	LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(0);
 }
 
 void UBLPUWGameMenu::CanBuy(const bool Value)
@@ -213,6 +263,16 @@ void UBLPUWGameMenu::CanBuy(const bool Value)
 
 void UBLPUWGameMenu::HasRolled(const bool Value)
 {
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+	if (!BLPPlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null"));
+
+	// Check if bankrupt to ensure FinishTurnBtn does not become visible
+	if (BLPPlayerStatePtr->GetBalance() < 0)
+	{
+		FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
+		return;
+	}
+
 	if (Value)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Finish button should be visible"));
@@ -234,7 +294,28 @@ void UBLPUWGameMenu::UpdateJailSkipCounter(const int& Value)
 	else
 	{
 		JailSkipCounterTextBlock->SetVisibility(ESlateVisibility::Visible);
-		JailSkipCounterTextBlock->SetText(FText::FromString("Get Out Of Jail Cards: " + FString::FromInt(Value))); 
+		JailSkipCounterTextBlock->SetText(FText::FromString("X " + FString::FromInt(Value)));
+		JailSkipCounterContainer->SetVisibility(ESlateVisibility::HitTestInvisible);
+		JailSkipCounterImage->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void UBLPUWGameMenu::CheckBankruptcyStatus() const
+{
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+	if (!BLPPlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null"));
+
+	if (BLPPlayerStatePtr->GetBalance() < 0)
+	{
+		LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(2);
+		FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
+		ForfeitBtn->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(0);
+		FinishTurnBtn->SetVisibility(ESlateVisibility::Visible);
+		ForfeitBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -249,26 +330,31 @@ void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading
 	{
 		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChanceCardNotificationClass);
-		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-		Notification->Setup(Type, Heading, Description, this);
-		CardNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Community Chest")
 	{
 		CardNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, ChestCardNotificationClass);
-		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-		Notification->Setup(Type, Heading, Description, this);
-		CardNotificationSlot->AddChild(Notification);
 	}
 	else if (Type == "Roll")
 	{
-		BannerNotificationSlotL->ClearChildren();
+		BannerNotificationSlot->ClearChildren();
 		Notification = CreateWidget<UBLPUWNotification>(World, RollNotificationClass);
-		if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
-		Notification->Setup(Type, Heading, Description, this);
-		BannerNotificationSlotL->AddChild(Notification);
 	}
+	else if (Type == "Forfeit")
+	{
+		BannerNotificationSlot->ClearChildren();
+		Notification = CreateWidget<UBLPUWNotification>(World, ForfeitNotificationClass);
+	}
+	else if (Type == "Leave")
+	{
+		BannerNotificationSlot->ClearChildren();
+		Notification = CreateWidget<UBLPUWNotification>(World, LeaveNotificationClass);
+	}
+	
+	if (!Notification) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: Notification is null")); return; }
+	Notification->Setup(Type, Heading, Description, this);
+	BannerNotificationSlot->AddChild(Notification);
 }
 
 void UBLPUWGameMenu::RefreshPlayerList()
@@ -278,14 +364,31 @@ void UBLPUWGameMenu::RefreshPlayerList()
 	UWorld* World = GetWorld();
 	if (!World) return;
 	const ABLPGameState* BLPGameStatePtr = World->GetGameState<ABLPGameState>();
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null ")); return;}
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null ")); return;}
+
 	
 	const TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
-	for (const APlayerState* PlayerStatePtr : PlayerArray)
+	
+	for (APlayerState* PlayerState : PlayerArray)
 	{
+		const ABLPPlayerState* BLPPlayerState = Cast<ABLPPlayerState>(PlayerState);
+		if (!BLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null ")); return;}
+
+		if (BLPPlayerState->GetIsLeaving()) continue;
+		
 		UBLPUWPlayerCard* PlayerCard = CreateWidget<UBLPUWPlayerCard>(World, PlayerCardClass);
 		if (!PlayerCard) return;
-		PlayerCard->PlayerNameText->SetText(FText::FromString(PlayerStatePtr->GetPlayerName()));
+		PlayerCard->PlayerNameText->SetText(FText::FromString(BLPPlayerState->GetPlayerName()));
+
+		TArray<int> ForfeitedPlayersArray = BLPGameStatePtr->GetForfeitedPlayersArray();
+
+		if (ForfeitedPlayersArray.Contains(BLPPlayerState->GetBLPPlayerId()))
+		{
+			PlayerCard->SetRenderOpacity(0.2f);
+		}
+		
 		PlayerCardWrapBox->AddChild(PlayerCard);
 	}
 }

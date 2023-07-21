@@ -21,6 +21,9 @@ class BLOCKOPOLY_API ABLPGameState : public AGameState
 public:
 	TArray<int> GetReadyStatusArray() const { return ReadyStatusArray; }
 	void SetReadyStatusArray(const TArray<int>& Value) { ReadyStatusArray = Value; OnRep_ReadyStatusArray(); }
+	
+	TArray<int> GetForfeitedPlayersArray() const { return ForfeitedPlayersArray; }
+	void SetForfeitedPlayersArray(const TArray<int>& Value) { ForfeitedPlayersArray = Value; OnRep_ForfeitedPlayersArray(); }
     	
 	ABLPCameraManager* GetCameraManager() const { return BLPCameraManagerPtr; }
 	
@@ -30,6 +33,8 @@ public:
 
 	int GetPlayerUpId() const { return PlayerUpId; }
 	void NextPlayerUp();
+
+	void SetWinnersPlayerId(const int& Value) { WinnersPlayerId = Value; WinnersPlayerIdCallback(); }
 	
 	TArray<ABLPSpace*> GetSpaceList() const { return SpaceList; }
 	void AddToSpaceList(ABLPSpace* Space) { SpaceList.Add(Space); }
@@ -49,9 +54,11 @@ public:
 	void ExecuteChanceCard(ABLPPlayerState* PlayerStatePtr);
 	void ExecuteChestCard(ABLPPlayerState* PlayerStatePtr);
 	
-	void AddRollNotificationToUI(const FString& PlayerName, const int& Number);
-	void AddCardDrawNotificationToUI(const FString& PlayerName, const FString& Type, const FString& Description);
-
+	void AddRollNotificationToUI(const int& Number, const ABLPPlayerState* BLPPlayerStateInPtr);
+	void AddForfeitNotificationToUI(const ABLPPlayerState* BLPPlayerStateInPtr);
+	void AddLeaveNotificationToUI(const ABLPPlayerState* BLPPlayerStateInPtr);
+	void AddCardDrawNotificationToUI(const FString& Type, const FString& Description, const ABLPPlayerState* BLPPlayerStateInPtr);
+	
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,8 +67,8 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_ReadyStatusArray)
 	TArray<int> ReadyStatusArray = {0, 0, 0, 0};
 	
-	UFUNCTION()
-	void OnRep_ReadyStatusArray();
+	UPROPERTY(ReplicatedUsing=OnRep_ForfeitedPlayersArray)
+	TArray<int> ForfeitedPlayersArray = {};
 	
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
@@ -69,19 +76,22 @@ private:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "General Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPSpace*> SpaceList;
 
-	// UPROPERTY(ReplicatedUsing=OnRep_AvailablePropertySpaces, BlueprintReadWrite, EditAnywhere, Category = "Property Spaces", meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category = "Property Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPPropertySpace*> AvailablePropertySpaceList;
 	
 	// Keeps track of which player in the PlayerArray has the current turn
 	UPROPERTY(Replicated)
 	int PlayerUpId = 0;
 
+	UPROPERTY()
+	int WinnersPlayerId = -1;
+
 	UPROPERTY(Replicated)
 	int CurrentChanceCardIndex = -1;
 
 	UPROPERTY(Replicated)
 	int CurrentChestCardIndex = -1;
-
+	
 	// WARNING: Must be changed if the number of cards change
 	const int MaxChanceCards = 16;
 	const int MaxChestCards = 16;
@@ -130,4 +140,14 @@ private:
 	void ChestCard13(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard14(ABLPPlayerState* PlayerStatePtr);
 	void ChestCard15(ABLPPlayerState* PlayerStatePtr);
+
+	UFUNCTION()
+	void OnRep_ForfeitedPlayersArray();
+	UFUNCTION()
+	void OnRep_ReadyStatusArray();
+	UFUNCTION()
+	void WinnersPlayerIdCallback();
+	
+	UFUNCTION()
+	void CheckForWinner();
 };

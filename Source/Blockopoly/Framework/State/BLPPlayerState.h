@@ -12,6 +12,7 @@ class ABLPPropertySpace;
 class ABLPPlayerState;
 class ABLPCameraManager;
 DECLARE_DELEGATE(FOutOfJailSignature);
+DECLARE_DELEGATE(FForfeitSignature);
 DECLARE_MULTICAST_DELEGATE(FRefreshUISignature);
 DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
@@ -37,7 +38,7 @@ public:
 	void SetBLPPlayerId(const int& Value){ BLPPlayerId = Value;}
 	
 	int GetBalance() const { return CreditBalance; }
-	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value > 0 ? CreditBalance+Value : 0; OnRep_CreditBalance();}
+	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value; OnRep_CreditBalance();}
 	
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
 	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; }
@@ -47,7 +48,7 @@ public:
 	
 	bool GetIsItMyTurn() const { return IsItMyTurn; }
 	void SetIsItMyTurn(const bool& Value) { IsItMyTurn = Value; OnRep_IsItMyTurn();}
-	
+
 	TArray<ABLPPropertySpace*> GetOwnedPropertyList() const { return OwnedPropertyList; }
 	void AddToOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Add(Value); OnRep_OwnedPropertyList();}
 	void RemoveFromOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Remove(Value); OnRep_OwnedPropertyList();}
@@ -66,15 +67,19 @@ public:
 	bool GetHasRolled() const { return HasRolled; }
 	void SetHasRolled(const bool& Value) { HasRolled = Value; OnRep_HasRolled(); }
 	
+	bool GetIsLeaving() const { return IsLeaving; }
+	void SetIsLeaving(const bool& Value) { IsLeaving = Value; }
+
+	// Client RPCs
 	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
 	void Client_AddNotification(const FString& Type, const FString& Heading, const FString& Description);
-
 	UFUNCTION(Client, Unreliable, WithValidation)
 	void Client_RefreshUI();
-    
+	UFUNCTION(Client, Unreliable, WithValidation)
+	void Client_DisplayWinScreen(const FString& WinnersName);
     UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
 	void Client_SimulateMoveLocally(const int NewSpaceId);
-
+	
 	FItsMyTurnSignature ItsMyTurnDelegate;
 	FItsNotMyTurnSignature ItsNotMyTurnDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
@@ -85,7 +90,7 @@ public:
 	FCanBuySignature CanBuyDelegate;
 	FHasRolledSignature HasRolledDelegate;
 	FNotificationSignature NotificationDelegate;
-
+	FForfeitSignature ForfeitDelegate;
 
 private:
 	UPROPERTY(Replicated, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -101,6 +106,9 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_IsItMyTurn)
 	bool IsItMyTurn = false;
+
+	UPROPERTY(Replicated)
+	bool IsLeaving = false;
 
 	UPROPERTY(ReplicatedUsing=OnRep_OwnedPropertyList)
 	TArray<ABLPPropertySpace*> OwnedPropertyList;
@@ -123,9 +131,11 @@ private:
 	// Keeps track of if the player has rolled during their turn
 	UPROPERTY(ReplicatedUsing=OnRep_HasRolled)
 	bool HasRolled = false;
-
+	
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
+
+	TSubclassOf<UUserWidget> WinScreenClass;
 	
 	UFUNCTION()
 	void OnRep_CreditBalance() const;
@@ -150,4 +160,6 @@ private:
 
 	UFUNCTION()
 	void OnRep_HasRolled();
+	
+	
 };
