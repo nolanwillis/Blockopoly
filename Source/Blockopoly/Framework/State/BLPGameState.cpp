@@ -85,7 +85,7 @@ ABLPPlayerState* ABLPGameState::GetOwnerOfProperty(const ABLPPropertySpace* Ente
 	for (APlayerState* PlayerStatePtr : PlayerArray)
 	{
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
-		if (BLPPlayerStatePtr->GetPlayerId() == EnteredPropertySpace->GetOwnerID())
+		if (BLPPlayerStatePtr->GetPlayerId() == EnteredPropertySpace->GetOwnerId())
 		{
 			return Cast<ABLPPlayerState>(BLPPlayerStatePtr);
 		}

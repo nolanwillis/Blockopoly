@@ -59,7 +59,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
 	UStaticMeshComponent* Hotel;
-
+	
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	FString FamilyColor;
 	

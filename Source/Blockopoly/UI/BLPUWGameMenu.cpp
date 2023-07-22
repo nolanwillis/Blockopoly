@@ -16,6 +16,7 @@
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/WrapBox.h"
+#include "DSP/AudioDebuggingUtilities.h"
 
 UBLPUWGameMenu::UBLPUWGameMenu()
 {
@@ -394,6 +395,25 @@ void UBLPUWGameMenu::RefreshPlayerList()
 		UBLPUWPlayerCard* PlayerCard = CreateWidget<UBLPUWPlayerCard>(World, PlayerCardClass);
 		if (!PlayerCard) return;
 		PlayerCard->PlayerNameText->SetText(FText::FromString(BLPPlayerState->GetPlayerName()));
+
+		switch(BLPPlayerState->GetBLPPlayerId())
+		{
+		case 0:
+			PlayerCard->Container->SetBackgroundColor(FLinearColor(1, .1588, 0, .8));
+			break;
+		case 1:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(.645, 0, 1, .8));
+            break;			
+		case 2:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(.0243, .566, 0, .8));
+            break;			
+		case 3:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(.0, .286, 1, .8));
+			break;
+		default:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(1, 1, 1, 1));
+			break;
+		}
 
 		TArray<int> ForfeitedPlayersArray = BLPGameStatePtr->GetForfeitedPlayersArray();
 

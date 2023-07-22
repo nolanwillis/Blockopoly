@@ -284,7 +284,7 @@ void ABLPPlayerController::Server_Forfeit_Implementation(ABLPPlayerState* Player
 	// Reset ownership of properties
 	for (ABLPPropertySpace* PropertySpace : PlayerStatePtr->GetOwnedPropertyList())
 	{
-		PropertySpace->SetOwnerID(-1);
+		PropertySpace->SetOwnerId(-1);
 		GameStatePtr->AddToAvailablePropertySpaceList(PropertySpace);
 	}
 
@@ -321,7 +321,7 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 		return;
 	}
 	
-	PropertySpaceToPurchase->SetOwnerID(PlayerStatePtr->GetPlayerId());
+	PropertySpaceToPurchase->SetOwnerId(PlayerStatePtr->GetBLPPlayerId());
 	PlayerStatePtr->AddToOwnedPropertyList(PropertySpaceToPurchase);
 	GameStatePtr->RemoveFromAvailablePropertySpaceList(PropertySpaceToPurchase);
 	PlayerStatePtr->AddToBalance(-PropertySpaceToPurchase->GetPurchaseCost());
@@ -352,7 +352,7 @@ void ABLPPlayerController::Server_ToggleMortgageStatus_Implementation(ABLPPlayer
 
 	if (!PropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not a property!")); return; }
 	
-	if (PlayerStatePtr->GetPlayerId() != PropertySpacePtr->GetOwnerID())
+	if (PlayerStatePtr->GetPlayerId() != PropertySpacePtr->GetOwnerId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this property!"))
 		return;
@@ -388,7 +388,7 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 
 	if (!EstatePropertySpace) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not an estate property!")); return; }
 	
-	if (PlayerStatePtr->GetPlayerId() != EstatePropertySpace->GetOwnerID())
+	if (PlayerStatePtr->GetPlayerId() != EstatePropertySpace->GetOwnerId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this estate property!"))
 		return;
@@ -623,11 +623,11 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 // Collects rent from player if they do not own the property they move to
 void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const
 {
-	if (EnteredPropertySpace->GetOwnerID() == -1) return;
+	if (EnteredPropertySpace->GetOwnerId() == -1) return;
 
 	if (EnteredPropertySpace->GetIsMortgaged()) return;
 	
-	if (EnteredPropertySpace->GetOwnerID() != PlayerStatePtr->GetPlayerId())
+	if (EnteredPropertySpace->GetOwnerId() != PlayerStatePtr->GetPlayerId())
 	{
 		PlayerStatePtr->AddToBalance(-EnteredPropertySpace->GetCurrentRent());
 
@@ -791,7 +791,7 @@ void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerState
 	ABLPSpace* Space = GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId());
 	if (const ABLPPropertySpace* PropertySpace = Cast<ABLPPropertySpace>(Space))
 	{
-		if (PropertySpace->GetOwnerID() == -1)
+		if (PropertySpace->GetOwnerId() == -1)
 		{
 			PlayerStatePtr->SetCanBuyCurrentProperty(true);
 		}
