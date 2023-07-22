@@ -5,6 +5,33 @@
 #include "../BLPGameInstance.h"
 #include "../State/BLPGameState.h"
 #include "../State/BLPPlayerState.h"
+#include "../Pawns/BLPAvatar.h"
+#include "../Controllers/BLPPlayerController.h"
+
+ABLPGameMode::ABLPGameMode()
+{
+	// Gets reference to BP_Avatar0
+	const ConstructorHelpers::FClassFinder<AActor> BP_Avatar0(TEXT("/Game/Core/Pawns/BP_BLPAvatar0"));
+	if (!BP_Avatar0.Class) return;
+	AvatarClass0 = BP_Avatar0.Class;
+	// Gets reference to BP_Avatar1
+	const ConstructorHelpers::FClassFinder<AActor> BP_Avatar1(TEXT("/Game/Core/Pawns/BP_BLPAvatar1"));
+	if (!BP_Avatar1.Class) return;
+	AvatarClass1 = BP_Avatar1.Class;
+	// Gets reference to BP_Avatar2
+	const ConstructorHelpers::FClassFinder<AActor> BP_Avatar2(TEXT("/Game/Core/Pawns/BP_BLPAvatar2"));
+	if (!BP_Avatar2.Class) return;
+	AvatarClass2 = BP_Avatar2.Class;
+	// Gets reference to BP_Avatar3
+	const ConstructorHelpers::FClassFinder<AActor> BP_Avatar3(TEXT("/Game/Core/Pawns/BP_BLPAvatar3"));
+	if (!BP_Avatar3.Class) return;
+	AvatarClass3 = BP_Avatar3.Class;
+    	
+	if (AvatarClass0) { UE_LOG(LogTemp, Warning, TEXT("Avatar0 Pawn found"));}
+	if (AvatarClass1) { UE_LOG(LogTemp, Warning, TEXT("Avatar1 Pawn found"));}
+	if (AvatarClass2) { UE_LOG(LogTemp, Warning, TEXT("Avatar2 Pawn found"));}
+	if (AvatarClass3) { UE_LOG(LogTemp, Warning, TEXT("Avatar3 Pawn found"));}
+}
 
 void ABLPGameMode::StartGame()
 {
@@ -14,9 +41,6 @@ void ABLPGameMode::StartGame()
 	BLPGameInstancePtr->StartSession();
 	UWorld* World = GetWorld();
 	if (!World) return;
-	// Enables seamless travel (connects players transition map first, then to target map)
-	//bUseSeamlessTravel = true;
-	// Tells all player controllers connected to travel to a different map as a listen server 
 	World->ServerTravel("/Game/Maps/LVL_Game");
 }
 
@@ -43,7 +67,12 @@ void ABLPGameMode::PostLogin(APlayerController* NewPlayer)
 		if (!BLPPlayerState) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPPlayerStatePtr is null")); return; }
 		BLPPlayerState->SetPlayerCount(PlayerArray.Num());
 	}
-    
+
+	Spawn(PlayerArray.Num()-1, NewPlayer);
+
+	UBLPGameInstance* BLPGameInstancePtr = GetGameInstance<UBLPGameInstance>();
+	if (!BLPGameInstancePtr) return;
+	if (BLPGameInstancePtr->HasEnteredGame) UE_LOG(LogTemp, Warning, TEXT("Entered Game map"));
 }
 
 void ABLPGameMode::Logout(AController* Exiting)
@@ -83,4 +112,51 @@ void ABLPGameMode::Logout(AController* Exiting)
 		const ABLPPlayerState* WinnersPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[0]);
 		BLPGameStatePtr->SetWinnersPlayerId(WinnersPlayerStatePtr->GetBLPPlayerId());
 	}
+}
+
+void ABLPGameMode::Spawn(const int& BLPPlayerId, APlayerController* NewPlayer) const
+{
+		UWorld* World = GetWorld();
+    	if (!World) return;
+
+		UBLPGameInstance* BLPGameInstancePtr = Cast<UBLPGameInstance>(GetGameInstance());
+		ABLPPlayerController* BLPPlayerControllerPtr = Cast<ABLPPlayerController>(NewPlayer);
+
+		if (!BLPGameInstancePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameMode: BLPGameInstancePtr is null")); return; }	
+		if (!BLPPlayerControllerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameMode: BLPPlayerControllerPtr is null")); return; }
+    
+    	const FActorSpawnParameters SpawnParameters;
+		FVector SpawnLocation;
+		TSubclassOf<ABLPAvatar> PawnToSpawn;
+		ABLPAvatar* NewPawn = nullptr;
+
+		switch (BLPPlayerId)
+    	{
+    	case 0:
+    		if (BLPGameInstancePtr->HasEnteredGame) SpawnLocation = InitGameSpawnPoint0;
+    		else SpawnLocation = InitLobbySpawnPoint0;
+			PawnToSpawn = AvatarClass0;
+    		break;
+    	case 1:
+    		if (BLPGameInstancePtr->HasEnteredGame) SpawnLocation = InitGameSpawnPoint1;
+    		else SpawnLocation = InitLobbySpawnPoint1;
+			PawnToSpawn = AvatarClass1;		
+    		break;
+    	case 2:
+    		if (BLPGameInstancePtr->HasEnteredGame) SpawnLocation = InitGameSpawnPoint2;
+    		else SpawnLocation = InitLobbySpawnPoint2;
+    		PawnToSpawn = AvatarClass2;		
+    		break;
+    	case 3:
+    		if (BLPGameInstancePtr->HasEnteredGame) SpawnLocation = InitGameSpawnPoint3;
+    		else SpawnLocation = InitLobbySpawnPoint3;
+    		PawnToSpawn = AvatarClass3;		
+    		break;
+    	default:
+    		break;
+    	}
+
+		NewPawn = World->SpawnActor<ABLPAvatar>(PawnToSpawn, SpawnLocation, {0, 0, 0}, SpawnParameters);
+	
+		BLPPlayerControllerPtr->Possess(NewPawn);
 }

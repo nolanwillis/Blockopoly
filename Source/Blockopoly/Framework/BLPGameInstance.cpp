@@ -29,16 +29,6 @@ UBLPGameInstance::UBLPGameInstance(const FObjectInitializer& ObjectInitializer)
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_PauseMenu(TEXT("/Game/Core/UI/WBP_PauseMenu"));
 	if (!WBP_PauseMenu.Class) return;
 	PauseMenuClass = WBP_PauseMenu.Class;
-
-	// Gets reference to WBP_GameMenu
-	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_GameMenu(TEXT("/Game/Core/UI/WBP_GameMenu"));
-	if (!WBP_GameMenu.Class) return;
-	GameMenuClass = WBP_GameMenu.Class;
-
-	// Gets reference to WBP_GameMenu.
-	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LobbyMenu(TEXT("/Game/Core/UI/WBP_LobbyMenu"));
-	if (!WBP_LobbyMenu.Class) return;
-	LobbyMenuClass = WBP_LobbyMenu.Class;
 }
 
 void UBLPGameInstance::Init()

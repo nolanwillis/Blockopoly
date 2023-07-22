@@ -57,5 +57,5 @@ private:
 	UFUNCTION()
 	void CheckAllReadyStatus();
 
-	TSubclassOf<UUserWidget> LobbyPlayerCardClass;
+	TSubclassOf<UUserWidget> PlayerCardClass;
 };

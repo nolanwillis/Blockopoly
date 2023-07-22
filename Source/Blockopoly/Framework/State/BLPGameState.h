@@ -6,6 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "BLPGameState.generated.h"
 
+class ABLPSpawnPlatform;
 class ABLPCameraManager;
 class ABLPSpace;
 class ABLPPropertySpace;
@@ -25,6 +26,8 @@ public:
 	TArray<int> GetForfeitedPlayersArray() const { return ForfeitedPlayersArray; }
 	void SetForfeitedPlayersArray(const TArray<int>& Value) { ForfeitedPlayersArray = Value; OnRep_ForfeitedPlayersArray(); }
     	
+	void AddToLobbySpawnPlatformArray(ABLPSpawnPlatform* Value) { LobbySpawnPlatformArray.Add(Value); }
+
 	ABLPCameraManager* GetCameraManager() const { return BLPCameraManagerPtr; }
 	
 	ABLPPlayerState* GetOwnerOfProperty(const ABLPPropertySpace* EnteredPropertySpace) const;
@@ -69,6 +72,9 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_ForfeitedPlayersArray)
 	TArray<int> ForfeitedPlayersArray = {};
+
+	UPROPERTY(Replicated)
+	TArray<ABLPSpawnPlatform*> LobbySpawnPlatformArray; 
 	
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr = nullptr;

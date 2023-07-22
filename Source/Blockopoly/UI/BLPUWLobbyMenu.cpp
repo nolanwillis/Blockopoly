@@ -5,7 +5,7 @@
 #include "../Framework/State/BLPPlayerState.h"
 #include "../Framework/State/BLPGameState.h"
 #include "../Framework/Controllers/BLPPlayerController.h"
-#include "./BLPUWLobbyPlayerCard.h"
+#include "./BLPUWPlayerCard.h"
 
 #include "Components/Button.h"
 #include "Components/WrapBox.h"
@@ -17,9 +17,9 @@
 UBLPUWLobbyMenu::UBLPUWLobbyMenu()
 {
 	// Gets reference to WBP_LobbyPlayerCard
-	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LobbyPlayerCard(TEXT("/Game/Core/UI/WBP_LobbyPlayerCard"));
-	if (!WBP_LobbyPlayerCard.Class) return;
-	LobbyPlayerCardClass = WBP_LobbyPlayerCard.Class;
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_PlayerCard(TEXT("/Game/Core/UI/WBP_PlayerCard"));
+	if (!WBP_PlayerCard.Class) return;
+	PlayerCardClass = WBP_PlayerCard.Class;
 }
 
 void UBLPUWLobbyMenu::NativeConstruct()
@@ -105,14 +105,30 @@ void UBLPUWLobbyMenu::RefreshPlayerList()
 		const ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu 111: BLPPlayerStatePtr is null")); return; }
     
-		UBLPUWLobbyPlayerCard* LobbyPlayerCard = CreateWidget<UBLPUWLobbyPlayerCard>(World, LobbyPlayerCardClass);
-		if (!LobbyPlayerCard) return;
-    
-		if (ReadyStatusArray[BLPPlayerStatePtr->GetBLPPlayerId()]) LobbyPlayerCard->CheckImage->SetVisibility(ESlateVisibility::Visible);
-		else LobbyPlayerCard->CheckImage->SetVisibility(ESlateVisibility::Hidden);
-    		
-		LobbyPlayerCard->PlayerNameText->SetText(FText::FromString(BLPPlayerStatePtr->GetPlayerName()));
-		PlayerCardWrapBox->AddChild(LobbyPlayerCard);
+		UBLPUWPlayerCard* PlayerCard = CreateWidget<UBLPUWPlayerCard>(World, PlayerCardClass);
+		if (!PlayerCard) return;
+
+		switch(BLPPlayerStatePtr->GetBLPPlayerId())
+		{
+		case 0:
+			PlayerCard->Container->SetBackgroundColor(FLinearColor(1, .1588, 0, .8));
+			break;
+		case 1:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(.645, 0, 1, .8));
+			break;			
+		case 2:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(.0243, .566, 0, .8));
+			break;			
+		case 3:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(.0, .286, 1, .8));
+			break;
+		default:
+			PlayerCard->Container->SetBackgroundColor( FLinearColor(1, 1, 1, 1));
+			break;
+		}
+		
+		PlayerCard->PlayerNameText->SetText(FText::FromString(BLPPlayerStatePtr->GetPlayerName()));
+		PlayerCardWrapBox->AddChild(PlayerCard);
 	}
     
 	UE_LOG(LogTemp, Warning, TEXT("BLPUWLobbyMenu: PlayerList Updated!"));

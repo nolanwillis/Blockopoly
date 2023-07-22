@@ -7,6 +7,7 @@
 #include "../Pawns/BLPAvatar.h"
 #include "../../Items/Spaces/BLPEstatePropertySpace.h"
 #include "../../BLPCameraManager.h"
+#include "../../Items/BLPSpawnPlatform.h"
 
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
@@ -29,6 +30,22 @@ void ABLPGameState::OnRep_ReadyStatusArray()
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameStateLobby: BLPPlayerStatePtr is null")); return; }
 		BLPPlayerStatePtr->Client_RefreshUI();
 	}
+
+	// Iterate through ready array, for each index (which is a player) find its corresponding platform,
+	// and if the player is ready turn it on, else off.
+	for (int i = 0; i < ReadyStatusArray.Num(); i++)
+	{
+		for (const ABLPSpawnPlatform* SpawnPlatformPtr : LobbySpawnPlatformArray)
+		{
+			if (SpawnPlatformPtr->GetPlatformId() == i)
+			{
+				if (ReadyStatusArray[i]) SpawnPlatformPtr->ToggleLight(i, true);
+				else SpawnPlatformPtr->ToggleLight(i, false);
+				break;
+			}	
+		}
+	}
+	
 }
 
 void ABLPGameState::WinnersPlayerIdCallback()
@@ -85,7 +102,7 @@ ABLPPlayerState* ABLPGameState::GetOwnerOfProperty(const ABLPPropertySpace* Ente
 	for (APlayerState* PlayerStatePtr : PlayerArray)
 	{
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
-		if (BLPPlayerStatePtr->GetPlayerId() == EnteredPropertySpace->GetOwnerId())
+		if (BLPPlayerStatePtr->GetBLPPlayerId() == EnteredPropertySpace->GetOwnerId())
 		{
 			return Cast<ABLPPlayerState>(BLPPlayerStatePtr);
 		}
@@ -659,4 +676,5 @@ void ABLPGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ABLPGameState, ReadyStatusArray);
 	DOREPLIFETIME(ABLPGameState, AvailablePropertySpaceList);
 	DOREPLIFETIME(ABLPGameState, ForfeitedPlayersArray);
+	DOREPLIFETIME(ABLPGameState, LobbySpawnPlatformArray);
 }

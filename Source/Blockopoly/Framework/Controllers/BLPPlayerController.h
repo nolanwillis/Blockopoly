@@ -19,8 +19,6 @@ class ABLPCameraManager;
 class UBLPUWGameMenu;
 class UBLPUWLobbyMenu;
 
-DECLARE_DELEGATE_OneParam(FOnPlayerJoinSignature, ABLPGameState* GameState);
-
 /**
  * 
  */
@@ -36,8 +34,6 @@ public:
 	UBLPUWLobbyMenu* LobbyMenu;
 	UPROPERTY()
 	UBLPUWWinScreen* WinScreen;
-
-	FOnPlayerJoinSignature OnPlayerJoinDelegate;
 	
 	ABLPPlayerController();
 
@@ -80,7 +76,7 @@ public:
 	void Server_BuyPropertySpace(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
 	UFUNCTION(Server, Unreliable, WithValidation)
-	void Server_ToggleMortgageStatus(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
+	void Server_SetMortgageStatus(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID, const bool MortgageStatus);
 	
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_BuyBuilding(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID);
@@ -107,6 +103,7 @@ private:
 	TSubclassOf<UUserWidget> GameMenuClass;
 	TSubclassOf<UUserWidget> LobbyMenuClass;
 	TSubclassOf<UUserWidget> WinScreenClass;
+
 
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr;

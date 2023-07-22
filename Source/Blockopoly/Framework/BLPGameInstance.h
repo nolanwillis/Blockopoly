@@ -26,6 +26,9 @@ class BLOCKOPOLY_API UBLPGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
+	UPROPERTY()
+	bool HasEnteredGame = false;
+	
 	UBLPGameInstance(const FObjectInitializer& ObjectInitializer);
 
 	virtual void Init();
@@ -60,8 +63,6 @@ private:
 	// Reference widget blueprints
 	TSubclassOf<UUserWidget> MainMenuClass;
 	TSubclassOf<UUserWidget> PauseMenuClass;
-	TSubclassOf<UUserWidget> GameMenuClass;
-	TSubclassOf<UUserWidget> LobbyMenuClass;
 
 	// References to created user widgets
 	UPROPERTY()

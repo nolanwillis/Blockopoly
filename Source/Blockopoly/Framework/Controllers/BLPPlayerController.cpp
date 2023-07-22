@@ -29,12 +29,10 @@ ABLPPlayerController::ABLPPlayerController()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_GameMenu(TEXT("/Game/Core/UI/WBP_GameMenu"));
 	if (!WBP_GameMenu.Class) return;
 	GameMenuClass = WBP_GameMenu.Class;
-
 	// Gets reference to WBP_GameMenu.
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LobbyMenu(TEXT("/Game/Core/UI/WBP_LobbyMenu"));
 	if (!WBP_LobbyMenu.Class) return;
 	LobbyMenuClass = WBP_LobbyMenu.Class;
-
 	// Gets reference to WBP_WinScreen.
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_WinScreen(TEXT("/Game/Core/UI/WBP_WinScreen"));
 	if (!WBP_WinScreen.Class) return;
@@ -48,7 +46,7 @@ void ABLPPlayerController::BeginPlay()
 	// Required, otherwise the camera target will sometimes default to the player pawn. 
 	bAutoManageActiveCameraTarget=false;
 	
-	const UWorld* World = GetWorld();
+	UWorld* World = GetWorld();
 	if (!World) return;
 	BLPCameraManagerPtr = Cast<ABLPCameraManager>(UGameplayStatics::GetActorOfClass(World, ABLPCameraManager::StaticClass()));
 	if (!BLPCameraManagerPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPCameraManagerPtr is null")); return; }
@@ -135,6 +133,8 @@ bool ABLPPlayerController::Server_PlayGame_Validate(ABLPPlayerState* BLPPlayerSt
 // Server RPC that toggles a players ready status for in the game state
 void ABLPPlayerController::Server_ToggleIsReady_Implementation(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr)
 {
+	UBLPGameInstance* BLPGameInstancePtr = Cast<UBLPGameInstance>(GetGameInstance());
+	if (!BLPGameInstancePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameMode: BLPGameInstancePtr is null")); return; }	
 	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
 	if (!BLPGameStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPGameStatePtr is null")); return; }
     
@@ -145,6 +145,8 @@ void ABLPPlayerController::Server_ToggleIsReady_Implementation(ABLPPlayerState* 
 	else LocalReadyStatusArray[BLPPlayerId] = 1;
     
 	BLPGameStateInPtr->SetReadyStatusArray(LocalReadyStatusArray);
+
+	BLPGameInstancePtr->HasEnteredGame = true;
 }
 bool ABLPPlayerController::Server_ToggleIsReady_Validate(ABLPPlayerState* BLPPlayerStateInPtr, ABLPGameState* BLPGameStateInPtr){ return true; }
 
@@ -336,7 +338,7 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 bool ABLPPlayerController::Server_BuyPropertySpace_Validate(ABLPPlayerState* PlayerStatePtr,ABLPGameState* GameStatePtr){ return true; }
 
 // Server RPC that allows a user to mortgage/unmortgage a property
-void ABLPPlayerController::Server_ToggleMortgageStatus_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
+void ABLPPlayerController::Server_SetMortgageStatus_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID, const bool MortgageStatus)
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }
 	if (!PlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: PlayerStatePtr is null")); return; }
@@ -352,24 +354,24 @@ void ABLPPlayerController::Server_ToggleMortgageStatus_Implementation(ABLPPlayer
 
 	if (!PropertySpacePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not a property!")); return; }
 	
-	if (PlayerStatePtr->GetPlayerId() != PropertySpacePtr->GetOwnerId())
+	if (PlayerStatePtr->GetBLPPlayerId() != PropertySpacePtr->GetOwnerId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this property!"))
 		return;
 	}
 
-	if (PropertySpacePtr->GetIsMortgaged())
-	{
-		PropertySpacePtr->SetIsMortgaged(false);
-		PlayerStatePtr->AddToBalance(-PropertySpacePtr->GetMortgageValue());
-	}
-	else
+	if (MortgageStatus)
 	{
 		PropertySpacePtr->SetIsMortgaged(true);
 		PlayerStatePtr->AddToBalance(PropertySpacePtr->GetMortgageValue());
 	}
+	else
+	{
+		PropertySpacePtr->SetIsMortgaged(false);
+		PlayerStatePtr->AddToBalance(-PropertySpacePtr->GetMortgageValue());
+	}
 }
-bool ABLPPlayerController::Server_ToggleMortgageStatus_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID){ return true; }
+bool ABLPPlayerController::Server_SetMortgageStatus_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID, const bool MortgageStatus){ return true; }
 
 // Server RPC that enables a user to build a building on a property
 void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr, const int& SpaceID)
@@ -388,7 +390,7 @@ void ABLPPlayerController::Server_BuyBuilding_Implementation(ABLPPlayerState* Pl
 
 	if (!EstatePropertySpace) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: This is not an estate property!")); return; }
 	
-	if (PlayerStatePtr->GetPlayerId() != EstatePropertySpace->GetOwnerId())
+	if (PlayerStatePtr->GetBLPPlayerId() != EstatePropertySpace->GetOwnerId())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You don't own this estate property!"))
 		return;
@@ -526,7 +528,7 @@ void ABLPPlayerController::UpdateBuildings(const ABLPEstatePropertySpace* Estate
 	if (BuildingCount == 1)
 	{
 		if (UStaticMeshComponent* HousePtr = EstatePropertySpacePtr->GetHouse0()) HousePtr->SetVisibility(true, false);
-		UE_LOG(LogTemp, Warning, TEXT("BLPEstatePropertySpace: You've built your 1st house"));
+		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: You've built your 1st house"));
 	}
 	else if (BuildingCount == 2)
 	{
@@ -627,13 +629,13 @@ void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABL
 
 	if (EnteredPropertySpace->GetIsMortgaged()) return;
 	
-	if (EnteredPropertySpace->GetOwnerId() != PlayerStatePtr->GetPlayerId())
+	if (EnteredPropertySpace->GetOwnerId() != PlayerStatePtr->GetBLPPlayerId())
 	{
 		PlayerStatePtr->AddToBalance(-EnteredPropertySpace->GetCurrentRent());
 
 		ABLPPlayerState* OwnerOfProperty = GameStatePtr->GetOwnerOfProperty(EnteredPropertySpace);
 			
-		if (!OwnerOfProperty) UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Owner of property could not be found!"));
+		if (!OwnerOfProperty) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Owner of property could not be found!")); return; }
 
 		OwnerOfProperty->AddToBalance(EnteredPropertySpace->GetCurrentRent());
 	}

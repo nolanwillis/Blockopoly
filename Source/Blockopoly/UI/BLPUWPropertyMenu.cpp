@@ -144,20 +144,17 @@ void UBLPUWPropertyMenu::MortgageBtnClicked()
 
 	if (!SelectedPropertySpace) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: No property was selected")); return; }
 
-	// Simulate locally if not on server
-	if (GetOwningPlayer()->GetLocalRole() < ROLE_Authority)
+	// Simulate locally
+	if (SelectedPropertySpace->GetIsMortgaged())
 	{
-		if (SelectedPropertySpace->GetIsMortgaged())
-		{
-			SelectedPropertySpace->SetIsMortgaged(false);
-		}
-		else
-		{
-			SelectedPropertySpace->SetIsMortgaged(true);
-		}
+		SelectedPropertySpace->SetIsMortgaged(false);
+		BLPPlayerControllerPtr->Server_SetMortgageStatus(BLPPlayerStatePtr, BLPGameStatePtr, SelectedPropertySpace->GetSpaceID(), false);
 	}
-	
-	BLPPlayerControllerPtr->Server_ToggleMortgageStatus(BLPPlayerStatePtr, BLPGameStatePtr, SelectedPropertySpace->GetSpaceID());
+	else
+	{
+		SelectedPropertySpace->SetIsMortgaged(true);
+		BLPPlayerControllerPtr->Server_SetMortgageStatus(BLPPlayerStatePtr, BLPGameStatePtr, SelectedPropertySpace->GetSpaceID(), true);
+	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("MortgageBtn Clicked"));
 
