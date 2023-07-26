@@ -11,14 +11,15 @@ struct FSpawnPoint;
 class ABLPPropertySpace;
 class ABLPPlayerState;
 class ABLPCameraManager;
-DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_DELEGATE(FForfeitSignature);
-DECLARE_MULTICAST_DELEGATE(FPlayerUpIdSignature);
+DECLARE_DELEGATE(FOutOfJailSignature);
 DECLARE_MULTICAST_DELEGATE(FRefreshUISignature);
-DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
-DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
+DECLARE_MULTICAST_DELEGATE(FPlayerUpIdSignature);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
 DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
+DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
+DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
+DECLARE_DELEGATE_OneParam(FSaleRequestSignature, const FPropertySaleData& SaleData);
 DECLARE_DELEGATE_ThreeParams(FNotificationSignature, const FString& Type, const FString& Heading, const FString& Description);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
 
@@ -78,9 +79,12 @@ public:
 	void Client_DisplayWinScreen(const FString& WinnersName);
     UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
 	void Client_SimulateMoveLocally(const int NewSpaceId);
+	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
+	void Client_AddSaleRequest(const FPropertySaleData& SaleData);
 	
 	FPlayerUpIdSignature PlayerUpIdDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
+	FSaleRequestSignature SaleRequestDelegate;
 	FInJailSignature InJailDelegate;
 	FOutOfJailSignature OutOfJailDelegate;
 	FJailSkipSignature JailSkipDelegate;
@@ -105,9 +109,6 @@ private:
 
 	FSpawnPoint* CurrentSpawnPoint;
 
-	UPROPERTY(Replicated)
-	bool IsLeaving = false;
-
 	UPROPERTY(ReplicatedUsing=OnRep_OwnedPropertyList)
 	TArray<ABLPPropertySpace*> OwnedPropertyList;
 
@@ -129,7 +130,12 @@ private:
 	// Keeps track of if the player has rolled during their turn
 	UPROPERTY(ReplicatedUsing=OnRep_HasRolled)
 	bool HasRolled = false;
-	
+
+	// Used for making sure a player state that is in the process of
+	// leaving isn't used
+	UPROPERTY(Replicated)
+	bool IsLeaving = false;
+
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr = nullptr;
 

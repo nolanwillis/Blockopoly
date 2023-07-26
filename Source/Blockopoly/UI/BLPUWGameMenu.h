@@ -6,14 +6,15 @@
 #include "./BLPUserWidget.h"
 #include "BLPUWGameMenu.generated.h"
 
+struct FPropertySaleData;
 class UWrapBox;
 class USizeBox;
 class UButton;
 class UTextBlock;
 class UWidgetSwitcher;
-class UBLPUWPropertyMenu;
 class UImage;
 class UWrapBox;
+class UBLPUWPropertyMenu;
 class ABLPPlayerState;
 class ABLPGameState;
 
@@ -88,6 +89,9 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	USizeBox* BannerNotificationSlot;
 	
+	UPROPERTY(meta = (BindWidget))
+	UWrapBox* SaleRequestWrapBox;
+
 	// References to widget blueprints
 	TSubclassOf<UUserWidget> PlayerCardClass;
 	TSubclassOf<UUserWidget> ChanceCardNotificationClass;
@@ -95,6 +99,7 @@ private:
 	TSubclassOf<UUserWidget> RollNotificationClass;
 	TSubclassOf<UUserWidget> ForfeitNotificationClass;
 	TSubclassOf<UUserWidget> LeaveNotificationClass;
+	TSubclassOf<UUserWidget> SaleRequestClass;
 
 	// Button handlers
 	UFUNCTION()
@@ -127,5 +132,7 @@ private:
 	void UpdateJailSkipCounter(const int& JailSkipCounter);
 	UFUNCTION()
 	void CheckBankruptcyStatus() const;
+	UFUNCTION()
+	void AddSaleRequest(const FPropertySaleData& SaleData);
 
 };

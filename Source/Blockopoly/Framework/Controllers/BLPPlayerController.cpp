@@ -104,8 +104,16 @@ void ABLPPlayerController::LoadWinScreen(const FString& WinnersName)
 
 void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayerState* BLPPlayerStateInPtr)
 {
+	UWorld* World = GetWorld();
+	if (!World) return;
+	ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(World->GetGameState());
+	
+	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPGameStatePtr is null")); return; }
 	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
+
 	BLPPlayerStateInPtr->SetPlayerUpId(0);
+
+	if (!BLPGameStatePtr->GetHasGameStarted()) BLPGameStatePtr->SetHasGameStarted(true);
 }
 bool ABLPPlayerController::Server_SetInitialTurnStatus_Validate(ABLPPlayerState* BLPPlayerStateInPtr){ return true; }
 
@@ -427,6 +435,29 @@ bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* Pla
 {
 	return true;
 }
+
+void ABLPPlayerController::Server_SendSaleRequest_Implementation(const FPropertySaleData& SaleData)
+{
+	if (!SaleData.OwningPlayer) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid OwningPlayer")); return; }
+	if (!SaleData.TargetPlayer) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid TargetPlayer")); return; }
+	if (!SaleData.PropertyToSell) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid PropertyToSell")); return; }
+	if (!SaleData.SalePrice || SaleData.SalePrice < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid price")); return; }
+
+	if (!SaleData.OwningPlayer->GetBLPPlayerId() == SaleData.OwningPlayer->GetPlayerUpId())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Its not your turn!"));
+		return;
+	}
+
+	if (SaleData.PropertyToSell->GetHasPendingSale())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("This property already has a sale active"));
+	}
+
+	SaleData.TargetPlayer->Client_AddSaleRequest(SaleData);
+	SaleData.PropertyToSell->SetHasPendingSale(true);
+}
+bool ABLPPlayerController::Server_SendSaleRequest_Validate(const FPropertySaleData& SaleData){ return true; }
 
 // Moves player (should always be called from the server)
 void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)

@@ -75,6 +75,12 @@ void ABLPPlayerState::Client_DisplayWinScreen_Implementation(const FString& Winn
 }
 bool ABLPPlayerState::Client_DisplayWinScreen_Validate(const FString& WinnersName){ return true; }
 
+void ABLPPlayerState::Client_AddSaleRequest_Implementation(const FPropertySaleData& SaleData)
+{
+	SaleRequestDelegate.ExecuteIfBound(SaleData);
+}
+bool ABLPPlayerState::Client_AddSaleRequest_Validate(const FPropertySaleData& SaleData){ return true; }
+
 void ABLPPlayerState::OnRep_PlayerUpId() const
 {
 	PlayerUpIdDelegate.Broadcast();

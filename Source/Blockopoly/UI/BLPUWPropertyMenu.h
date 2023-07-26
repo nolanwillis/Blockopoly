@@ -7,6 +7,7 @@
 #include "Components/Button.h"
 #include "BLPUWPropertyMenu.generated.h"
 
+class UBLPUWPlayerCard;
 class UTextBlock;
 class UBLPUWPropertyTitle;
 class ABLPPlayerState;
@@ -17,6 +18,8 @@ class UButton;
 class UWrapBox;
 class UBLPUWPropertyDetails;
 class UBLPUWGameMenu;
+class UWidgetSwitcher;
+class UEditableTextBox;
 
 /**
  * 
@@ -39,6 +42,15 @@ public:
 	
 	void SetSelectedPropertyTitle(UBLPUWPropertyTitle* Value) { SelectedPropertyTitle = Value; }
 
+	void SetPlayerToTradeWith(ABLPPlayerState* Value) { PlayerToTradeWith = Value; UE_LOG(LogTemp, Warning, TEXT("PlayerToTradeWith set!"));}
+
+	UBLPUWPlayerCard* GetSelectedPlayerCard() { return SelectedPlayerCard; }
+	void SetSelectedPlayerCard(UBLPUWPlayerCard* Value) { SelectedPlayerCard = Value; UE_LOG(LogTemp, Warning, TEXT("SelectedPlayerCard set!"));}
+
+	UButton* GetConfirmTradeBtn() { return ConfirmSaleRequestBtn; }
+	UButton* GetSellBtn() { return SellBtn; }
+	UTextBlock* GetPendingSaleText() { return PendingSaleText; }
+
 protected:
 	virtual void NativeConstruct() override;
 
@@ -49,6 +61,15 @@ private:
 	UPROPERTY()
 	UBLPUWPropertyTitle* SelectedPropertyTitle;
 	
+	UPROPERTY()
+	ABLPPlayerState* PlayerToTradeWith;
+	
+	UPROPERTY()
+	UBLPUWPlayerCard* SelectedPlayerCard;
+
+	UPROPERTY(meta = (BindWidget))
+	UWidgetSwitcher* WidgetSwitcher;
+	
 	UPROPERTY(meta = (BindWidget))
 	UButton* BackBtn;
 	
@@ -56,19 +77,38 @@ private:
 	UButton* BuildBtn;
 
 	UPROPERTY(meta = (BindWidget))
+	UButton* SellBtn;
+	
+	UPROPERTY(meta = (BindWidget))
 	UButton* MortgageBtn;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* ConfirmSaleRequestBtn;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MortgageBtnText;
 
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* SaleRequestErrorText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* PendingSaleText;
+
+	UPROPERTY(meta = (BindWidget))
 	UWrapBox* PropertyWrapBox;
+
+	UPROPERTY(meta = (BindWidget))
+	UWrapBox* PlayerCardWrapBox;
+
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* TradeAmountTextBox;
 
 	UPROPERTY(meta = (BindWidget))
 	UBLPUWPropertyDetails* PropertyDetails;
 
-	// PropertyTitle class reference
+	// Reference to widget blueprints
 	TSubclassOf<UUserWidget> PropertyTitleClass;
+	TSubclassOf<UUserWidget> PlayerCardClass;
 
 	UFUNCTION()
 	void BackBtnClicked();
@@ -80,5 +120,15 @@ private:
 	void MortgageBtnClicked();
 
 	UFUNCTION()
+	void SellBtnClicked();
+
+	UFUNCTION()
+	void ConfirmTradeBtnClicked();
+
+	UFUNCTION()
 	void PlayerUpId();
+
+	UFUNCTION()
+	void RefreshPlayerTradeList();
+
 };

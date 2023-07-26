@@ -26,7 +26,7 @@ public:
 	
 private:
 	UPROPERTY(meta = (BindWidget))
-	UBorder* InnerBorder;
+	UButton* TitleContainer;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PropertyNameText;
 	UPROPERTY(meta = (BindWidget))

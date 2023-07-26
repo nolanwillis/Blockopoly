@@ -25,7 +25,7 @@ public:
 	
 	TArray<int> GetForfeitedPlayersArray() const { return ForfeitedPlayersArray; }
 	void SetForfeitedPlayersArray(const TArray<int>& Value) { ForfeitedPlayersArray = Value; OnRep_ForfeitedPlayersArray(); }
-    	
+	
 	void AddToLobbySpawnPlatformArray(ABLPSpawnPlatform* Value) { LobbySpawnPlatformArray.Add(Value); }
 
 	ABLPCameraManager* GetCameraManager() const { return BLPCameraManagerPtr; }
@@ -39,6 +39,9 @@ public:
 
 	void SetWinnersPlayerId(const int& Value) { WinnersPlayerId = Value; WinnersPlayerIdCallback(); }
 	
+	int GetHasGameStarted() const { return HasGameStarted; }
+	void SetHasGameStarted(const bool& Value) { HasGameStarted = Value; }
+
 	TArray<ABLPSpace*> GetSpaceList() const { return SpaceList; }
 	void AddToSpaceList(ABLPSpace* Space) { SpaceList.Add(Space); }
 	
@@ -61,7 +64,6 @@ public:
 	void AddForfeitNotificationToUI(const ABLPPlayerState* BLPPlayerStateInPtr);
 	void AddLeaveNotificationToUI(const ABLPPlayerState* BLPPlayerStateInPtr);
 	void AddCardDrawNotificationToUI(const FString& Type, const FString& Description, const ABLPPlayerState* BLPPlayerStateInPtr);
-	
 
 protected:
 	virtual void BeginPlay() override;
@@ -69,7 +71,8 @@ protected:
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_ReadyStatusArray)
 	TArray<int> ReadyStatusArray = {0, 0, 0, 0};
-	
+
+
 	UPROPERTY(ReplicatedUsing=OnRep_ForfeitedPlayersArray)
 	TArray<int> ForfeitedPlayersArray = {};
 
@@ -84,7 +87,10 @@ private:
 
 	UPROPERTY(Replicated, BlueprintReadWrite, EditAnywhere, Category = "Property Spaces", meta = (AllowPrivateAccess = true))
 	TArray<ABLPPropertySpace*> AvailablePropertySpaceList;
-	
+
+	UPROPERTY()
+	bool HasGameStarted = false;
+    	
 	// Keeps track of which player in the PlayerArray has the current turn
 	UPROPERTY()
 	int GSPlayerUpId = 0;

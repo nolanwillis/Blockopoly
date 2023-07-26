@@ -78,7 +78,7 @@ void ABLPGameMode::PostLogin(APlayerController* NewPlayer)
 void ABLPGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
-
+	
 	ABLPGameState* BLPGameStatePtr = GetGameState<ABLPGameState>();
 	ABLPPlayerState* PlayerStateOfLeaver = Exiting->GetPlayerState<ABLPPlayerState>();  
 	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGMClassic: BLPGameStatePtr is null")); return; }
@@ -104,12 +104,19 @@ void ABLPGameMode::Logout(AController* Exiting)
 	TArray<int> NewForfeitedPlayersArray = BLPGameStatePtr->GetForfeitedPlayersArray();
 	NewForfeitedPlayersArray.Remove(PlayerStateOfLeaver->GetBLPPlayerId());
 	BLPGameStatePtr->SetForfeitedPlayersArray(NewForfeitedPlayersArray);
+	UE_LOG(LogTemp, Warning, TEXT("Player count: %d"), PlayerArray.Num());
 
-	// Check if there's only one player left, if there is they win
-	if (PlayerArray.Num() == 1)
+	// Check if there will be only one player left, if there is that player that is not leaving wins
+	if (PlayerArray.Num() == 2 && BLPGameStatePtr->GetHasGameStarted())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Winner declared in BLPGameMode 82!"));
-		const ABLPPlayerState* WinnersPlayerStatePtr = Cast<ABLPPlayerState>(PlayerArray[0]);
+		ABLPPlayerState* WinnersPlayerStatePtr = nullptr;
+		for (APlayerState* PlayerStatePtr : PlayerArray)
+		{
+			ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerStatePtr);
+			if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameMode: BLPPlayerStatePtr is null")); return; }
+			if (BLPPlayerStatePtr->GetBLPPlayerId() != PlayerStateOfLeaver->GetBLPPlayerId()) WinnersPlayerStatePtr = BLPPlayerStatePtr; break;
+		}
 		BLPGameStatePtr->SetWinnersPlayerId(WinnersPlayerStatePtr->GetBLPPlayerId());
 	}
 }

@@ -115,6 +115,7 @@ void ABLPPropertySpace::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	// Here we list the variables we want to replicate
 	DOREPLIFETIME(ABLPPropertySpace, OwnerId);
 	DOREPLIFETIME(ABLPPropertySpace, IsMortgaged);
+	DOREPLIFETIME(ABLPPropertySpace, HasPendingSale);
 	DOREPLIFETIME(ABLPPropertySpace, PerimeterTop);
 	DOREPLIFETIME(ABLPPropertySpace, PerimeterBottom);
 	DOREPLIFETIME(ABLPPropertySpace, PerimeterLeft);

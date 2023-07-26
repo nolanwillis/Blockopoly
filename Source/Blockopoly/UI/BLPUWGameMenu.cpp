@@ -5,6 +5,7 @@
 #include "BLPUWNotification.h"
 #include "BLPUWPropertyMenu.h"
 #include "BLPUWPlayerCard.h"
+#include "BLPUWSaleRequest.h"
 #include "../Framework/Pawns/BLPAvatar.h"
 #include "../Framework/Controllers/BLPPlayerController.h"
 #include "../Framework/State/BLPGameState.h"
@@ -16,7 +17,6 @@
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/WrapBox.h"
-#include "DSP/AudioDebuggingUtilities.h"
 
 UBLPUWGameMenu::UBLPUWGameMenu()
 {
@@ -44,6 +44,10 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_LeaveNotification(TEXT("/Game/Core/UI/WBP_LeaveNotification"));
 	if (!WBP_LeaveNotification.Class) return;
 	LeaveNotificationClass = WBP_LeaveNotification.Class;
+	
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_SaleRequest(TEXT("/Game/Core/UI/WBP_SaleRequest"));
+	if (!WBP_SaleRequest.Class) return;
+	SaleRequestClass = WBP_SaleRequest.Class;
 }
 
  void UBLPUWGameMenu::NativeConstruct()
@@ -79,6 +83,7 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	BLPPlayerStatePtr->CanBuyDelegate.BindUObject(this, &UBLPUWGameMenu::CanBuy);
 	BLPPlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
 	BLPPlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
+	BLPPlayerStatePtr->SaleRequestDelegate.BindUObject(this, &UBLPUWGameMenu::AddSaleRequest);
 	
 	// Set initial turn status for the owner of this menu.
 	BLPPlayerControllerPtr->Server_SetInitialTurnStatus(BLPPlayerStatePtr);
@@ -321,6 +326,15 @@ void UBLPUWGameMenu::CheckBankruptcyStatus() const
 	}
 }
 
+void UBLPUWGameMenu::AddSaleRequest(const FPropertySaleData& SaleData)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+	UBLPUWSaleRequest* SaleRequest = CreateWidget<UBLPUWSaleRequest>(World, SaleRequestClass);
+	SaleRequest->LoadData(SaleData);
+	SaleRequestWrapBox->AddChild(SaleRequest);
+}
+
 void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading, const FString& Description)
 {
 	UWorld* World = GetWorld();
@@ -381,7 +395,6 @@ void UBLPUWGameMenu::RefreshPlayerList()
 	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPGameStatePtr is null ")); return;}
 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null ")); return;}
-
 	
 	const TArray<TObjectPtr<APlayerState>> PlayerArray = BLPGameStatePtr->PlayerArray;
 	

@@ -32,6 +32,9 @@ public:
 	bool GetIsMortgaged() const { return IsMortgaged; }
 	void SetIsMortgaged(const bool& Value){ IsMortgaged = Value; OnRep_IsMortgaged(); }
 
+	bool GetHasPendingSale() const { return HasPendingSale; }
+	void SetHasPendingSale(const bool& Value){ HasPendingSale = Value; }
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -77,6 +80,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_IsMortgaged)
 	bool IsMortgaged = false;
+
+	UPROPERTY(Replicated)
+	bool HasPendingSale = false;
 
 	UFUNCTION()
 	void OnRep_OwnerId();

@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
+#include "Blockopoly/Framework/State/BLPPlayerState.h"
 #include "BLPUWPlayerCard.generated.h"
 
+class ABLPPlayerState;
+class UBLPUWPropertyMenu;
 class UButton;
 class UTextBlock;
 
@@ -23,4 +26,14 @@ public:
 	
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* PlayerNameText;
+
+	UFUNCTION()
+	void Setup(UBLPUWPropertyMenu* InParent, ABLPPlayerState* BLPPlayerStatePtr);
+
+private:
+	UBLPUWPropertyMenu* Parent;
+	ABLPPlayerState* AssociatedPlayerState;
+
+	UFUNCTION()
+	void OnClick();
 };

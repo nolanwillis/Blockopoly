@@ -19,6 +19,21 @@ class ABLPCameraManager;
 class UBLPUWGameMenu;
 class UBLPUWLobbyMenu;
 
+USTRUCT(BlueprintType)
+struct FPropertySaleData
+{
+	GENERATED_BODY();
+
+	UPROPERTY()
+	ABLPPlayerState* OwningPlayer;
+	UPROPERTY()
+	ABLPPlayerState* TargetPlayer;
+	UPROPERTY()
+	ABLPPropertySpace* PropertyToSell;
+	UPROPERTY()
+	int SalePrice;
+};
+
 /**
  * 
  */
@@ -86,6 +101,9 @@ public:
 
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_ExecuteChestCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
+
+	UFUNCTION(Server, Unreliable, WithValidation)
+	void Server_SendSaleRequest(const FPropertySaleData& SaleData);
 
 	// The following funtions must be public for the chance/chest system to work
 	void MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList);

@@ -50,7 +50,6 @@ private:
 	UFUNCTION()
 	void PlayBtnClicked();
 
-
 	UFUNCTION()
 	void RefreshPlayerList();
 

@@ -12,6 +12,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
+
 void ABLPGameState::BeginPlay()
 {
 	Super::BeginPlay();
@@ -661,7 +662,6 @@ void ABLPGameState::AddLeaveNotificationToUI(const ABLPPlayerState* BLPPlayerSta
 	{
 		ABLPPlayerState* BLPPlayerStatePtr = Cast<ABLPPlayerState>(PlayerState);
 		if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameState: BLPPlayerStatePtr is null")); return; }
-
 		BLPPlayerStatePtr->Client_AddNotification("Leave", "", Description);
 	}
 }
