@@ -13,6 +13,7 @@ class ABLPPlayerState;
 class ABLPCameraManager;
 DECLARE_DELEGATE(FForfeitSignature);
 DECLARE_DELEGATE(FOutOfJailSignature);
+DECLARE_DELEGATE(FOnPropertyListChangedSignature);
 DECLARE_MULTICAST_DELEGATE(FRefreshUISignature);
 DECLARE_MULTICAST_DELEGATE(FPlayerUpIdSignature);
 DECLARE_DELEGATE_OneParam(FCanBuySignature, bool Value);
@@ -20,6 +21,7 @@ DECLARE_DELEGATE_OneParam(FHasRolledSignature, bool Value);
 DECLARE_DELEGATE_OneParam(FInJailSignature, int TurnsLeft);
 DECLARE_DELEGATE_OneParam(FJailSkipSignature, const int& JailSkipCounter);
 DECLARE_DELEGATE_OneParam(FSaleRequestSignature, const FPropertySaleData& SaleData);
+DECLARE_DELEGATE_TwoParams(FSaleResponseSignature, const FPropertySaleData& SaleData, const bool Status);
 DECLARE_DELEGATE_ThreeParams(FNotificationSignature, const FString& Type, const FString& Heading, const FString& Description);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBalanceChangedSignature, int NewBalance);
 
@@ -81,10 +83,14 @@ public:
 	void Client_SimulateMoveLocally(const int NewSpaceId);
 	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
 	void Client_AddSaleRequest(const FPropertySaleData& SaleData);
+	UFUNCTION(Client, Unreliable, WithValidation, BlueprintCallable)
+	void Client_AddSaleResponse(const FPropertySaleData& SaleData, const bool Status);
 	
 	FPlayerUpIdSignature PlayerUpIdDelegate;
 	FOnBalanceChangedSignature OnBalanceChangedDelegate;
+	FOnPropertyListChangedSignature OnPropertyListChangedDelegate;
 	FSaleRequestSignature SaleRequestDelegate;
+	FSaleResponseSignature SaleResponseDelegate;
 	FInJailSignature InJailDelegate;
 	FOutOfJailSignature OutOfJailDelegate;
 	FJailSkipSignature JailSkipDelegate;

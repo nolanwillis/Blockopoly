@@ -200,7 +200,6 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 	}
 	
 	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
-	PlayerStatePtr->SetHasRolled(true);
 
 	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
 
@@ -224,8 +223,6 @@ void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* A
 	}
 	
 	ApplySpaceEffect(PlayerStatePtr, GameStatePtr);
-	
-	PlayerStatePtr->SetHasRolled(true);
 }
 bool ABLPPlayerController::Server_ReflectRollInGame_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
@@ -278,7 +275,6 @@ void ABLPPlayerController::Server_SkipJail_Implementation(ABLPPlayerState* Playe
 	{
 		UE_LOG(LogTemp, Warning, TEXT("You have no get out of jail free cards!"));
 	}
-    	
 }
 bool ABLPPlayerController::Server_SkipJail_Validate(ABLPPlayerState* PlayerStatePtr){ return true; }
 
@@ -422,19 +418,15 @@ bool ABLPPlayerController::Server_BuyBuilding_Validate(ABLPPlayerState* PlayerSt
 void ABLPPlayerController::Server_ExecuteChanceCard_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	GameStatePtr->ExecuteChanceCard(PlayerStatePtr);
+	PlayerStatePtr->SetHasRolled(true);
 }
-bool ABLPPlayerController::Server_ExecuteChanceCard_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
-{
-	return true;
-}
+bool ABLPPlayerController::Server_ExecuteChanceCard_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 void ABLPPlayerController::Server_ExecuteChestCard_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
 	GameStatePtr->ExecuteChestCard(PlayerStatePtr);
+	PlayerStatePtr->SetHasRolled(true);
 }
-bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
-{
-	return true;
-}
+bool ABLPPlayerController::Server_ExecuteChestCard_Validate(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 
 void ABLPPlayerController::Server_SendSaleRequest_Implementation(const FPropertySaleData& SaleData)
 {
@@ -449,15 +441,41 @@ void ABLPPlayerController::Server_SendSaleRequest_Implementation(const FProperty
 		return;
 	}
 
+	if (SaleData.PropertyToSell->GetIsMortgaged())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("This property is mortgaged and cannot be sole"));
+		return;
+	}
+	
 	if (SaleData.PropertyToSell->GetHasPendingSale())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("This property already has a sale active"));
+		return;
 	}
 
 	SaleData.TargetPlayer->Client_AddSaleRequest(SaleData);
 	SaleData.PropertyToSell->SetHasPendingSale(true);
 }
 bool ABLPPlayerController::Server_SendSaleRequest_Validate(const FPropertySaleData& SaleData){ return true; }
+void ABLPPlayerController::Server_SendSaleResponse_Implementation(const FPropertySaleData& SaleData, const bool Status)
+{
+	if (!SaleData.OwningPlayer) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid OwningPlayer")); return; }
+	if (!SaleData.TargetPlayer) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid TargetPlayer")); return; }
+	if (!SaleData.PropertyToSell) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid PropertyToSell")); return; }
+	if (!SaleData.SalePrice || SaleData.SalePrice < 0) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: SaleData has an invalid price")); return; }
+	
+	if (Status)
+	{
+		TransferOwnership(SaleData);
+		// Only add sale response to target player if they accepted
+		SaleData.TargetPlayer->Client_AddSaleResponse(SaleData, Status);
+	}
+
+	SaleData.OwningPlayer->Client_AddSaleResponse(SaleData, Status);
+
+	SaleData.PropertyToSell->SetHasPendingSale(false);
+}
+bool ABLPPlayerController::Server_SendSaleResponse_Validate(const FPropertySaleData& SaleData, const bool Status){ return true; }
 
 // Moves player (should always be called from the server)
 void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)
@@ -630,6 +648,7 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
 		CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
 		ChargeRent(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
+		PlayerStatePtr->SetHasRolled(true);
 	}
 	else if (Cast<ABLPChanceSpace>(EnteredSpace))
 	{
@@ -645,11 +664,21 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 	{
 		UE_LOG(LogTemp, Warning, TEXT("GO TO JAIL!!"));
 		SendToJail(PlayerStatePtr, GameStatePtr->GetSpaceList());
+		PlayerStatePtr->SetHasRolled(true);
 	}
 	else if (Cast<ABLPTaxSpace>(EnteredSpace))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Taxes Collected"));
 		PlayerStatePtr->AddToBalance(-100);
+		PlayerStatePtr->SetHasRolled(true);
+	}
+	else if (Cast<ABLPJailSpace>(EnteredSpace))
+	{
+		PlayerStatePtr->SetHasRolled(true);
+	}
+	else
+	{
+		PlayerStatePtr->SetHasRolled(true);
 	}
 }
 
@@ -672,7 +701,25 @@ void ABLPPlayerController::ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABL
 	}
 }
 
-// Triggers a card to be drawn and a notifications to be sent to clients
+// Transfers ownership of property for a sale
+void ABLPPlayerController::TransferOwnership(const FPropertySaleData& SaleData)
+{
+	SaleData.OwningPlayer->AddToBalance(SaleData.SalePrice);
+	SaleData.TargetPlayer->AddToBalance(-SaleData.SalePrice);
+
+	// Working
+	// Set owner id of property to player target
+    const int NewOwnerId = SaleData.TargetPlayer->GetBLPPlayerId();
+    SaleData.PropertyToSell->SetOwnerId(NewOwnerId);
+	
+	// Not working
+    // Remove property from the old owners property list
+	SaleData.OwningPlayer->RemoveFromOwnedPropertyList(SaleData.PropertyToSell);
+    // Add property to the new owners property list
+    SaleData.TargetPlayer->AddToOwnedPropertyList(SaleData.PropertyToSell);
+}
+
+// Triggers a card to be drawn and notifications to be sent to all clients
 void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr) const 
 {
 	if (!GameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: GameStatePtr is null")); return; }

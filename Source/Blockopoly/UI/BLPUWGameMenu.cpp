@@ -6,6 +6,8 @@
 #include "BLPUWPropertyMenu.h"
 #include "BLPUWPlayerCard.h"
 #include "BLPUWSaleRequest.h"
+#include "BLPUWSaleResponse.h"
+
 #include "../Framework/Pawns/BLPAvatar.h"
 #include "../Framework/Controllers/BLPPlayerController.h"
 #include "../Framework/State/BLPGameState.h"
@@ -48,6 +50,10 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_SaleRequest(TEXT("/Game/Core/UI/WBP_SaleRequest"));
 	if (!WBP_SaleRequest.Class) return;
 	SaleRequestClass = WBP_SaleRequest.Class;
+	
+	const ConstructorHelpers::FClassFinder<UUserWidget> WBP_SaleResponse(TEXT("/Game/Core/UI/WBP_SaleResponse"));
+	if (!WBP_SaleResponse.Class) return;
+	SaleResponseClass = WBP_SaleResponse.Class;
 }
 
  void UBLPUWGameMenu::NativeConstruct()
@@ -84,6 +90,7 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 	BLPPlayerStatePtr->HasRolledDelegate.BindUObject(this, &UBLPUWGameMenu::HasRolled);
 	BLPPlayerStatePtr->NotificationDelegate.BindUObject(this, &UBLPUWGameMenu::AddNotification);
 	BLPPlayerStatePtr->SaleRequestDelegate.BindUObject(this, &UBLPUWGameMenu::AddSaleRequest);
+	BLPPlayerStatePtr->SaleResponseDelegate.BindUObject(this, &UBLPUWGameMenu::AddSaleResponse);
 	
 	// Set initial turn status for the owner of this menu.
 	BLPPlayerControllerPtr->Server_SetInitialTurnStatus(BLPPlayerStatePtr);
@@ -92,11 +99,9 @@ UBLPUWGameMenu::UBLPUWGameMenu()
 void UBLPUWGameMenu::PropertyMenuBtnClicked()
 {
 	MainWidgetSwitcher->SetActiveWidgetIndex(1);
-	PropertyMenu->RefreshPropertyWrapBox();
 	
 	UE_LOG(LogTemp, Warning, TEXT("Property menu button clicked"));
 }
-
 void UBLPUWGameMenu::BuyBtnClicked()
 {
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
@@ -113,7 +118,6 @@ void UBLPUWGameMenu::BuyBtnClicked()
 
 	UE_LOG(LogTemp, Warning, TEXT("Buy button clicked"));
 }
-
 void UBLPUWGameMenu::RollBtnClicked()
 {
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
@@ -131,7 +135,6 @@ void UBLPUWGameMenu::RollBtnClicked()
 	
 	UE_LOG(LogTemp, Warning, TEXT("Roll button clicked"));
 }
-
 void UBLPUWGameMenu::FinishTurnBtnClicked()
 {
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
@@ -146,7 +149,6 @@ void UBLPUWGameMenu::FinishTurnBtnClicked()
 
 	UE_LOG(LogTemp, Warning, TEXT("Finish turn button clicked"));
 }
-
 void UBLPUWGameMenu::SkipJailBtnClicked()
 {
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
@@ -163,7 +165,6 @@ void UBLPUWGameMenu::SkipJailBtnClicked()
 	LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(0);
  	UE_LOG(LogTemp, Warning, TEXT("Finish turn button clicked"));
 }
-
 void UBLPUWGameMenu::ForfeitBtnClicked()
 {
 	ABLPPlayerController* PlayerControllerPtr = Cast<ABLPPlayerController>(GetOwningPlayer());
@@ -227,13 +228,11 @@ void UBLPUWGameMenu::PlayerUpId()
     	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-
 void UBLPUWGameMenu::UpdateBalance(const int NewBalance)
 {
 	BalanceText->SetText(FText::AsNumber(NewBalance));
 	CheckBankruptcyStatus();
 }
-
 void UBLPUWGameMenu::InJail(const int TurnsLeft)
 {
 	FString Message = "YOUR IN JAIL FOR ";
@@ -250,12 +249,10 @@ void UBLPUWGameMenu::InJail(const int TurnsLeft)
 	LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(1);
 	RollBtn->SetVisibility(ESlateVisibility::Hidden);
 }
-
 void UBLPUWGameMenu::OutOfJail()
 {
 	LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(0);
 }
-
 void UBLPUWGameMenu::CanBuy(const bool Value)
 {
 	if (Value)
@@ -267,7 +264,6 @@ void UBLPUWGameMenu::CanBuy(const bool Value)
 		BuyBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-
 void UBLPUWGameMenu::HasRolled(const bool Value)
 {
 	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
@@ -291,7 +287,6 @@ void UBLPUWGameMenu::HasRolled(const bool Value)
 		FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-
 void UBLPUWGameMenu::UpdateJailSkipCounter(const int& Value)
 {
 	if (Value == 0)
@@ -306,7 +301,6 @@ void UBLPUWGameMenu::UpdateJailSkipCounter(const int& Value)
 		JailSkipCounterImage->SetVisibility(ESlateVisibility::Visible);
 	}
 }
-
 void UBLPUWGameMenu::CheckBankruptcyStatus() const
 {
 	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
@@ -325,16 +319,33 @@ void UBLPUWGameMenu::CheckBankruptcyStatus() const
 		ForfeitBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-
 void UBLPUWGameMenu::AddSaleRequest(const FPropertySaleData& SaleData)
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
 	UBLPUWSaleRequest* SaleRequest = CreateWidget<UBLPUWSaleRequest>(World, SaleRequestClass);
 	SaleRequest->LoadData(SaleData);
-	SaleRequestWrapBox->AddChild(SaleRequest);
+	SaleWrapBox->AddChild(SaleRequest);
 }
+void UBLPUWGameMenu::AddSaleResponse(const FPropertySaleData& SaleData, const bool Status)
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+	UBLPUWSaleResponse* SaleResponse = CreateWidget<UBLPUWSaleResponse>(World, SaleResponseClass);
+	SaleResponse->LoadData(SaleData, Status);
+	SaleWrapBox->AddChild(SaleResponse);
 
+	if (!PropertyMenu->GetSelectedPropertySpace()) return;
+	// If property is sold and its currently selected in the property menu
+	if (Status && PropertyMenu->GetSelectedPropertySpace()->GetSpaceID() == SaleData.PropertyToSell->GetSpaceID())
+	{
+		PropertyMenu->SetSelectedPlayerCard(nullptr);
+		PropertyMenu->SetSelectedPropertySpace(nullptr);
+		PropertyMenu->ResetPropertyDetails();
+	}
+	
+	PropertyMenu->RefreshPropertyManagementButtons();
+}
 void UBLPUWGameMenu::AddNotification(const FString& Type, const FString& Heading, const FString& Description)
 {
 	UWorld* World = GetWorld();

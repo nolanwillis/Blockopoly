@@ -53,10 +53,14 @@ void UBLPUWPropertyMenu::NativeConstruct()
 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
 
 	BLPPlayerStatePtr->PlayerUpIdDelegate.AddUObject(this, &UBLPUWPropertyMenu::PlayerUpId);
-	BLPPlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWPropertyMenu::RefreshPlayerTradeList);
+	BLPPlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWPropertyMenu::RefreshPlayerSellList);
+	BLPPlayerStatePtr->OnPropertyListChangedDelegate.BindUObject(this, &UBLPUWPropertyMenu::RefreshPropertyWrapBox);
 
 	// Required because this menu is loaded after the initial firing of the RefreshUIDelegate 
-	RefreshPlayerTradeList();
+	RefreshPlayerSellList();
+
+	// For testing
+	PropertyWrapBox->ClearChildren();
 }
 
 void UBLPUWPropertyMenu::BackBtnClicked()
@@ -140,6 +144,7 @@ void UBLPUWPropertyMenu::MortgageBtnClicked()
 	UE_LOG(LogTemp, Warning, TEXT("MortgageBtn Clicked"));
 
 	RefreshPropertyDetails();
+	RefreshPropertyManagementButtons();
 }
 void UBLPUWPropertyMenu::SellBtnClicked()
 {
@@ -179,11 +184,9 @@ void UBLPUWPropertyMenu::ConfirmTradeBtnClicked()
 	SaleData.PropertyToSell = SelectedPropertySpace;
 	BLPPlayerControllerPtr->Server_SendSaleRequest(SaleData);
 	
-	PendingSaleText->SetVisibility(ESlateVisibility::Visible);
-	ConfirmSaleRequestBtn->SetVisibility(ESlateVisibility::Hidden);
-	SellBtn->SetVisibility(ESlateVisibility::Collapsed);
+	RefreshPropertyManagementButtons();
 
-	// Return to propert list after a sale request is sent
+	// Return to property list after a sale request is sent
 	WidgetSwitcher->SetActiveWidgetIndex(0);
 	
 	UE_LOG(LogTemp, Warning, TEXT("ConfirmTradeBtnClicked"));
@@ -191,31 +194,64 @@ void UBLPUWPropertyMenu::ConfirmTradeBtnClicked()
 
 void UBLPUWPropertyMenu::PlayerUpId()
 {
-	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
-	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerStatePtr is null")); return; }
-
-	// Its the owners turn
-	if (BLPPlayerStatePtr->GetPlayerUpId() == BLPPlayerStatePtr->GetBLPPlayerId())
-	{
-		MortgageBtn->SetVisibility(ESlateVisibility::Visible);
-		if (const ABLPEstatePropertySpace* EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(SelectedPropertySpace))
-		{
-			if (EstatePropertySpacePtr->GetCanBuild())
-			{
-				BuildBtn->SetVisibility(ESlateVisibility::Visible);
-			}
-		}
-		SellBtn->SetVisibility(ESlateVisibility::Visible);
-	}
-	// Its not the owners turn
-	else
-	{
-		MortgageBtn->SetVisibility(ESlateVisibility::Hidden);
-    	BuildBtn->SetVisibility(ESlateVisibility::Hidden);
-		SellBtn->SetVisibility(ESlateVisibility::Hidden);
-	}
+	RefreshPropertyManagementButtons();
 }
 
+void UBLPUWPropertyMenu::RefreshPropertyManagementButtons()
+{
+	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+    if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWNotification: BLPPlayerStatePtr is null")); return; }
+	
+    if (BLPPlayerStatePtr->GetPlayerUpId() == BLPPlayerStatePtr->GetBLPPlayerId())
+    {
+		if (!SelectedPropertySpace)
+		{
+			MortgageBtn->SetVisibility(ESlateVisibility::Collapsed);
+			BuildBtn->SetVisibility(ESlateVisibility::Collapsed);
+			SellBtn->SetVisibility(ESlateVisibility::Collapsed);
+			PendingSaleText->SetVisibility(ESlateVisibility::Hidden);
+			return;
+		}
+
+    	if (SelectedPropertySpace->GetIsMortgaged())
+    	{
+    		BuildBtn->SetVisibility(ESlateVisibility::Collapsed);
+    		SellBtn->SetVisibility(ESlateVisibility::Collapsed);
+            return;			
+    	}
+    	
+    	if (SelectedPropertySpace->GetHasPendingSale())
+    	{
+    		MortgageBtn->SetVisibility(ESlateVisibility::Collapsed);
+        	BuildBtn->SetVisibility(ESlateVisibility::Collapsed);
+    		SellBtn->SetVisibility(ESlateVisibility::Collapsed);
+    		PendingSaleText->SetVisibility(ESlateVisibility::Visible);
+    	}
+    	else
+    	{
+    		PendingSaleText->SetVisibility(ESlateVisibility::Hidden);
+    		MortgageBtn->SetVisibility(ESlateVisibility::Visible);
+    		SellBtn->SetVisibility(ESlateVisibility::Visible);
+    		if (const ABLPEstatePropertySpace* EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(SelectedPropertySpace))
+    		{
+    			if (EstatePropertySpacePtr->GetCanBuild()) BuildBtn->SetVisibility(ESlateVisibility::Visible);
+    		}
+    	}
+    }
+    else
+    {
+    	MortgageBtn->SetVisibility(ESlateVisibility::Collapsed);
+        BuildBtn->SetVisibility(ESlateVisibility::Collapsed);
+    	SellBtn->SetVisibility(ESlateVisibility::Collapsed);
+    	if (!SelectedPropertySpace) return;
+    	if (SelectedPropertySpace->GetHasPendingSale()) PendingSaleText->SetVisibility(ESlateVisibility::Visible);
+    	else PendingSaleText->SetVisibility(ESlateVisibility::Hidden);
+    }
+}
+void UBLPUWPropertyMenu::ResetPropertyDetails()
+{
+	PropertyDetails->Reset();
+}
 void UBLPUWPropertyMenu::RefreshPropertyWrapBox()
 {
 	PropertyWrapBox->ClearChildren();
@@ -233,7 +269,7 @@ void UBLPUWPropertyMenu::RefreshPropertyWrapBox()
 		if (!PropertyTitle) return;
 
 		PropertyTitle->Setup(this, Property);
-		PropertyTitle->PropertyNameText->SetText(FText::FromString(Property->GetName()));
+		PropertyTitle->PropertyNameTextBlock->SetText(FText::FromString(Property->GetName()));
 
 		// Only set the color of the inner border if it's an EstateProperty
 		if (const ABLPEstatePropertySpace* EstatePropertySpace = Cast<ABLPEstatePropertySpace>(Property))
@@ -241,13 +277,13 @@ void UBLPUWPropertyMenu::RefreshPropertyWrapBox()
 			FLinearColor CurrColor;
 			EstatePropertySpace->GetColor()->GetMaterial()->GetVectorParameterValue(TEXT("Color"), CurrColor);
 
-			PropertyTitle->InnerBorder->SetBrushColor(CurrColor);
+			PropertyTitle->PropertyTitleBorder->SetBrushColor(CurrColor);
 		}
-
+		
 		PropertyWrapBox->AddChild(PropertyTitle);
 	}
 }
-void UBLPUWPropertyMenu::RefreshPlayerTradeList()
+void UBLPUWPropertyMenu::RefreshPlayerSellList()
 {
 	PlayerCardWrapBox->ClearChildren();
     	
@@ -315,5 +351,6 @@ void UBLPUWPropertyMenu::RefreshPropertyDetails() const
 	if (!SelectedPropertySpace) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: SelectedPropertySpace is null")); return; }
 	PropertyDetails->Refresh(IsItOwnersTurn, SelectedPropertySpace, BuildBtn, MortgageBtnText);
 }
+
 
 

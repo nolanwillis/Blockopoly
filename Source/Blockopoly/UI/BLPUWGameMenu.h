@@ -90,7 +90,7 @@ private:
 	USizeBox* BannerNotificationSlot;
 	
 	UPROPERTY(meta = (BindWidget))
-	UWrapBox* SaleRequestWrapBox;
+	UWrapBox* SaleWrapBox;
 
 	// References to widget blueprints
 	TSubclassOf<UUserWidget> PlayerCardClass;
@@ -100,6 +100,7 @@ private:
 	TSubclassOf<UUserWidget> ForfeitNotificationClass;
 	TSubclassOf<UUserWidget> LeaveNotificationClass;
 	TSubclassOf<UUserWidget> SaleRequestClass;
+	TSubclassOf<UUserWidget> SaleResponseClass;
 
 	// Button handlers
 	UFUNCTION()
@@ -134,5 +135,7 @@ private:
 	void CheckBankruptcyStatus() const;
 	UFUNCTION()
 	void AddSaleRequest(const FPropertySaleData& SaleData);
+	UFUNCTION()
+	void AddSaleResponse(const FPropertySaleData& SaleData, const bool Status);
 
 };

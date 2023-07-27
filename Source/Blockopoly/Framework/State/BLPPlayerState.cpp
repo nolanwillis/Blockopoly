@@ -80,6 +80,11 @@ void ABLPPlayerState::Client_AddSaleRequest_Implementation(const FPropertySaleDa
 	SaleRequestDelegate.ExecuteIfBound(SaleData);
 }
 bool ABLPPlayerState::Client_AddSaleRequest_Validate(const FPropertySaleData& SaleData){ return true; }
+void ABLPPlayerState::Client_AddSaleResponse_Implementation(const FPropertySaleData& SaleData, const bool Status)
+{
+	SaleResponseDelegate.ExecuteIfBound(SaleData, Status);
+}
+bool ABLPPlayerState::Client_AddSaleResponse_Validate(const FPropertySaleData& SaleData, const bool Status){ return true; }
 
 void ABLPPlayerState::OnRep_PlayerUpId() const
 {
@@ -104,6 +109,8 @@ void ABLPPlayerState::OnRep_OwnedPropertyList() const
 		UE_LOG(LogTemp, Warning, TEXT("|Name: %s | Rent: %d|"), *Property->GetName(), Property->GetCurrentRent());
 	}
 	UE_LOG(LogTemp, Warning, TEXT("///////////////////////"));
+
+	OnPropertyListChangedDelegate.ExecuteIfBound();
 }
 
 void ABLPPlayerState::OnRep_JailCounter()

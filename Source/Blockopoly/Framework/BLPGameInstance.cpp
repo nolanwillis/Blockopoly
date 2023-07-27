@@ -7,7 +7,6 @@
 #include "../UI/BLPUWMainMenu.h"
 #include "../UI/BLPUWPauseMenu.h"
 #include "./Controllers/BLPPlayerController.h"
-#include "./State/BLPPlayerState.h"
 
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
@@ -179,7 +178,6 @@ void UBLPGameInstance::StartSession()
 		SessionInterface->StartSession(SESSION_NAME);
 	}
 }
-
 
 void UBLPGameInstance::OnCreateSessionComplete(FName SessionName, bool Success)
 {

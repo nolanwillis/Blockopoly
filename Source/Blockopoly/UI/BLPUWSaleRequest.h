@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
+#include "Blockopoly/Framework/Controllers/BLPPlayerController.h"
 #include "BLPUWSaleRequest.generated.h"
 
 struct FPropertySaleData;
@@ -34,7 +35,7 @@ private:
 	UTextBlock* AmountText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* PropertyTitleNameText;
+	UTextBlock* PropertyNameTextBlock;
 
 	UPROPERTY(meta = (BindWidget))
 	UBorder* PropertyTitleBorder;
@@ -44,6 +45,8 @@ private:
 	
 	UPROPERTY(meta = (BindWidget))
 	UButton* DenyBtn;
+
+	FPropertySaleData AssociatedSaleData = {nullptr, nullptr, nullptr, 0};
 
 	UFUNCTION()
 	void AcceptBtnClicked();

@@ -105,6 +105,9 @@ public:
 	UFUNCTION(Server, Unreliable, WithValidation)
 	void Server_SendSaleRequest(const FPropertySaleData& SaleData);
 
+	UFUNCTION(Server, Unreliable, WithValidation)
+	void Server_SendSaleResponse(const FPropertySaleData& SaleData, const bool Status);
+
 	// The following funtions must be public for the chance/chest system to work
 	void MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList);
 	void SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList);
@@ -121,8 +124,7 @@ private:
 	TSubclassOf<UUserWidget> GameMenuClass;
 	TSubclassOf<UUserWidget> LobbyMenuClass;
 	TSubclassOf<UUserWidget> WinScreenClass;
-
-
+	
 	UPROPERTY()
 	ABLPCameraManager* BLPCameraManagerPtr;
 
@@ -130,5 +132,6 @@ private:
 	void UpdateBuildings(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const;
 	void UpdateRent(ABLPEstatePropertySpace* EstatePropertySpacePtr, const int& BuildingCount) const;
 	void ChargeRent(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr, const ABLPPropertySpace* EnteredPropertySpace) const;
+	void TransferOwnership(const FPropertySaleData& SaleData);
     	
 };

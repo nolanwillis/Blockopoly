@@ -117,7 +117,16 @@ void ABLPGameMode::Logout(AController* Exiting)
 			if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPGameMode: BLPPlayerStatePtr is null")); return; }
 			if (BLPPlayerStatePtr->GetBLPPlayerId() != PlayerStateOfLeaver->GetBLPPlayerId()) WinnersPlayerStatePtr = BLPPlayerStatePtr; break;
 		}
+		if (!WinnersPlayerStatePtr) return;
 		BLPGameStatePtr->SetWinnersPlayerId(WinnersPlayerStatePtr->GetBLPPlayerId());
+	}
+
+	// Reset ownership of properties
+	TArray<ABLPPropertySpace*> LeavingPlayersProperties = PlayerStateOfLeaver->GetOwnedPropertyList();
+	for (ABLPPropertySpace* PropertySpace : LeavingPlayersProperties)
+	{
+		PropertySpace->SetOwnerId(-1);
+		BLPGameStatePtr->AddToAvailablePropertySpaceList(PropertySpace);
 	}
 }
 

@@ -23,18 +23,18 @@ class BLOCKOPOLY_API UBLPUWPropertyTitle : public UBLPUserWidget
 
 public:
 	UPROPERTY(meta = (BindWidget))
-	UBorder* InnerBorder;
+	UBorder* PropertyTitleBorder;
 	
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* PropertyNameText;
+	UTextBlock* PropertyNameTextBlock;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* PropertyTitleContainer;
 
 	// Method that sets up this session entry
 	void Setup(UBLPUWPropertyMenu* InParent, ABLPPropertySpace* PropertySpacePtr);
 
 private:
-	UPROPERTY(meta = (BindWidget))
-	UButton* Button;
-	
 	UPROPERTY()
 	UBLPUWPropertyMenu* Parent;
 

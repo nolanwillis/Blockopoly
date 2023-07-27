@@ -4,33 +4,28 @@
 #include "./BLPUWPropertyTitle.h"
 
 #include "BLPUWPropertyMenu.h"
+#include "Blockopoly/Framework/State/BLPPlayerState.h"
+#include "Blockopoly/Items/Spaces/BLPEstatePropertySpace.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 
 void UBLPUWPropertyTitle::Setup(UBLPUWPropertyMenu* InParent, ABLPPropertySpace* PropertySpacePtr)
 {
 	// Bind OnClicked event
-	if (!Button) return;
-	Button->OnClicked.AddDynamic(this, &UBLPUWPropertyTitle::OnClick);
+	if (!PropertyTitleContainer) return;
+	PropertyTitleContainer->OnClicked.AddDynamic(this, &UBLPUWPropertyTitle::OnClick);
 	Parent = InParent;
 	AssociatedProperty = PropertySpacePtr;
 }
 
 void UBLPUWPropertyTitle::OnClick()
 {
+	ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
+	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWPropertyTitle: BLPPlayerStatePtr is null")); return; }
+
 	Parent->SetSelectedPropertySpace(AssociatedProperty);
 	Parent->SetSelectedPropertyTitle(this);
 	Parent->RefreshPropertyDetails();
-	
-	if (AssociatedProperty->GetHasPendingSale())
-	{
-		Parent->GetSellBtn()->SetVisibility(ESlateVisibility::Collapsed);
-		Parent->GetPendingSaleText()->SetVisibility(ESlateVisibility::Visible);
-	}
-	else
-	{
-		Parent->GetSellBtn()->SetVisibility(ESlateVisibility::Visible);
-		Parent->GetPendingSaleText()->SetVisibility(ESlateVisibility::Hidden);
-	}
+	Parent->RefreshPropertyManagementButtons();
 }
 

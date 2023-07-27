@@ -31,25 +31,39 @@ class BLOCKOPOLY_API UBLPUWPropertyMenu : public UBLPUserWidget
 
 public:
 	UBLPUWPropertyMenu();
-
-	UFUNCTION()
-	void RefreshPropertyWrapBox();
-
+	
 	UFUNCTION()
 	void RefreshPropertyDetails() const;
 
+	ABLPPropertySpace* GetSelectedPropertySpace() const { return SelectedPropertySpace; }
 	void SetSelectedPropertySpace(ABLPPropertySpace* Value) { SelectedPropertySpace = Value; }
 	
 	void SetSelectedPropertyTitle(UBLPUWPropertyTitle* Value) { SelectedPropertyTitle = Value; }
 
-	void SetPlayerToTradeWith(ABLPPlayerState* Value) { PlayerToTradeWith = Value; UE_LOG(LogTemp, Warning, TEXT("PlayerToTradeWith set!"));}
+	void SetPlayerToTradeWith(ABLPPlayerState* Value) { PlayerToTradeWith = Value; UE_LOG(LogTemp, Warning, TEXT("PlayerToTradeWith set!")); }
 
 	UBLPUWPlayerCard* GetSelectedPlayerCard() { return SelectedPlayerCard; }
 	void SetSelectedPlayerCard(UBLPUWPlayerCard* Value) { SelectedPlayerCard = Value; UE_LOG(LogTemp, Warning, TEXT("SelectedPlayerCard set!"));}
 
-	UButton* GetConfirmTradeBtn() { return ConfirmSaleRequestBtn; }
-	UButton* GetSellBtn() { return SellBtn; }
-	UTextBlock* GetPendingSaleText() { return PendingSaleText; }
+	UPROPERTY(meta = (BindWidget))
+	UButton* ConfirmSaleRequestBtn;
+	
+	UPROPERTY(meta = (BindWidget))
+	UButton* SellBtn;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* MortgageBtn;
+	
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* PendingSaleText;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* BuildBtn;
+
+	UFUNCTION()
+	void RefreshPropertyManagementButtons();
+	UFUNCTION()
+	void ResetPropertyDetails();
 
 protected:
 	virtual void NativeConstruct() override;
@@ -74,25 +88,11 @@ private:
 	UButton* BackBtn;
 	
 	UPROPERTY(meta = (BindWidget))
-	UButton* BuildBtn;
-
-	UPROPERTY(meta = (BindWidget))
-	UButton* SellBtn;
-	
-	UPROPERTY(meta = (BindWidget))
-	UButton* MortgageBtn;
-
-	UPROPERTY(meta = (BindWidget))
-	UButton* ConfirmSaleRequestBtn;
-
-	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MortgageBtnText;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SaleRequestErrorText;
 
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* PendingSaleText;
 
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox* PropertyWrapBox;
@@ -112,23 +112,20 @@ private:
 
 	UFUNCTION()
 	void BackBtnClicked();
-	
 	UFUNCTION()
 	void BuildBtnClicked();
-
 	UFUNCTION()
 	void MortgageBtnClicked();
-
 	UFUNCTION()
 	void SellBtnClicked();
-
 	UFUNCTION()
 	void ConfirmTradeBtnClicked();
 
 	UFUNCTION()
 	void PlayerUpId();
-
+	
 	UFUNCTION()
-	void RefreshPlayerTradeList();
-
+	void RefreshPlayerSellList();
+	UFUNCTION()
+	void RefreshPropertyWrapBox();
 };

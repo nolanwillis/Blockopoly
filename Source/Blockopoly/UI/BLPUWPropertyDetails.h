@@ -23,6 +23,7 @@ class BLOCKOPOLY_API UBLPUWPropertyDetails : public UBLPUserWidget
 
 public:
 	void Refresh(const bool& IsItMyTurn, ABLPPropertySpace* PropertySpace, UButton* BuildBtn, UTextBlock* MortgageBtnText) const;
+	void Reset();
 	
 private:
 	UPROPERTY(meta = (BindWidget))
