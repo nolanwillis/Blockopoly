@@ -92,8 +92,7 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* SaleRequestErrorText;
-
-
+	
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox* PropertyWrapBox;
 
@@ -105,6 +104,9 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UBLPUWPropertyDetails* PropertyDetails;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* BalanceText;
 
 	// Reference to widget blueprints
 	TSubclassOf<UUserWidget> PropertyTitleClass;
@@ -122,10 +124,13 @@ private:
 	void ConfirmTradeBtnClicked();
 
 	UFUNCTION()
+	void UpdateBalance(const int NewBalance);
+	UFUNCTION()
 	void PlayerUpId();
 	
 	UFUNCTION()
 	void RefreshPlayerSellList();
 	UFUNCTION()
 	void RefreshPropertyWrapBox();
+
 };

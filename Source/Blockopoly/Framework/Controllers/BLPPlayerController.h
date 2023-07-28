@@ -72,10 +72,10 @@ public:
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
 	void Server_SetInitialTurnStatus(ABLPPlayerState* BLPPlayerStateInPtr);
 
-	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
 	void Server_Roll(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 
-	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
 	void Server_ReflectRollInGame(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr);
 	
 	UFUNCTION(Server, Unreliable, WithValidation, BlueprintCallable)

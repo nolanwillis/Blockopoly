@@ -6,7 +6,6 @@
 #include "../../Items/Spaces/BLPSpace.h"
 #include "../../Items/Spaces/BLPPropertySpace.h"
 #include "../../Items/Spaces/BLPJailSpace.h"
-#include "Blockopoly/Framework/BLPGameInstance.h"
 #include "Blockopoly/Framework/Controllers/BLPPlayerController.h"
 
 #include "Net/UnrealNetwork.h"
@@ -95,7 +94,6 @@ void ABLPPlayerState::OnRep_PlayerUpId() const
 void ABLPPlayerState::OnRep_CreditBalance() const
 {
 	UE_LOG(LogTemp, Warning, TEXT("New Balance: %d"), CreditBalance);
-	if (!OnBalanceChangedDelegate.IsBound()) return;
 	OnBalanceChangedDelegate.Broadcast(CreditBalance);
 }
 

@@ -644,11 +644,11 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 	}
 	if (Cast<ABLPPropertySpace>(EnteredSpace))
 	{
+		PlayerStatePtr->SetHasRolled(true);
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Property Space Entered"));
 		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
 		CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
 		ChargeRent(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
-		PlayerStatePtr->SetHasRolled(true);
 	}
 	else if (Cast<ABLPChanceSpace>(EnteredSpace))
 	{
@@ -662,15 +662,15 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 	}
 	else if (Cast<ABLPGoToJailSpace>(EnteredSpace))
 	{
+		PlayerStatePtr->SetHasRolled(true);
 		UE_LOG(LogTemp, Warning, TEXT("GO TO JAIL!!"));
 		SendToJail(PlayerStatePtr, GameStatePtr->GetSpaceList());
-		PlayerStatePtr->SetHasRolled(true);
 	}
 	else if (Cast<ABLPTaxSpace>(EnteredSpace))
 	{
+		PlayerStatePtr->SetHasRolled(true);
 		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Taxes Collected"));
 		PlayerStatePtr->AddToBalance(-100);
-		PlayerStatePtr->SetHasRolled(true);
 	}
 	else if (Cast<ABLPJailSpace>(EnteredSpace))
 	{
@@ -717,6 +717,11 @@ void ABLPPlayerController::TransferOwnership(const FPropertySaleData& SaleData)
 	SaleData.OwningPlayer->RemoveFromOwnedPropertyList(SaleData.PropertyToSell);
     // Add property to the new owners property list
     SaleData.TargetPlayer->AddToOwnedPropertyList(SaleData.PropertyToSell);
+
+	if (const ABLPEstatePropertySpace* EstatePropertySpacePtr = Cast<ABLPEstatePropertySpace>(SaleData.PropertyToSell))
+	{
+		UpdateCanBuild(EstatePropertySpacePtr, SaleData.TargetPlayer);
+	}
 }
 
 // Triggers a card to be drawn and notifications to be sent to all clients

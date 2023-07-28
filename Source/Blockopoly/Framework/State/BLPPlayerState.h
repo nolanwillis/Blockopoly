@@ -43,8 +43,11 @@ public:
 	void SetPlayerUpId(const int& Value){ PlayerUpId = Value; OnRep_PlayerUpId(); }
 	
 	int GetBalance() const { return CreditBalance; }
-	void AddToBalance(const int& Value) { CreditBalance = CreditBalance+Value; OnRep_CreditBalance();}
-	
+	void AddToBalance(const int& Value) { PreviousCreditBalance = CreditBalance; CreditBalance = CreditBalance+Value; OnRep_CreditBalance();}
+
+	UFUNCTION(BlueprintCallable)
+	int GetPreviousBalance() const { return PreviousCreditBalance; }
+
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
 	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; }
 
@@ -67,7 +70,7 @@ public:
 	void SetCanBuyCurrentProperty(const bool& Value) { CanBuyCurrentProperty = Value; OnRep_CanBuyCurrentProperty(); }
 
 	bool GetHasRolled() const { return HasRolled; }
-	void SetHasRolled(const bool& Value) { HasRolled = Value; OnRep_HasRolled(); }
+	void SetHasRolled(const bool& Value){ HasRolled = Value; OnRep_HasRolled(); }
 	
 	bool GetIsLeaving() const { return IsLeaving; }
 	void SetIsLeaving(const bool& Value) { IsLeaving = Value; }
@@ -109,6 +112,9 @@ private:
 	
 	UPROPERTY(ReplicatedUsing=OnRep_CreditBalance)
 	int CreditBalance = 1500;
+
+	UPROPERTY(Replicated)
+	int PreviousCreditBalance = 1500;
 	
 	UPROPERTY(Replicated)
 	int CurrentSpaceId = 0;
@@ -132,7 +138,7 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_CanBuyCurrentProperty)
 	bool CanBuyCurrentProperty = false;
-
+	
 	// Keeps track of if the player has rolled during their turn
 	UPROPERTY(ReplicatedUsing=OnRep_HasRolled)
 	bool HasRolled = false;
@@ -152,7 +158,7 @@ private:
 	
 	UFUNCTION()
 	void OnRep_CreditBalance() const;
-
+	
 	UFUNCTION()
 	void OnRep_OwnedPropertyList() const;
 

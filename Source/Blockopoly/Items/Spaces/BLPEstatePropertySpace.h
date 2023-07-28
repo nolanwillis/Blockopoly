@@ -66,7 +66,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))
 	UMaterial* Color;
 
-	UPROPERTY(meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, meta = (AllowPrivateAccess = true))
 	bool CanBuild = false;
 	
 	UPROPERTY(EditAnywhere, Category = EstateData, meta = (AllowPrivateAccess = true))

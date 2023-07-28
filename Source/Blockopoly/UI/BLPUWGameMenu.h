@@ -44,6 +44,12 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateBalance(const int NewBalance);
+
+	UFUNCTION(BlueprintCallable)
+	void CheckBankruptcyStatus() const;
+
 private:
 	UPROPERTY(meta = (BindWidget))
 	UBLPUWPropertyMenu* PropertyMenu;
@@ -69,8 +75,6 @@ private:
 	UTextBlock* InJailText;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* JailSkipCounterTextBlock;
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* BalanceText;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* BankruptText; 
 
@@ -120,8 +124,6 @@ private:
 	UFUNCTION()
 	void PlayerUpId();
 	UFUNCTION()
-	void UpdateBalance(const int NewBalance);
-	UFUNCTION()
 	void InJail(const int TurnsLeft);
 	UFUNCTION()
 	void OutOfJail();
@@ -131,8 +133,6 @@ private:
 	void HasRolled(const bool Value);
 	UFUNCTION()
 	void UpdateJailSkipCounter(const int& JailSkipCounter);
-	UFUNCTION()
-	void CheckBankruptcyStatus() const;
 	UFUNCTION()
 	void AddSaleRequest(const FPropertySaleData& SaleData);
 	UFUNCTION()

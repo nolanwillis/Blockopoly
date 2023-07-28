@@ -4,6 +4,7 @@
 #include "BLPEstatePropertySpace.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 
 ABLPEstatePropertySpace::ABLPEstatePropertySpace()
 {
@@ -20,6 +21,8 @@ ABLPEstatePropertySpace::ABLPEstatePropertySpace()
 	House2->SetupAttachment(RootComponent);
 	House3->SetupAttachment(RootComponent);
 	Hotel->SetupAttachment(RootComponent);
+
+	SetReplicates(true);
 }
 
 void ABLPEstatePropertySpace::BeginPlay()
@@ -34,3 +37,12 @@ void ABLPEstatePropertySpace::BeginPlay()
 	House3->SetVisibility(false, false);
 	Hotel->SetVisibility(false, false);
 }
+
+void ABLPEstatePropertySpace::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Here we list the variables we want to replicate
+	DOREPLIFETIME(ABLPEstatePropertySpace, CanBuild);
+}
+

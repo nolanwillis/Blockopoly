@@ -53,6 +53,7 @@ void UBLPUWPropertyMenu::NativeConstruct()
 	if (!BLPPlayerStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: BLPPlayerStatePtr is null")); return; }
 
 	BLPPlayerStatePtr->PlayerUpIdDelegate.AddUObject(this, &UBLPUWPropertyMenu::PlayerUpId);
+	BLPPlayerStatePtr->OnBalanceChangedDelegate.AddUObject(this, &UBLPUWPropertyMenu::UpdateBalance);
 	BLPPlayerStatePtr->RefreshUIDelegate.AddUObject(this, &UBLPUWPropertyMenu::RefreshPlayerSellList);
 	BLPPlayerStatePtr->OnPropertyListChangedDelegate.BindUObject(this, &UBLPUWPropertyMenu::RefreshPropertyWrapBox);
 
@@ -192,6 +193,10 @@ void UBLPUWPropertyMenu::ConfirmTradeBtnClicked()
 	UE_LOG(LogTemp, Warning, TEXT("ConfirmTradeBtnClicked"));
 }
 
+void UBLPUWPropertyMenu::UpdateBalance(const int NewBalance)
+{
+	BalanceText->SetText(FText::AsNumber(NewBalance));
+}
 void UBLPUWPropertyMenu::PlayerUpId()
 {
 	RefreshPropertyManagementButtons();

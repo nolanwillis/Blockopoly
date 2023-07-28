@@ -228,11 +228,11 @@ void UBLPUWGameMenu::PlayerUpId()
     	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-void UBLPUWGameMenu::UpdateBalance(const int NewBalance)
-{
-	BalanceText->SetText(FText::AsNumber(NewBalance));
-	CheckBankruptcyStatus();
-}
+// void UBLPUWGameMenu::UpdateBalance(const int NewBalance)
+// {
+// 	BalanceText->SetText(FText::AsNumber(NewBalance));
+// 	CheckBankruptcyStatus();
+// }
 void UBLPUWGameMenu::InJail(const int TurnsLeft)
 {
 	FString Message = "YOUR IN JAIL FOR ";
@@ -305,7 +305,8 @@ void UBLPUWGameMenu::CheckBankruptcyStatus() const
 {
 	const ABLPPlayerState* BLPPlayerStatePtr = GetOwningPlayerState<ABLPPlayerState>();
 	if (!BLPPlayerStatePtr) UE_LOG(LogTemp, Warning, TEXT("BLPUWGameMenu: PlayerStatePtr is null"));
-
+	
+	
 	if (BLPPlayerStatePtr->GetBalance() < 0)
 	{
 		LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(2);
@@ -315,8 +316,7 @@ void UBLPUWGameMenu::CheckBankruptcyStatus() const
 	else
 	{
 		LargeNotificationWidgetSwitcher->SetActiveWidgetIndex(0);
-		FinishTurnBtn->SetVisibility(ESlateVisibility::Visible);
-		ForfeitBtn->SetVisibility(ESlateVisibility::Hidden);
+		if (BLPPlayerStatePtr->GetPlayerUpId() == BLPPlayerStatePtr->GetBLPPlayerId()) FinishTurnBtn->SetVisibility(ESlateVisibility::Visible);
 	}
 }
 void UBLPUWGameMenu::AddSaleRequest(const FPropertySaleData& SaleData)
