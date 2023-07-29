@@ -484,32 +484,21 @@ void ABLPPlayerController::MovePlayer(ABLPAvatar* AvatarPtr, ABLPPlayerState* Pl
 	{
 		if (Space->GetSpaceID() == PlayerStatePtr->GetCurrentSpaceId())
 		{
-			FSpawnPoint* OldSpawnPoint = PlayerStatePtr->GetCurrentSpawnPoint();
-			if (OldSpawnPoint) OldSpawnPoint->Taken = false;
-
-			FSpawnPoint* NewSpawnPoint = nullptr;
+			USceneComponent* NewSpawnPoint = nullptr;
 
 			// If player is in jail get special spawn point else get normal spawn point
 			if (PlayerStatePtr->GetJailCounter() == 3)
 			{
-				if (ABLPJailSpace* JailSpace = Cast<ABLPJailSpace>(Space)) NewSpawnPoint = JailSpace->GetOpenJailCell();
+				if (ABLPJailSpace* JailSpace = Cast<ABLPJailSpace>(Space)) NewSpawnPoint = JailSpace->GetJailCell(PlayerStatePtr->GetBLPPlayerId());
 			}
 			else
 			{
-				NewSpawnPoint = Space->GetOpenSpawnPoint();
+				NewSpawnPoint = Space->GetSpawnPoint(PlayerStatePtr->GetBLPPlayerId());
 			}
-			
-			if (!NewSpawnPoint)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Spawn point could not be found!"));
-				return;
-			}
-			PlayerStatePtr->SetCurrentSpawnPoint(NewSpawnPoint);
-			
-			UE_LOG(LogTemp, Warning, TEXT("SpawnPointId: %d, Location: %s" ), NewSpawnPoint->Index, *(NewSpawnPoint->Transform).ToString());
-			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
-			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator(); 
-			AvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
+
+			const FVector NewSpawnPointLocation = NewSpawnPoint->GetComponentLocation();
+
+			AvatarPtr->SetActorLocation(NewSpawnPointLocation);
 
 			AActor* NewCamera = BLPCameraManagerPtr->GetCamera(PlayerStatePtr->GetCurrentSpaceId()/10);
 			if (!NewCamera) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Camera not found when moving player")); return; }

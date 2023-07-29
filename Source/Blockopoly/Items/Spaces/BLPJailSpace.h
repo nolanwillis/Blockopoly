@@ -6,6 +6,8 @@
 #include "./BLPSpace.h"
 #include "BLPJailSpace.generated.h"
 
+class USceneComponent;
+
 /**
  * 
  */
@@ -15,25 +17,19 @@ class BLOCKOPOLY_API ABLPJailSpace : public ABLPSpace
 	GENERATED_BODY()
 
 public:
+	ABLPJailSpace();
 	// Gets the transform of an open jail cell from the JailCells array
-	FSpawnPoint* GetOpenJailCell();
-
-protected:
-	virtual void BeginPlay() override;
+	USceneComponent* GetJailCell(const int& BLPPlayerId);
 
 private:
-	// Array of spawn points
-	TArray<FSpawnPoint*> JailCells{ &JailCell0, &JailCell1, &JailCell2, &JailCell3 };
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* JailCell0;
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* JailCell1;
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* JailCell2;
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* JailCell3;
 
-	UPROPERTY(EditAnywhere, Category = JailCells, meta = (AllowPrivateAccess = true))
-	FSpawnPoint JailCell0;
-
-	UPROPERTY(EditAnywhere, Category = JailCells, meta = (AllowPrivateAccess = true))
-	FSpawnPoint JailCell1;
-
-	UPROPERTY(EditAnywhere, Category = JailCells, meta = (AllowPrivateAccess = true))
-	FSpawnPoint JailCell2;
-
-	UPROPERTY(EditAnywhere, Category = JailCells, meta = (AllowPrivateAccess = true))
-	FSpawnPoint JailCell3;
+	TArray<USceneComponent*> JailCells{ JailCell0, JailCell1, JailCell2, JailCell3 };
 };

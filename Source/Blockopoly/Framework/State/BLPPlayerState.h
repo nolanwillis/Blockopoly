@@ -50,9 +50,6 @@ public:
 
 	int GetCurrentSpaceId() const { return CurrentSpaceId; }
 	void SetCurrentSpaceId(const int& Value){ CurrentSpaceId = Value; }
-
-	FSpawnPoint* GetCurrentSpawnPoint() const { return CurrentSpawnPoint; }
-	void SetCurrentSpawnPoint(FSpawnPoint* Value){ CurrentSpawnPoint = Value; }
 	
 	TArray<ABLPPropertySpace*> GetOwnedPropertyList() const { return OwnedPropertyList; }
 	void AddToOwnedPropertyList(ABLPPropertySpace* Value) { OwnedPropertyList.Add(Value); OnRep_OwnedPropertyList();}
@@ -118,8 +115,6 @@ private:
 	
 	UPROPERTY(Replicated)
 	int CurrentSpaceId = 0;
-
-	FSpawnPoint* CurrentSpawnPoint;
 
 	UPROPERTY(ReplicatedUsing=OnRep_OwnedPropertyList)
 	TArray<ABLPPropertySpace*> OwnedPropertyList;

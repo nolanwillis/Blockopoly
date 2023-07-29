@@ -41,26 +41,19 @@ void ABLPPlayerState::Client_SimulateMoveLocally_Implementation(const int NewSpa
 	{
 		if (Space->GetSpaceID() == NewSpaceId)
 		{
-			FSpawnPoint* NewSpawnPoint = nullptr;
+			USceneComponent* NewSpawnPoint = nullptr;
 
 			if (JailCounter == 3)
 			{
-				if (ABLPJailSpace* JailSpace = Cast<ABLPJailSpace>(Space)) NewSpawnPoint = JailSpace->GetOpenJailCell();
+				if (ABLPJailSpace* JailSpace = Cast<ABLPJailSpace>(Space)) NewSpawnPoint = JailSpace->GetJailCell(BLPPlayerId);
 			}
 			else
 			{
-				NewSpawnPoint = Space->GetOpenSpawnPoint();
+				NewSpawnPoint = Space->GetSpawnPoint(BLPPlayerId);
 			}
-			if (!NewSpawnPoint)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Spawn point could not be found!"));
-				return;
-			}
-			CurrentSpawnPoint = NewSpawnPoint;
 			
-			const FVector NewLocation = Space->GetActorTransform().GetLocation() + NewSpawnPoint->Transform.GetLocation();
-			const FRotator NewRotation = Space->GetActorTransform().GetRotation().Rotator();
-			BLPAvatarPtr->SetActorLocationAndRotation(NewLocation, NewRotation);
+			const FVector NewLocation = NewSpawnPoint->GetComponentLocation();
+			BLPAvatarPtr->SetActorLocation(NewLocation);
 		}
 	}
 }

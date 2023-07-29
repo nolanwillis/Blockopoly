@@ -9,19 +9,6 @@
 class USceneComponent; 
 class UStaticMeshComponent;
 
-USTRUCT()
-struct FSpawnPoint
-{
-	GENERATED_BODY()
-	
-	UPROPERTY(EditAnywhere, Meta = (MakeEditWidget = true))
-	FTransform Transform;
-
-	bool Taken;
-
-	int Index;
-};
-
 UCLASS()
 class BLOCKOPOLY_API ABLPSpace : public AActor
 {
@@ -36,7 +23,7 @@ public:
 	int GetSpaceID() const { return SpaceID; }
 
 	// Gets the transform of an open SpawnPoint from the SpawnPoints array
-	FSpawnPoint* GetOpenSpawnPoint();
+	USceneComponent* GetSpawnPoint(const int& BLPPlayerId);
 
 protected:
 	// Called when the game starts or when spawned
@@ -44,31 +31,30 @@ protected:
 
 private:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpaceData, meta = (AllowPrivateAccess = true))
-		FString Name;
+	FString Name;
 
 	UPROPERTY(EditAnywhere, Category = SpaceData, meta = (AllowPrivateAccess = true))
-		int SpaceID;
+	int SpaceID;
 
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
-		USceneComponent* Root;
+	USceneComponent* Root;
 
 	UPROPERTY(EditAnywhere, Category = Components, meta = (AllowPrivateAccess = true))
-		UStaticMeshComponent* Square;
-
+	UStaticMeshComponent* Square;
+	
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* SpawnPoint0;
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* SpawnPoint1;
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* SpawnPoint2;
+	UPROPERTY(EditAnywhere, Category = Spawning, meta = (AllowPrivateAccess = true, MakeEditWidget = true))
+	USceneComponent* SpawnPoint3;
+	
 	// Array of spawn points
-	TArray<FSpawnPoint*> SpawnPoints{ &SpawnPoint0, &SpawnPoint1, &SpawnPoint2, &SpawnPoint3 };
+	TArray<USceneComponent*> SpawnPoints{ SpawnPoint0, SpawnPoint1, SpawnPoint2, SpawnPoint3 };
 
-	UPROPERTY(EditAnywhere, Category = SpawnPoints, meta = (AllowPrivateAccess = true))
-		FSpawnPoint SpawnPoint0;
 
-	UPROPERTY(EditAnywhere, Category = SpawnPoints, meta = (AllowPrivateAccess = true))
-		FSpawnPoint SpawnPoint1;
-
-	UPROPERTY(EditAnywhere, Category = SpawnPoints, meta = (AllowPrivateAccess = true))
-		FSpawnPoint SpawnPoint2;
-
-	UPROPERTY(EditAnywhere, Category = SpawnPoints, meta = (AllowPrivateAccess = true))
-		FSpawnPoint SpawnPoint3;
 
 	
 
