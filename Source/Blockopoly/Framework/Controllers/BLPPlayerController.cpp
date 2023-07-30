@@ -187,9 +187,13 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 
 	if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
 
-	const int DiceValue = FMath::RandRange(2,12);
-	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), DiceValue);
-	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + DiceValue;
+	const int DieOneValue = FMath::RandRange(1,6);
+	const int DieTwoValue = FMath::RandRange(1,6);
+	const int TotalDiceValue = DieOneValue + DieTwoValue;
+	
+	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), TotalDiceValue);
+
+	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + TotalDiceValue;
 	const int MaxSpaceID = GameStatePtr->GetSpaceList().Num()-1;
 	
 	// If we pass go
@@ -203,7 +207,7 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 
 	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
 
-	GameStatePtr->AddRollNotificationToUI(DiceValue, PlayerStatePtr);
+	GameStatePtr->AddRollNotificationToUI(TotalDiceValue, PlayerStatePtr);
 }
 bool ABLPPlayerController::Server_Roll_Validate(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr){ return true; }
 

@@ -3,6 +3,7 @@
 
 #include "BLPUWMainMenu.h"
 #include "BLPUWSessionEntry.h"
+#include "BLPUWSettingsMenu.h"
 #include "../Framework/BLPGameInstance.h"
 
 #include "Components/Button.h"
@@ -11,38 +12,48 @@
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/EditableTextBox.h"
+#include "Components/Overlay.h"
 
 UBLPUWMainMenu::UBLPUWMainMenu(const FObjectInitializer& ObjectInitializer)
 {
+	// Gets reference to WBP_SettingsMenu
+	ConstructorHelpers::FClassFinder<UUserWidget> WBP_SettingsMenu(TEXT("/Game/Core/UI/WBP_SettingsMenu"));
+	if (!WBP_SettingsMenu.Class) return;
+	SettingsMenuClass = WBP_SettingsMenu.Class;
+	
 	// Gets reference to WBP_SessionEntry
 	ConstructorHelpers::FClassFinder<UUserWidget> WBP_SessionEntry(TEXT("/Game/Core/UI/WBP_SessionEntry"));
 	if (!WBP_SessionEntry.Class) return;
 	SessionEntryClass = WBP_SessionEntry.Class;
 }
 
-bool UBLPUWMainMenu::Initialize()
+void UBLPUWMainMenu::NativeConstruct()
 {
-	// Call parent version of function and store result in variable
-	bool Success = Super::Initialize();
-	if (!Success) return false;
-
-	// Bind host/join server functions to OnClicked delegate of host/join button
-	if (!HostMenuBtn) return false;
+	if (!HostMenuBtn) return;
 	HostMenuBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::OpenHostMenu);
-	if (!HostMenuBackBtn) return false;
+	if (!HostMenuBackBtn) return;
 	HostMenuBackBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::CloseHostMenu);
-	if (!HostServerBtn) return false;
+	if (!HostServerBtn) return;
 	HostServerBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::HostServer);
-	if (!JoinMenuBtn) return false;
+	if (!JoinMenuBtn) return;
 	JoinMenuBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::OpenJoinMenu);
-	if (!JoinMenuBackBtn) return false;
+	if (!JoinMenuBackBtn) return;
 	JoinMenuBackBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::CloseJoinMenu);
-	if (!JoinServerBtn) return false;
+	if (!JoinServerBtn) return;
 	JoinServerBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::JoinServer);
-	if (!QuitBtn) return false;
+	if (!SettingsMenuBtn) return;
+	SettingsMenuBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::OpenSettingsMenu);
+	if (!QuitBtn) return;
 	QuitBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::QuitGame);
-	return true;
 
+	UWorld* World = GetWorld();
+	if (!World) return;
+	UBLPUWSettingsMenu* SettingsMenu = CreateWidget<UBLPUWSettingsMenu>(World, SettingsMenuClass);
+	if (!SettingsMenu) return;
+	SettingsMenu->SetParent(this);
+	if (!MainWidgetSwitcher) return;
+	MainWidgetSwitcher->AddChild(SettingsMenu);
+	
 }
 
 // Sets the index of the selected SessionEntry and updates the UI to reflect this change
@@ -54,16 +65,16 @@ void UBLPUWMainMenu::SetSelectedIndex(uint32 Index)
 
 void UBLPUWMainMenu::OpenHostMenu()
 {
-	if (!MenuSwitcher) return;
+	if (!SubWidgetSwitcher) return;
 	if (!HostMenu) return;
-	MenuSwitcher->SetActiveWidget(HostMenu);
+	SubWidgetSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UBLPUWMainMenu::CloseHostMenu()
 {
-	if (!MenuSwitcher) return;
+	if (!SubWidgetSwitcher) return;
 	if (!HostMenu) return;
-	MenuSwitcher->SetActiveWidget(Menu);
+	SubWidgetSwitcher->SetActiveWidget(Menu);
 }
 
 void UBLPUWMainMenu::HostServer()
@@ -78,9 +89,9 @@ void UBLPUWMainMenu::HostServer()
 
 void UBLPUWMainMenu::OpenJoinMenu()
 {
-	if (!MenuSwitcher) return;
+	if (!SubWidgetSwitcher) return;
 	if (!JoinMenu) return;
-	MenuSwitcher->SetActiveWidget(JoinMenu);
+	SubWidgetSwitcher->SetActiveWidget(JoinMenu);
 	UBLPGameInstance* GameInstance = Cast<UBLPGameInstance>(GetGameInstance());
 	if (GameInstance)
 	{
@@ -90,9 +101,9 @@ void UBLPUWMainMenu::OpenJoinMenu()
 
 void UBLPUWMainMenu::CloseJoinMenu()
 {
-	if (!MenuSwitcher) return;
+	if (!SubWidgetSwitcher) return;
 	if (!JoinMenu) return;
-	MenuSwitcher->SetActiveWidget(Menu);
+	SubWidgetSwitcher->SetActiveWidget(Menu);
 }
 
 void UBLPUWMainMenu::JoinServer()
@@ -107,6 +118,18 @@ void UBLPUWMainMenu::JoinServer()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Selected index not set"));
 	}
+}
+
+void UBLPUWMainMenu::OpenSettingsMenu()
+{
+	if (!MainWidgetSwitcher) return;
+	MainWidgetSwitcher->SetActiveWidgetIndex(1);
+}
+
+void UBLPUWMainMenu::CloseSettingsMenu()
+{
+	if (!MainWidgetSwitcher) return;
+	MainWidgetSwitcher->SetActiveWidgetIndex(0);
 }
 
 void UBLPUWMainMenu::QuitGame()

@@ -6,6 +6,7 @@
 #include "BLPUserWidget.h"
 #include "BLPUWMainMenu.generated.h"
 
+class UBLPUWSettingsMenu;
 class UButton;
 class UWidgetSwitcher;
 class UWidget;
@@ -38,44 +39,49 @@ public:
 	
 	// Sets the index of the selected session
 	void SetSelectedIndex(uint32 Index);
+	
+	void CloseSettingsMenu();
 
 protected:
-	virtual bool Initialize();
+	virtual void NativeConstruct();
 	
 private:
-	// Menu switcher reference
 	UPROPERTY(meta = (BindWidget))
-		UWidgetSwitcher* MenuSwitcher;
+	UWidgetSwitcher* MainWidgetSwitcher;
+	UPROPERTY(meta = (BindWidget))
+	UWidgetSwitcher* SubWidgetSwitcher;
 
 	// Submenu references
 	UPROPERTY(meta = (BindWidget))
-		UWidget* Menu;
+	UWidget* Menu;
 	UPROPERTY(meta = (BindWidget))
-		UWidget* HostMenu;
+	UWidget* HostMenu;
 	UPROPERTY(meta = (BindWidget))
-		UWidget* JoinMenu;
-
-	// Button references
+	UWidget* JoinMenu;
+	
 	UPROPERTY(meta = (BindWidget))
-		UButton* HostMenuBtn;
+	UButton* HostMenuBtn;
 	UPROPERTY(meta = (BindWidget))
-		UButton* HostServerBtn;
+	UButton* HostServerBtn;
 	UPROPERTY(meta = (BindWidget))
-		UButton* HostMenuBackBtn;
+	UButton* HostMenuBackBtn;
 	UPROPERTY(meta = (BindWidget))
-		UButton* JoinMenuBtn;
+	UButton* JoinMenuBtn;
 	UPROPERTY(meta = (BindWidget))
-		UButton* JoinServerBtn;
+	UButton* JoinServerBtn;
 	UPROPERTY(meta = (BindWidget))
-		UButton* JoinMenuBackBtn;
+	UButton* JoinMenuBackBtn;
 	UPROPERTY(meta = (BindWidget))
-		UButton* QuitBtn;
+	UButton* SettingsMenuBtn;
+	UPROPERTY(meta = (BindWidget))
+	UButton* QuitBtn;
 
 	// Server browser scroll box reference
 	UPROPERTY(meta = (BindWidget))
-		UPanelWidget* SessionBrowserScrollBox;
+	UPanelWidget* SessionBrowserScrollBox;
 
-	// Session entry class reference
+	// WBP References
+	TSubclassOf<UUserWidget> SettingsMenuClass;
 	TSubclassOf<UUserWidget> SessionEntryClass;
 
 	// Index to keep track of the selected session in the server browser
@@ -83,26 +89,26 @@ private:
 
 	// Session host name editable text box reference 
 	UPROPERTY(meta = (BindWidget))
-		UEditableTextBox* SessionHostName;
+	UEditableTextBox* SessionHostName;
 
 	// Button callbacks
 	UFUNCTION()
-		void OpenHostMenu();
+	void OpenHostMenu();
 	UFUNCTION()
-		void CloseHostMenu();
+	void CloseHostMenu();
 	UFUNCTION()
-		void HostServer();
+	void HostServer();
 	UFUNCTION()
-		void OpenJoinMenu();
+	void OpenJoinMenu();
 	UFUNCTION()
-		void CloseJoinMenu();
+	void CloseJoinMenu();
 	UFUNCTION()
-		void JoinServer();
+	void JoinServer();
 	UFUNCTION()
-		void QuitGame();
+	void OpenSettingsMenu();
+	UFUNCTION()
+	void QuitGame();
 
 	// Method that updates the sessions in the server browser when a session is selected
 	void UpdateChildren();
-
-
 };
