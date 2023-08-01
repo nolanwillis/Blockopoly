@@ -72,6 +72,8 @@ void UBLPGameInstance::LoadMainMenu()
 
 void UBLPGameInstance::LoadPauseMenu()
 {
+	UE_LOG(LogTemp, Warning, TEXT("LoadPauseMenu called"));
+	
 	// Create a WBP_PauseMenu
 	if (!PauseMenuClass) return;
 	PauseMenu = CreateWidget<UBLPUWPauseMenu>(this, PauseMenuClass);

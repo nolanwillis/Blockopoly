@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "./BLPUserWidget.h"
+#include "BLPUWMainMenu.h"
 #include "BLPUWSettingsMenu.generated.h"
 
-
+class UBLPUWPauseMenu;
 class UBLPUWMainMenu;
 class UButton;
 class USlider;
@@ -22,12 +23,8 @@ class BLOCKOPOLY_API UBLPUWSettingsMenu : public UBLPUserWidget
 	GENERATED_BODY()
 
 public:
-	void SetParent(UBLPUWMainMenu* InParent) { Parent = InParent; }
-	
-	UPROPERTY()
-	float MasterVolume = 100.0f;
-	UPROPERTY()
-	float MusicVolume = 100.0f;
+	void SetParent(UBLPUWMainMenu* InParent) { MainMenuParent = InParent; }
+	void SetParent(UBLPUWPauseMenu* InParent) { PauseMenuParent = InParent; }
 
 protected:
 	virtual void NativeConstruct() override;
@@ -63,7 +60,9 @@ private:
 	int FoliageLevelIndex = 3;
 
 	UPROPERTY()
-	UBLPUWMainMenu* Parent;
+	UBLPUWMainMenu* MainMenuParent;
+	UPROPERTY()
+	UBLPUWPauseMenu* PauseMenuParent;
 
 	UPROPERTY(meta = (BindWidget))
 	UComboBoxString* WindowModeComboBox;
@@ -72,17 +71,9 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	USlider* ResScaleSlider;
-	UPROPERTY(meta = (BindWidget))
-	USlider* MasterVolSlider;
-	UPROPERTY(meta = (BindWidget))
-	USlider* MusicVolSlider;
-	
+
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ResScaleTextBlock;
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* MasterVolTextBlock;
-	UPROPERTY(meta = (BindWidget))
-	UTextBlock* MusicVolTextBlock;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* VSync_Off_Btn;
@@ -214,59 +205,64 @@ private:
 	UButton* ApplyBtn;
 	UPROPERTY(meta = (BindWidget))
 	UButton* BackBtn;
+
+	UFUNCTION()
+	void SetDefaultWindowMode() const;
+	UFUNCTION()
+	void SetDefaultScreenRes() const;
 	
 	UFUNCTION()
 	void ApplyAllGraphicsSettings() const;
 
 	UFUNCTION()
-	void RefreshAllGraphicsBtns();
+	void RefreshAllGraphicsBtns() const;
 	UFUNCTION()
-	void RefreshVSyncBtns();
+	void RefreshVSyncBtns() const;
 	UFUNCTION()
-	void RefreshDrawDistanceBtns();
+	void RefreshDrawDistanceBtns() const;
 	UFUNCTION()
-	void RefreshAntiAliasingBtns();
+	void RefreshAntiAliasingBtns() const;
 	UFUNCTION()
-	void RefreshPostProcessingBtns();
+	void RefreshPostProcessingBtns() const;
 	UFUNCTION()
-	void RefreshShadowsBtns();
+	void RefreshShadowsBtns() const;
 	UFUNCTION()
-	void RefreshShadingBtns();
+	void RefreshShadingBtns() const;
 	UFUNCTION()
-	void RefreshReflectionsBtns();
+	void RefreshReflectionsBtns() const;
 	UFUNCTION()
-	void RefreshIlluminationBtns();
+	void RefreshIlluminationBtns() const;
 	UFUNCTION()
-	void RefreshTexturesBtns();
+	void RefreshTexturesBtns() const;
 	UFUNCTION()
-	void RefreshEffectsBtns();
+	void RefreshEffectsBtns() const;
 	UFUNCTION()
-	void RefreshFoliageBtns();
+	void RefreshFoliageBtns() const;
 
 	UFUNCTION()
-	void BindAllGraphicsBtns();
+	void BindAllGraphicsBtns() const;
 	UFUNCTION()
-	void BindVSyncBtns();
+	void BindVSyncBtns() const;
 	UFUNCTION()
-    void BindDrawDistanceBtns();
+    void BindDrawDistanceBtns() const;
     UFUNCTION()
-    void BindAntiAliasingBtns();
+    void BindAntiAliasingBtns() const;
     UFUNCTION()
-    void BindPostProcessingBtns();
+    void BindPostProcessingBtns() const;
     UFUNCTION()
-    void BindShadowsBtns();
+    void BindShadowsBtns() const;
     UFUNCTION()
-    void BindShadingBtns();
+    void BindShadingBtns() const;
     UFUNCTION()
-    void BindReflectionsBtns();
+    void BindReflectionsBtns() const;
     UFUNCTION()
-    void BindIlluminationBtns();
+    void BindIlluminationBtns() const;
     UFUNCTION()
-    void BindTexturesBtns();
+    void BindTexturesBtns() const;
     UFUNCTION()
-    void BindEffectsBtns();
+    void BindEffectsBtns() const;
     UFUNCTION()
-    void BindFoliageBtns();
+    void BindFoliageBtns() const;
 
 	// ComboBox Handlers
 	UFUNCTION()
@@ -277,10 +273,6 @@ private:
 	// Slider Handlers
 	UFUNCTION()
 	void ResScaleSliderAdjusted(const float Value);
-	UFUNCTION()
-	void MasterVolSliderAdjusted(const float Value);
-	UFUNCTION()
-	void MusicVolSliderAdjusted(const float Value);
 	
 	// VSync Button Handlers
 	UFUNCTION()
@@ -398,10 +390,12 @@ private:
 	void FL_Ultra_BtnClicked(){ FoliageLevelIndex = 3; RefreshFoliageBtns(); }
 	UFUNCTION()
 	void FL_Max_BtnClicked(){ FoliageLevelIndex = 4; RefreshFoliageBtns(); }
+
 	// Menu Button Handlers
 	UFUNCTION()
 	void BackBtnClicked();
+
 	UFUNCTION()
-	void ApplyBtnClicked();
+	void ApplyBtnClicked() { ApplyAllGraphicsSettings(); };
 	
 };

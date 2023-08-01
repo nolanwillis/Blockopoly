@@ -1,22 +1,25 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "./BLPUWSettingsMenu.h"
-#include "./BLPUWMainMenu.h"
+#include "BLPUWSettingsMenu.h"
+#include "BLPUWMainMenu.h"
+#include "BLPUWPauseMenu.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/Slider.h"
 #include "Components/ComboBoxString.h"
 #include "GameFramework/GameUserSettings.h"
 
-#include "Scalability.h"
-
 void UBLPUWSettingsMenu::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	SetDefaultWindowMode();
+	SetDefaultScreenRes();
 	
 	RefreshAllGraphicsBtns();
+	
 	BindAllGraphicsBtns();
-
+	
 	if (!WindowModeComboBox) return;
 	WindowModeComboBox->OnSelectionChanged.AddDynamic(this, &UBLPUWSettingsMenu::WindowModeComboBoxChanged);
 	if (!ResComboBox) return;
@@ -24,10 +27,6 @@ void UBLPUWSettingsMenu::NativeConstruct()
 
 	if (!ResScaleSlider) return;
 	ResScaleSlider->OnValueChanged.AddDynamic(this, &UBLPUWSettingsMenu::ResScaleSliderAdjusted);
-	if (!MasterVolSlider) return;
-	MasterVolSlider->OnValueChanged.AddDynamic(this, &UBLPUWSettingsMenu::MasterVolSliderAdjusted);
-	if (!MusicVolSlider) return;
-	MusicVolSlider->OnValueChanged.AddDynamic(this, &UBLPUWSettingsMenu::MusicVolSliderAdjusted);
 
 	if (!BackBtn) return;
 	BackBtn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::BackBtnClicked);
@@ -35,36 +34,76 @@ void UBLPUWSettingsMenu::NativeConstruct()
 	ApplyBtn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::ApplyBtnClicked);
 }
 
-void UBLPUWSettingsMenu::ApplyAllGraphicsSettings() const
+void UBLPUWSettingsMenu::SetDefaultWindowMode() const
 {
-	UGameUserSettings* GameUserSettings = GEngine->GameUserSettings;
+	const UGameUserSettings* GameUserSettingsPtr = GEngine->GameUserSettings;
+	if (!GameUserSettingsPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWSettingsMenu: GameUserSettingsPtr is null")); return; }
 
-	if (WindowMode == "Fullscreen") GameUserSettings->SetFullscreenMode(EWindowMode::Fullscreen);
-	else if (WindowMode == "Windowed") GameUserSettings->SetFullscreenMode(EWindowMode::Windowed);
-	else if (WindowMode == "Borderless") GameUserSettings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
+	const EWindowMode::Type CurrentWindowMode = GameUserSettingsPtr->GetFullscreenMode();
 
-	if (Resolution == "1920 X 1080") GameUserSettings->SetScreenResolution(FIntPoint(1920, 1080));
-	else if (Resolution == "2560 X 1440") GameUserSettings->SetScreenResolution(FIntPoint(2560, 1440));
-	else if (Resolution == "3840 X 2160") GameUserSettings->SetScreenResolution(FIntPoint(3840, 2160));
-	
-	GameUserSettings->SetVSyncEnabled(VSyncOn);
-	GameUserSettings->SetResolutionScaleValueEx(ResolutionScale);
-	GameUserSettings->SetViewDistanceQuality(DrawDistanceLevelIndex);
-	GameUserSettings->SetAntiAliasingQuality(AntiAliasingLevelIndex);
-	GameUserSettings->SetPostProcessingQuality(AntiAliasingLevelIndex);
-	GameUserSettings->SetShadowQuality(ShadowsLevelIndex);
-	GameUserSettings->SetShadingQuality(ShadingLevelIndex);
-	GameUserSettings->SetReflectionQuality(ReflectionsLevelIndex);
-	GameUserSettings->SetGlobalIlluminationQuality(IlluminationLevelIndex);
-	GameUserSettings->SetTextureQuality(TexturesLevelIndex);
-	GameUserSettings->SetVisualEffectQuality(EffectsLevelIndex);
-	GameUserSettings->SetFoliageQuality(FoliageLevelIndex);
+	if (CurrentWindowMode == EWindowMode::Fullscreen)
+	{
+		WindowModeComboBox->SetSelectedIndex(0);
+	}
+	else if (CurrentWindowMode == EWindowMode::Windowed)
+	{
+		WindowModeComboBox->SetSelectedIndex(1);
+	}
+	else if (CurrentWindowMode == EWindowMode::WindowedFullscreen)
+	{
+		WindowModeComboBox->SetSelectedIndex(2);
+	}
 
-	GameUserSettings->ApplySettings(true);
+}
+void UBLPUWSettingsMenu::SetDefaultScreenRes() const
+{
+	const UGameUserSettings* GameUserSettingsPtr = GEngine->GameUserSettings;
+	if (!GameUserSettingsPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWSettingsMenu: GameUserSettingsPtr is null")); return; }
+	const FIntPoint CurrentScreenRes = GameUserSettingsPtr->GetScreenResolution();
+    if (CurrentScreenRes == FIntPoint(1920, 1080))
+    {
+	    ResComboBox->SetSelectedIndex(0);
+    }
+	else if (CurrentScreenRes == FIntPoint(2560, 1440))
+	{
+		ResComboBox->SetSelectedIndex(1);
+	}
+	else if (CurrentScreenRes == FIntPoint(3840, 2160))
+	{
+		ResComboBox->SetSelectedIndex(2);
+	}
 }
 
+void UBLPUWSettingsMenu::ApplyAllGraphicsSettings() const
+{
+	UGameUserSettings* GameUserSettingsPtr = GEngine->GameUserSettings;
+	if (!GameUserSettingsPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPUWSettingsMenu: GameUserSettingsPtr is null")); return; }
+	
+	if (WindowMode == "Fullscreen") GameUserSettingsPtr->SetFullscreenMode(EWindowMode::Fullscreen);
+	else if (WindowMode == "Windowed") GameUserSettingsPtr->SetFullscreenMode(EWindowMode::Windowed);
+	else if (WindowMode == "Borderless") GameUserSettingsPtr->SetFullscreenMode(EWindowMode::WindowedFullscreen);
 
-void UBLPUWSettingsMenu::RefreshAllGraphicsBtns()
+	if (Resolution == "1920 X 1080") GameUserSettingsPtr->SetScreenResolution(FIntPoint(1920, 1080));
+	else if (Resolution == "2560 X 1440") GameUserSettingsPtr->SetScreenResolution(FIntPoint(2560, 1440));
+	else if (Resolution == "3840 X 2160") GameUserSettingsPtr->SetScreenResolution(FIntPoint(3840, 2160));
+	
+	GameUserSettingsPtr->SetVSyncEnabled(VSyncOn);
+	GameUserSettingsPtr->SetResolutionScaleValueEx(ResolutionScale);
+	GameUserSettingsPtr->SetViewDistanceQuality(DrawDistanceLevelIndex);
+	GameUserSettingsPtr->SetAntiAliasingQuality(AntiAliasingLevelIndex);
+	GameUserSettingsPtr->SetPostProcessingQuality(AntiAliasingLevelIndex);
+	GameUserSettingsPtr->SetShadowQuality(ShadowsLevelIndex);
+	GameUserSettingsPtr->SetShadingQuality(ShadingLevelIndex);
+	GameUserSettingsPtr->SetReflectionQuality(ReflectionsLevelIndex);
+	GameUserSettingsPtr->SetGlobalIlluminationQuality(IlluminationLevelIndex);
+	GameUserSettingsPtr->SetTextureQuality(TexturesLevelIndex);
+	GameUserSettingsPtr->SetVisualEffectQuality(EffectsLevelIndex);
+	GameUserSettingsPtr->SetFoliageQuality(FoliageLevelIndex);
+
+	GameUserSettingsPtr->ApplySettings(true);
+}
+
+void UBLPUWSettingsMenu::RefreshAllGraphicsBtns() const
 {
 	RefreshVSyncBtns();
 	RefreshDrawDistanceBtns();
@@ -78,7 +117,7 @@ void UBLPUWSettingsMenu::RefreshAllGraphicsBtns()
 	RefreshEffectsBtns();
 	RefreshFoliageBtns();
 }
-void UBLPUWSettingsMenu::RefreshVSyncBtns()
+void UBLPUWSettingsMenu::RefreshVSyncBtns() const
 {
 	if (VSyncOn)
 	{
@@ -91,7 +130,7 @@ void UBLPUWSettingsMenu::RefreshVSyncBtns()
 		VSync_On_Btn->SetRenderOpacity(0.5f);
 	}
 }
-void UBLPUWSettingsMenu::RefreshDrawDistanceBtns()
+void UBLPUWSettingsMenu::RefreshDrawDistanceBtns() const
 {
 	switch (DrawDistanceLevelIndex)
 	{
@@ -134,7 +173,7 @@ void UBLPUWSettingsMenu::RefreshDrawDistanceBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshAntiAliasingBtns()
+void UBLPUWSettingsMenu::RefreshAntiAliasingBtns() const
 {
 	switch (AntiAliasingLevelIndex)
 	{
@@ -177,7 +216,7 @@ void UBLPUWSettingsMenu::RefreshAntiAliasingBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshPostProcessingBtns()
+void UBLPUWSettingsMenu::RefreshPostProcessingBtns() const
 {
 	switch (PostProcessingLevelIndex)
 	{
@@ -220,7 +259,7 @@ void UBLPUWSettingsMenu::RefreshPostProcessingBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshShadowsBtns()
+void UBLPUWSettingsMenu::RefreshShadowsBtns() const
 {
 	switch (ShadowsLevelIndex)
 	{
@@ -263,7 +302,7 @@ void UBLPUWSettingsMenu::RefreshShadowsBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshShadingBtns()
+void UBLPUWSettingsMenu::RefreshShadingBtns() const
 {
 	switch (ShadingLevelIndex)
 	{
@@ -306,7 +345,7 @@ void UBLPUWSettingsMenu::RefreshShadingBtns()
 		break;
 	}	
 }
-void UBLPUWSettingsMenu::RefreshReflectionsBtns()
+void UBLPUWSettingsMenu::RefreshReflectionsBtns() const
 {
 	switch (ReflectionsLevelIndex)
 	{
@@ -349,7 +388,7 @@ void UBLPUWSettingsMenu::RefreshReflectionsBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshIlluminationBtns()
+void UBLPUWSettingsMenu::RefreshIlluminationBtns() const
 {
 	switch (IlluminationLevelIndex)
 	{
@@ -392,7 +431,7 @@ void UBLPUWSettingsMenu::RefreshIlluminationBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshTexturesBtns()
+void UBLPUWSettingsMenu::RefreshTexturesBtns() const
 {
 	switch (TexturesLevelIndex)
 	{
@@ -435,7 +474,7 @@ void UBLPUWSettingsMenu::RefreshTexturesBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshEffectsBtns()
+void UBLPUWSettingsMenu::RefreshEffectsBtns() const
 {
 	switch (EffectsLevelIndex)
 	{
@@ -478,7 +517,7 @@ void UBLPUWSettingsMenu::RefreshEffectsBtns()
 		break;
 	}
 }
-void UBLPUWSettingsMenu::RefreshFoliageBtns()
+void UBLPUWSettingsMenu::RefreshFoliageBtns() const
 {
 	switch (FoliageLevelIndex)
 	{
@@ -522,7 +561,7 @@ void UBLPUWSettingsMenu::RefreshFoliageBtns()
 	}
 }
 
-void UBLPUWSettingsMenu::BindAllGraphicsBtns()
+void UBLPUWSettingsMenu::BindAllGraphicsBtns() const
 {
 	BindVSyncBtns();
 	BindDrawDistanceBtns();
@@ -536,14 +575,14 @@ void UBLPUWSettingsMenu::BindAllGraphicsBtns()
 	BindEffectsBtns();
 	BindFoliageBtns();
 }
-void UBLPUWSettingsMenu::BindVSyncBtns()
+void UBLPUWSettingsMenu::BindVSyncBtns() const
 {
 	if (!VSync_Off_Btn) return;
   	VSync_Off_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::VSync_Off_BtnClicked);
   	if (!VSync_On_Btn) return;
   	VSync_On_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::VSync_On_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindDrawDistanceBtns()
+void UBLPUWSettingsMenu::BindDrawDistanceBtns() const
 {
 	if (!DD_Low_Btn) return;
  	DD_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::DD_Low_BtnClicked);
@@ -556,7 +595,7 @@ void UBLPUWSettingsMenu::BindDrawDistanceBtns()
  	if (!DD_Max_Btn) return;
  	DD_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::DD_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindAntiAliasingBtns()
+void UBLPUWSettingsMenu::BindAntiAliasingBtns() const
 {
 	if (!AA_Low_Btn) return;
     AA_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::AA_Low_BtnClicked);
@@ -569,7 +608,7 @@ void UBLPUWSettingsMenu::BindAntiAliasingBtns()
     if (!DD_Max_Btn) return;
     AA_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::AA_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindPostProcessingBtns()
+void UBLPUWSettingsMenu::BindPostProcessingBtns() const
 {
 	if (!PP_Low_Btn) return;
     PP_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::PP_Low_BtnClicked);
@@ -582,7 +621,7 @@ void UBLPUWSettingsMenu::BindPostProcessingBtns()
     if (!DD_Max_Btn) return;
     PP_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::PP_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindShadowsBtns()
+void UBLPUWSettingsMenu::BindShadowsBtns() const
 {
 	if (!SH_Low_Btn) return;
   	SH_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::SH_Low_BtnClicked);
@@ -595,7 +634,7 @@ void UBLPUWSettingsMenu::BindShadowsBtns()
   	if (!SH_Max_Btn) return;
   	SH_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::SH_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindShadingBtns()
+void UBLPUWSettingsMenu::BindShadingBtns() const
 {
 	if (!SD_Low_Btn) return;
    	SD_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::SD_Low_BtnClicked);
@@ -608,7 +647,7 @@ void UBLPUWSettingsMenu::BindShadingBtns()
    	if (!SD_Max_Btn) return;
    	SD_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::SD_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindReflectionsBtns()
+void UBLPUWSettingsMenu::BindReflectionsBtns() const
 {
 	if (!RF_Low_Btn) return;
    	RF_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::RF_Low_BtnClicked);
@@ -621,7 +660,7 @@ void UBLPUWSettingsMenu::BindReflectionsBtns()
    	if (!RF_Max_Btn) return;
    	RF_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::RF_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindIlluminationBtns()
+void UBLPUWSettingsMenu::BindIlluminationBtns() const
 {
 	if (!IL_Low_Btn) return;
   	IL_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::IL_Low_BtnClicked);
@@ -634,7 +673,7 @@ void UBLPUWSettingsMenu::BindIlluminationBtns()
   	if (!IL_Max_Btn) return;
   	IL_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::IL_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindTexturesBtns()
+void UBLPUWSettingsMenu::BindTexturesBtns() const
 {
 	if (!TX_Low_Btn) return;
   	TX_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::TX_Low_BtnClicked);
@@ -647,7 +686,7 @@ void UBLPUWSettingsMenu::BindTexturesBtns()
   	if (!TX_Max_Btn) return;
   	TX_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::TX_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindEffectsBtns()
+void UBLPUWSettingsMenu::BindEffectsBtns() const
 {
 	if (!EF_Low_Btn) return;
   	EF_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::EF_Low_BtnClicked);
@@ -660,7 +699,7 @@ void UBLPUWSettingsMenu::BindEffectsBtns()
   	if (!EF_Max_Btn) return;
   	EF_Max_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::EF_Max_BtnClicked);
 }
-void UBLPUWSettingsMenu::BindFoliageBtns()
+void UBLPUWSettingsMenu::BindFoliageBtns() const
 {
 	if (!FL_Low_Btn) return;
   	FL_Low_Btn->OnClicked.AddDynamic(this, &UBLPUWSettingsMenu::UBLPUWSettingsMenu::FL_Low_BtnClicked);
@@ -692,31 +731,17 @@ void UBLPUWSettingsMenu::ResScaleSliderAdjusted(const float Value)
 		ResScaleTextBlock->SetText(FText::FromString(NewValue));
 	}
 }
-void UBLPUWSettingsMenu::MasterVolSliderAdjusted(const float Value)
-{
-	MasterVolume = Value;
-	if (MasterVolTextBlock)
-	{
-		const FString NewValue = FString::FromInt(Value) + "%";
-		MasterVolTextBlock->SetText(FText::FromString(NewValue));
-	}
-}
-void UBLPUWSettingsMenu::MusicVolSliderAdjusted(const float Value)
-{
-	MusicVolume = Value;
- 	if (MusicVolTextBlock)
- 	{
- 		const FString NewValue = FString::FromInt(Value) + "%";
- 		MusicVolTextBlock->SetText(FText::FromString(NewValue));
- 	}
-}
 
 void UBLPUWSettingsMenu::BackBtnClicked()
 {
-	if (!Parent) return;
-	Parent->CloseSettingsMenu();
+	if (MainMenuParent)
+	{
+		MainMenuParent->CloseSettingsMenu();
+	}
+	else if (PauseMenuParent)
+	{
+		PauseMenuParent->CloseSettingsMenu();
+	}
 }
-void UBLPUWSettingsMenu::ApplyBtnClicked()
-{
-	ApplyAllGraphicsSettings();
-}
+
+

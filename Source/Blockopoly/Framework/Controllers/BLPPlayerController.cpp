@@ -79,13 +79,13 @@ void ABLPPlayerController::LoadGameMenu()
 	GameMenu->RefreshPlayerList();
 	UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Load Game Menu called"));
 }
-void ABLPPlayerController::LoadPauseMenu()
-{
-	UE_LOG(LogTemp, Warning, TEXT("LoadPauseMenu clicked!"));
-	UBLPGameInstance* BLPGameInstancePtr = GetGameInstance<UBLPGameInstance>();
-	if (!BLPGameInstancePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerContoller: BLPGameInstancePtr is null")); return; }
-	BLPGameInstancePtr->LoadPauseMenu();
-}
+// void ABLPPlayerController::LoadPauseMenu()
+// {
+// 	UE_LOG(LogTemp, Warning, TEXT("LoadPauseMenu clicked!"));
+// 	UBLPGameInstance* BLPGameInstancePtr = GetGameInstance<UBLPGameInstance>();
+// 	if (!BLPGameInstancePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerContoller: BLPGameInstancePtr is null")); return; }
+// 	BLPGameInstancePtr->LoadPauseMenu();
+// }
 void ABLPPlayerController::LoadWinScreen(const FString& WinnersName)
 {
 	// Create a WBP_WinScreen

@@ -56,8 +56,8 @@ public:
 	void LoadLobbyMenu();
 	UFUNCTION(BlueprintCallable)
 	void LoadGameMenu();
-	UFUNCTION(BlueprintCallable)
-	void LoadPauseMenu();
+	// UFUNCTION(BlueprintCallable)
+	// void LoadPauseMenu();
 	UFUNCTION(BlueprintCallable)
 	void LoadWinScreen(const FString& WinnersName);
 	

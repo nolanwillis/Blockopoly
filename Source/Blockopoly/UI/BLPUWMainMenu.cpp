@@ -46,6 +46,7 @@ void UBLPUWMainMenu::NativeConstruct()
 	if (!QuitBtn) return;
 	QuitBtn->OnClicked.AddDynamic(this, &UBLPUWMainMenu::QuitGame);
 
+	// Construct the settings menu as a child of this menu
 	UWorld* World = GetWorld();
 	if (!World) return;
 	UBLPUWSettingsMenu* SettingsMenu = CreateWidget<UBLPUWSettingsMenu>(World, SettingsMenuClass);
