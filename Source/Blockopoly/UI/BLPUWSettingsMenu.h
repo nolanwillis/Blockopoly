@@ -6,6 +6,7 @@
 #include "./BLPUserWidget.h"
 #include "BLPUWSettingsMenu.generated.h"
 
+
 class UBLPUWMainMenu;
 class UButton;
 class USlider;
@@ -22,31 +23,45 @@ class BLOCKOPOLY_API UBLPUWSettingsMenu : public UBLPUserWidget
 
 public:
 	void SetParent(UBLPUWMainMenu* InParent) { Parent = InParent; }
+	
+	UPROPERTY()
+	float MasterVolume = 100.0f;
+	UPROPERTY()
+	float MusicVolume = 100.0f;
 
 protected:
 	virtual void NativeConstruct() override;
 	
 private:
 	UPROPERTY()
-	int DrawDistanceLevelIndex = 0;
-	
+	FString WindowMode = "Fullscreen";
 	UPROPERTY()
-	int AntiAliasingLevelIndex;
+	FString Resolution = "1920 X 1080";
 	UPROPERTY()
-	int PostProcessingLevelIndex;
+	bool VSyncOn = true;
 	UPROPERTY()
-	int ShadowsLevelIndex;
+	float ResolutionScale = 100.0f;
 	UPROPERTY()
-	int ShadingLevelIndex;
+	int DrawDistanceLevelIndex = 3;
 	UPROPERTY()
-	int ReflectionsLevelIndex;
+	int AntiAliasingLevelIndex = 3;
 	UPROPERTY()
-	int IlluminationLevelIndex;
+	int PostProcessingLevelIndex = 3;
 	UPROPERTY()
-	int TexturesLevelIndex;
-	
+	int ShadowsLevelIndex = 3;
+	UPROPERTY()
+	int ShadingLevelIndex = 3;
+	UPROPERTY()
+	int ReflectionsLevelIndex = 3;
+	UPROPERTY()
+	int IlluminationLevelIndex = 3;
+	UPROPERTY()
+	int TexturesLevelIndex = 3;
+	UPROPERTY()
+	int EffectsLevelIndex = 3;
+	UPROPERTY()
+	int FoliageLevelIndex = 3;
 
-	
 	UPROPERTY()
 	UBLPUWMainMenu* Parent;
 
@@ -69,6 +84,11 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MusicVolTextBlock;
 
+	UPROPERTY(meta = (BindWidget))
+	UButton* VSync_Off_Btn;
+	UPROPERTY(meta = (BindWidget))
+	UButton* VSync_On_Btn;
+	
 	// Draw Distance Buttons
 	UPROPERTY(meta = (BindWidget))
 	UButton* DD_Low_Btn;
@@ -194,127 +214,190 @@ private:
 	UButton* ApplyBtn;
 	UPROPERTY(meta = (BindWidget))
 	UButton* BackBtn;
+	
+	UFUNCTION()
+	void ApplyAllGraphicsSettings() const;
 
+	UFUNCTION()
+	void RefreshAllGraphicsBtns();
+	UFUNCTION()
+	void RefreshVSyncBtns();
+	UFUNCTION()
+	void RefreshDrawDistanceBtns();
+	UFUNCTION()
+	void RefreshAntiAliasingBtns();
+	UFUNCTION()
+	void RefreshPostProcessingBtns();
+	UFUNCTION()
+	void RefreshShadowsBtns();
+	UFUNCTION()
+	void RefreshShadingBtns();
+	UFUNCTION()
+	void RefreshReflectionsBtns();
+	UFUNCTION()
+	void RefreshIlluminationBtns();
+	UFUNCTION()
+	void RefreshTexturesBtns();
+	UFUNCTION()
+	void RefreshEffectsBtns();
+	UFUNCTION()
+	void RefreshFoliageBtns();
+
+	UFUNCTION()
+	void BindAllGraphicsBtns();
+	UFUNCTION()
+	void BindVSyncBtns();
+	UFUNCTION()
+    void BindDrawDistanceBtns();
+    UFUNCTION()
+    void BindAntiAliasingBtns();
+    UFUNCTION()
+    void BindPostProcessingBtns();
+    UFUNCTION()
+    void BindShadowsBtns();
+    UFUNCTION()
+    void BindShadingBtns();
+    UFUNCTION()
+    void BindReflectionsBtns();
+    UFUNCTION()
+    void BindIlluminationBtns();
+    UFUNCTION()
+    void BindTexturesBtns();
+    UFUNCTION()
+    void BindEffectsBtns();
+    UFUNCTION()
+    void BindFoliageBtns();
+
+	// ComboBox Handlers
+	UFUNCTION()
+	void WindowModeComboBoxChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
+	UFUNCTION()
+	void ResComboBoxChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
+
+	// Slider Handlers
+	UFUNCTION()
+	void ResScaleSliderAdjusted(const float Value);
+	UFUNCTION()
+	void MasterVolSliderAdjusted(const float Value);
+	UFUNCTION()
+	void MusicVolSliderAdjusted(const float Value);
+	
+	// VSync Button Handlers
+	UFUNCTION()
+	void VSync_Off_BtnClicked(){ VSyncOn = false; RefreshVSyncBtns(); }
+	UFUNCTION()
+	void VSync_On_BtnClicked(){ VSyncOn = true;; RefreshVSyncBtns(); }
+	
 	// Draw Distance Button Handlers
 	UFUNCTION()
-	void DD_Low_BtnClicked(){};
+	void DD_Low_BtnClicked(){ DrawDistanceLevelIndex = 0; RefreshDrawDistanceBtns(); }
 	UFUNCTION()
-	void DD_Medium_BtnClicked(){};
+	void DD_Medium_BtnClicked(){ DrawDistanceLevelIndex = 1; RefreshDrawDistanceBtns(); }
 	UFUNCTION()
-	void DD_High_BtnClicked(){};
+	void DD_High_BtnClicked(){ DrawDistanceLevelIndex = 2; RefreshDrawDistanceBtns(); }
 	UFUNCTION()
-	void DD_Ultra_BtnClicked(){};
+	void DD_Ultra_BtnClicked(){ DrawDistanceLevelIndex = 3; RefreshDrawDistanceBtns(); }
 	UFUNCTION()
-	void DD_Max_BtnClicked(){};
-
+	void DD_Max_BtnClicked(){ DrawDistanceLevelIndex = 4; RefreshDrawDistanceBtns(); }
 	// Anti Aliasing Button Handlers
 	UFUNCTION()
-	void AA_Low_BtnClicked(){};
+	void AA_Low_BtnClicked(){ AntiAliasingLevelIndex = 0; RefreshAntiAliasingBtns(); }
 	UFUNCTION()
-	void AA_Medium_BtnClicked(){};
+	void AA_Medium_BtnClicked(){ AntiAliasingLevelIndex = 1; RefreshAntiAliasingBtns(); }
 	UFUNCTION()
-	void AA_High_BtnClicked(){};
+	void AA_High_BtnClicked(){ AntiAliasingLevelIndex = 2; RefreshAntiAliasingBtns(); }
 	UFUNCTION()
-	void AA_Ultra_BtnClicked(){};
+	void AA_Ultra_BtnClicked(){ AntiAliasingLevelIndex = 3; RefreshAntiAliasingBtns(); }
 	UFUNCTION()
-	void AA_Max_BtnClicked(){};
-
+	void AA_Max_BtnClicked(){ AntiAliasingLevelIndex = 4; RefreshAntiAliasingBtns(); }
 	// Post Processing Button Handlers
 	UFUNCTION()
-	void PP_Low_BtnClicked(){};
+	void PP_Low_BtnClicked(){ PostProcessingLevelIndex = 0; RefreshPostProcessingBtns(); }
 	UFUNCTION()
-	void PP_Medium_BtnClicked(){};
+	void PP_Medium_BtnClicked(){ PostProcessingLevelIndex = 1; RefreshPostProcessingBtns(); }
 	UFUNCTION()
-	void PP_High_BtnClicked(){};
+	void PP_High_BtnClicked(){ PostProcessingLevelIndex = 2; RefreshPostProcessingBtns(); }
 	UFUNCTION()
-	void PP_Ultra_BtnClicked(){};
+	void PP_Ultra_BtnClicked(){ PostProcessingLevelIndex = 3; RefreshPostProcessingBtns(); }
 	UFUNCTION()
-	void PP_Max_BtnClicked(){};
-
+	void PP_Max_BtnClicked(){ PostProcessingLevelIndex = 4; RefreshPostProcessingBtns(); }
 	// Shadows Button Handlers
 	UFUNCTION()
-	void SH_Low_BtnClicked(){};
+	void SH_Low_BtnClicked(){ ShadowsLevelIndex = 0; RefreshShadowsBtns(); }
 	UFUNCTION()
-	void SH_Medium_BtnClicked(){};
+	void SH_Medium_BtnClicked(){ ShadowsLevelIndex = 1; RefreshShadowsBtns(); }
 	UFUNCTION()
-	void SH_High_BtnClicked(){};
+	void SH_High_BtnClicked(){ ShadowsLevelIndex = 2; RefreshShadowsBtns(); }
 	UFUNCTION()
-	void SH_Ultra_BtnClicked(){};
+	void SH_Ultra_BtnClicked(){ ShadowsLevelIndex = 3; RefreshShadowsBtns(); }
 	UFUNCTION()
-	void SH_Max_BtnClicked(){};
-
+	void SH_Max_BtnClicked(){ ShadowsLevelIndex = 4; RefreshShadowsBtns(); }
 	// Shading Button Handlers
 	UFUNCTION()
-	void SD_Low_BtnClicked(){};
+	void SD_Low_BtnClicked(){ ShadingLevelIndex = 0; RefreshShadingBtns(); }
 	UFUNCTION()
-	void SD_Medium_BtnClicked(){};
+	void SD_Medium_BtnClicked(){ ShadingLevelIndex = 1; RefreshShadingBtns(); }
 	UFUNCTION()
-	void SD_High_BtnClicked(){};
+	void SD_High_BtnClicked(){ ShadingLevelIndex = 2; RefreshShadingBtns(); }
 	UFUNCTION()
-	void SD_Ultra_BtnClicked(){};
+	void SD_Ultra_BtnClicked(){ ShadingLevelIndex = 3; RefreshShadingBtns(); }
 	UFUNCTION()
-	void SD_Max_BtnClicked(){};
-
+	void SD_Max_BtnClicked(){ ShadingLevelIndex = 4; RefreshShadingBtns(); }
 	// Reflections Button Handlers
 	UFUNCTION()
-	void RF_Low_BtnClicked(){};
+	void RF_Low_BtnClicked(){ ReflectionsLevelIndex = 0; RefreshReflectionsBtns(); }
 	UFUNCTION()
-	void RF_Medium_BtnClicked(){};
+	void RF_Medium_BtnClicked(){ ReflectionsLevelIndex = 1; RefreshReflectionsBtns(); }
 	UFUNCTION()
-	void RF_High_BtnClicked(){};
+	void RF_High_BtnClicked(){ ReflectionsLevelIndex = 2; RefreshReflectionsBtns(); }
 	UFUNCTION()
-	void RF_Ultra_BtnClicked(){};
+	void RF_Ultra_BtnClicked(){ ReflectionsLevelIndex = 3; RefreshReflectionsBtns(); }
 	UFUNCTION()
-	void RF_Max_BtnClicked(){};
-
+	void RF_Max_BtnClicked(){ ReflectionsLevelIndex = 4; RefreshReflectionsBtns(); }
 	// Illumination Button Handlers
 	UFUNCTION()
-	void IL_Low_BtnClicked(){};
+	void IL_Low_BtnClicked(){ IlluminationLevelIndex = 0; RefreshIlluminationBtns(); }
 	UFUNCTION()
-	void IL_Medium_BtnClicked(){};
+	void IL_Medium_BtnClicked(){ IlluminationLevelIndex = 1; RefreshIlluminationBtns(); }
 	UFUNCTION()
-	void IL_High_BtnClicked(){};
+	void IL_High_BtnClicked(){ IlluminationLevelIndex = 2; RefreshIlluminationBtns(); }
 	UFUNCTION()
-	void IL_Ultra_BtnClicked(){};
+	void IL_Ultra_BtnClicked(){ IlluminationLevelIndex = 3; RefreshIlluminationBtns(); }
 	UFUNCTION()
-	void IL_Max_BtnClicked(){};
-
+	void IL_Max_BtnClicked(){ IlluminationLevelIndex = 4; RefreshIlluminationBtns(); }
 	// Textures Button Handlers
 	UFUNCTION()
-	void TX_Low_BtnClicked(){};
+	void TX_Low_BtnClicked(){ TexturesLevelIndex = 0; RefreshTexturesBtns(); }
 	UFUNCTION()
-	void TX_Medium_BtnClicked(){};
+	void TX_Medium_BtnClicked(){ TexturesLevelIndex = 1; RefreshTexturesBtns(); }
 	UFUNCTION()
-	void TX_High_BtnClicked(){};
+	void TX_High_BtnClicked(){ TexturesLevelIndex = 2; RefreshTexturesBtns(); }
 	UFUNCTION()
-	void TX_Ultra_BtnClicked(){};
+	void TX_Ultra_BtnClicked(){ TexturesLevelIndex = 3; RefreshTexturesBtns(); }
 	UFUNCTION()
-	void TX_Max_BtnClicked(){};
-
+	void TX_Max_BtnClicked(){ TexturesLevelIndex = 4; RefreshTexturesBtns(); }
 	// Effects Button Handlers
 	UFUNCTION()
-	void EF_Low_BtnClicked(){};
+	void EF_Low_BtnClicked(){ EffectsLevelIndex = 0; RefreshEffectsBtns(); }
 	UFUNCTION()
-	void EF_Medium_BtnClicked(){};
+	void EF_Medium_BtnClicked(){ EffectsLevelIndex = 1; RefreshEffectsBtns(); }
 	UFUNCTION()
-	void EF_High_BtnClicked(){};
+	void EF_High_BtnClicked(){ EffectsLevelIndex = 2; RefreshEffectsBtns(); }
 	UFUNCTION()
-	void EF_Ultra_BtnClicked(){};
+	void EF_Ultra_BtnClicked(){ EffectsLevelIndex = 3; RefreshEffectsBtns(); }
 	UFUNCTION()
-	void EF_Max_BtnClicked(){};
-
+	void EF_Max_BtnClicked(){ EffectsLevelIndex = 4; RefreshEffectsBtns(); }
 	// Foliage Button Handlers
 	UFUNCTION()
-	void FL_Low_BtnClicked(){};
+	void FL_Low_BtnClicked(){ FoliageLevelIndex = 0; RefreshFoliageBtns(); }
 	UFUNCTION()
-	void FL_Medium_BtnClicked(){};
+	void FL_Medium_BtnClicked(){ FoliageLevelIndex = 1; RefreshFoliageBtns(); }
 	UFUNCTION()
-	void FL_High_BtnClicked(){};
+	void FL_High_BtnClicked(){ FoliageLevelIndex = 2; RefreshFoliageBtns(); }
 	UFUNCTION()
-	void FL_Ultra_BtnClicked(){};
+	void FL_Ultra_BtnClicked(){ FoliageLevelIndex = 3; RefreshFoliageBtns(); }
 	UFUNCTION()
-	void FL_Max_BtnClicked(){};
-	
+	void FL_Max_BtnClicked(){ FoliageLevelIndex = 4; RefreshFoliageBtns(); }
 	// Menu Button Handlers
 	UFUNCTION()
 	void BackBtnClicked();
