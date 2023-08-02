@@ -228,11 +228,6 @@ void UBLPUWGameMenu::PlayerUpId()
     	SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
-// void UBLPUWGameMenu::UpdateBalance(const int NewBalance)
-// {
-// 	BalanceText->SetText(FText::AsNumber(NewBalance));
-// 	CheckBankruptcyStatus();
-// }
 void UBLPUWGameMenu::InJail(const int TurnsLeft)
 {
 	FString Message = "YOUR IN JAIL FOR ";
@@ -291,6 +286,7 @@ void UBLPUWGameMenu::UpdateJailSkipCounter(const int& Value)
 {
 	if (Value == 0)
 	{
+		JailSkipCounterContainer->SetVisibility(ESlateVisibility::Hidden);
 		JailSkipCounterTextBlock->SetVisibility(ESlateVisibility::Hidden);
 	}
 	else
