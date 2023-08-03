@@ -75,14 +75,14 @@ TArray<USceneComponent*> SpawnPoints{ SpawnPoint0, SpawnPoint1, SpawnPoint2, Spa
 ```
 void ABLPSpace::BeginPlay()
 {
-	Super::BeginPlay();
+   Super::BeginPlay();
 
-	// Add self to SpaceList in GameState
-	ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
-	if (BLPGameStatePtr)
-	{
-		BLPGameStatePtr->AddToSpaceList(this);
-	}
+   // Add self to SpaceList in GameState
+   ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(GetWorld()->GetGameState());
+   if (BLPGameStatePtr)
+   {
+      BLPGameStatePtr->AddToSpaceList(this);
+   }
 }
 ```
 #### It's important to not that BLPPropertySpaces are part of the SpaceList but they also add themselves to an AvailablePropertySpace list in their BeginPlay functions. This is used to make finding properties that can be purchases more convient.
@@ -113,14 +113,14 @@ void ABLPGameMode::PostLogin(APlayerController* NewPlayer)
 ```
 void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayerState* BLPPlayerStateInPtr)
 {
-	UWorld* World = GetWorld();
-	if (!World) return;
-	ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(World->GetGameState());
-	
-	if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPGameStatePtr is null")); return; }
-	if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
+   UWorld* World = GetWorld();
+   if (!World) return;
+   ABLPGameState* BLPGameStatePtr = Cast<ABLPGameState>(World->GetGameState());
 
-	BLPPlayerStateInPtr->SetPlayerUpId(0);
+   if (!BLPGameStatePtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPGameStatePtr is null")); return; }
+   if (!BLPPlayerStateInPtr) { UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: BLPPlayerStatePtr is null")); return; }
+
+   BLPPlayerStateInPtr->SetPlayerUpId(0);
 }
 
 ```
@@ -133,31 +133,31 @@ void ABLPPlayerController::Server_SetInitialTurnStatus_Implementation(ABLPPlayer
 ```
 void UBLPUWGameMenu::PlayerUpId()
 {
-	...
+   ...
 
-    // If its my turn
-	if (BLPPlayerStatePtr->GetBLPPlayerId() == BLPPlayerStatePtr->GetPlayerUpId())
-	{
-		FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
-		YourTurnText->SetText(FText::FromString("It's your turn"));
+   // If its my turn
+   if (BLPPlayerStatePtr->GetBLPPlayerId() == BLPPlayerStatePtr->GetPlayerUpId())
+   {
+      FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
+      YourTurnText->SetText(FText::FromString("It's your turn"));
 
-		if (BLPPlayerStatePtr->GetJailCounter() == 0)
-		{
-			// Only let RollBtn be visible if not in jail.
-			RollBtn->SetVisibility(ESlateVisibility::Visible);
-		}
-		else
-		{
-			// If in jail, pass true in to HasRolled() so FinishTurnBtn becomes visible.
-			HasRolled(true);
-			RollBtn->SetVisibility(ESlateVisibility::Hidden);
-			if (BLPPlayerStatePtr->GetJailSkipCounter() > 1)                                                   
-            SkipJailBtn->SetVisibility(ESlateVisibility::Visible);
-		}		
-	}
-	// If its not my turn
-	else
-	{
+      if (BLPPlayerStatePtr->GetJailCounter() == 0)
+      {
+         // Only let RollBtn be visible if not in jail.
+	 RollBtn->SetVisibility(ESlateVisibility::Visible);
+      }
+      else
+      {
+	 // If in jail, pass true in to HasRolled() so FinishTurnBtn becomes visible.
+         HasRolled(true);
+	 RollBtn->SetVisibility(ESlateVisibility::Hidden);
+
+         if (BLPPlayerStatePtr->GetJailSkipCounter() > 1) SkipJailBtn->SetVisibility(ESlateVisibility::Visible);
+      }		
+   }
+   // If its not my turn
+   else
+   {
       const ABLPPlayerState* PlayerUpBLPPlayerState = BLPGameStatePtr->
       GetBLPPlayerStateFromId(BLPPlayerStatePtr->GetPlayerUpId());
 		  
@@ -167,14 +167,14 @@ void UBLPUWGameMenu::PlayerUpId()
         return; 
       }
 
-	  const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
+      const FString PlayerUpName = PlayerUpBLPPlayerState->GetPlayerName();
     	
       YourTurnText->SetText(FText::FromString(PlayerUpName + " is up"));
       RollBtn->SetVisibility(ESlateVisibility::Hidden);
       FinishTurnBtn->SetVisibility(ESlateVisibility::Hidden);
       BuyBtn->SetVisibility(ESlateVisibility::Hidden);
       SkipJailBtn->SetVisibility(ESlateVisibility::Hidden);
-	}
+   }
 }
 ```
 #### When a player clicks the Finished Turn button, another Server RPC is called that simply advances the PlayerUpId in all the PlayerStates. Which in turn calls the RepNotify function shown above.
@@ -183,29 +183,29 @@ void UBLPUWGameMenu::PlayerUpId()
 ```
 void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	...
+   ...
 
-	const int DieOneValue = FMath::RandRange(1,6);
-	const int DieTwoValue = FMath::RandRange(1,6);
-	const int TotalDiceValue = DieOneValue + DieTwoValue;
+   const int DieOneValue = FMath::RandRange(1,6);
+   const int DieTwoValue = FMath::RandRange(1,6);
+   const int TotalDiceValue = DieOneValue + DieTwoValue;
 	
-	UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), TotalDiceValue);
+   UE_LOG(LogTemp, Warning, TEXT("You rolled a: %d"), TotalDiceValue);
 
-	int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + TotalDiceValue;
-	const int MaxSpaceID = GameStatePtr->GetSpaceList().Num()-1;
+   int NewSpaceID = PlayerStatePtr->GetCurrentSpaceId() + TotalDiceValue;
+   const int MaxSpaceID = GameStatePtr->GetSpaceList().Num()-1;
 	
-	// If we pass go
-	if (NewSpaceID > MaxSpaceID)
-	{
-		NewSpaceID = NewSpaceID-MaxSpaceID-1;
-		PlayerStatePtr->AddToBalance(200);
-	}
+   // If we pass go
+   if (NewSpaceID > MaxSpaceID)
+   {
+      NewSpaceID = NewSpaceID-MaxSpaceID-1;
+      PlayerStatePtr->AddToBalance(200);
+   }
 	
-	PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
+   PlayerStatePtr->SetCurrentSpaceId(NewSpaceID);
 
-	UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
+   UE_LOG(LogTemp, Warning, TEXT("CurrentSpaceId is: %d"), PlayerStatePtr->GetCurrentSpaceId());
 
-	GameStatePtr->AddRollNotificationToUI(TotalDiceValue, PlayerStatePtr);
+   GameStatePtr->AddRollNotificationToUI(TotalDiceValue, PlayerStatePtr);
 }
 
 ```
@@ -218,15 +218,15 @@ void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* A
 {
     ...
 
-	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
-	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+   const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
+   MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
 	
-	if (GetRemoteRole() == ROLE_AutonomousProxy)
-	{
-		PlayerStatePtr->Client_SimulateMoveLocally(PlayerStatePtr->GetCurrentSpaceId());
-	}
+   if (GetRemoteRole() == ROLE_AutonomousProxy)
+   {
+      PlayerStatePtr->Client_SimulateMoveLocally(PlayerStatePtr->GetCurrentSpaceId());
+   }
 	
-	ApplySpaceEffect(PlayerStatePtr, GameStatePtr);
+   ApplySpaceEffect(PlayerStatePtr, GameStatePtr);
 }
 ```
 
@@ -237,52 +237,52 @@ void ABLPPlayerController::Server_ReflectRollInGame_Implementation(ABLPAvatar* A
 ```
 void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	...
+   ...
 
-	ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceFromId(EnteredSpaceID);
-	if (!EnteredSpace)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Entered space could not be found"));
-		return;
-	}
-	if (Cast<ABLPPropertySpace>(EnteredSpace))
-	{
-		PlayerStatePtr->SetHasRolled(true);
-		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Property Space Entered"));
-		const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
-		CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
-		ChargeRent(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
-	}
-	else if (Cast<ABLPChanceSpace>(EnteredSpace))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chance Space Entered"));
-		DrawChanceCard(PlayerStatePtr, GameStatePtr);
-	}
-	else if (Cast<ABLPChestSpace>(EnteredSpace))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chest Space Entered"));
-		DrawChestCard(PlayerStatePtr, GameStatePtr);
-	}
-	else if (Cast<ABLPGoToJailSpace>(EnteredSpace))
-	{
-		PlayerStatePtr->SetHasRolled(true);
-		UE_LOG(LogTemp, Warning, TEXT("GO TO JAIL!!"));
-		SendToJail(PlayerStatePtr, GameStatePtr->GetSpaceList());
-	}
-	else if (Cast<ABLPTaxSpace>(EnteredSpace))
-	{
-		PlayerStatePtr->SetHasRolled(true);
-		UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Taxes Collected"));
-		PlayerStatePtr->AddToBalance(-100);
-	}
-	else if (Cast<ABLPJailSpace>(EnteredSpace))
-	{
-		PlayerStatePtr->SetHasRolled(true);
-	}
-	else
-	{
-		PlayerStatePtr->SetHasRolled(true);
-	}
+   ABLPSpace* EnteredSpace = GameStatePtr->GetSpaceFromId(EnteredSpaceID);
+   if (!EnteredSpace)
+   {
+      UE_LOG(LogTemp, Warning, TEXT("Entered space could not be found"));
+      return;
+   }
+   if (Cast<ABLPPropertySpace>(EnteredSpace))
+   {
+      PlayerStatePtr->SetHasRolled(true);
+      UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Property Space Entered"));
+      const ABLPPropertySpace* EnteredPropertySpace = Cast<ABLPPropertySpace>(EnteredSpace);
+      CheckIfPropertyIsForSale(PlayerStatePtr, GameStatePtr);
+      ChargeRent(PlayerStatePtr, GameStatePtr, EnteredPropertySpace);
+   }
+   else if (Cast<ABLPChanceSpace>(EnteredSpace))
+   {
+      UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chance Space Entered"));
+      DrawChanceCard(PlayerStatePtr, GameStatePtr);
+   }
+   else if (Cast<ABLPChestSpace>(EnteredSpace))
+   {
+      UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Chest Space Entered"));
+      DrawChestCard(PlayerStatePtr, GameStatePtr);
+   }
+   else if (Cast<ABLPGoToJailSpace>(EnteredSpace))
+   {
+      PlayerStatePtr->SetHasRolled(true);
+      UE_LOG(LogTemp, Warning, TEXT("GO TO JAIL!!"));
+      SendToJail(PlayerStatePtr, GameStatePtr->GetSpaceList());
+   }
+   else if (Cast<ABLPTaxSpace>(EnteredSpace))
+   {
+      PlayerStatePtr->SetHasRolled(true);
+      UE_LOG(LogTemp, Warning, TEXT("BLPPlayerController: Taxes Collected"));
+      PlayerStatePtr->AddToBalance(-100);
+   }
+   else if (Cast<ABLPJailSpace>(EnteredSpace))
+   {
+      PlayerStatePtr->SetHasRolled(true);
+   }
+   else
+   {
+      PlayerStatePtr->SetHasRolled(true);
+   }
 }
 ```
 #### These side effects are gone into more detail in the sections to come. Along with a side effect, the RepNotify variable HasRolled, in the PlayerState, is also set to true. Its RepNotify function fires a delegate making the FinishTurnBtn visible and allows the Server_FinishTurn to be called. In some cases, HasRolled is called within the side effect function (ex: a player that lands on a chance space, can only finish their turn after the chance card is applied).
@@ -293,18 +293,18 @@ void ABLPPlayerController::ApplySpaceEffect(ABLPPlayerState* PlayerStatePtr, ABL
 ```
 void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerStatePtr, const ABLPGameState* GameStatePtr) const
 {
-	ABLPSpace* Space = GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId());
-	if (const ABLPPropertySpace* PropertySpace = Cast<ABLPPropertySpace>(Space))
-	{
-		if (PropertySpace->GetOwnerId() == -1)
-		{
-			PlayerStatePtr->SetCanBuyCurrentProperty(true);
-		}
-		else
-		{
-			PlayerStatePtr->SetCanBuyCurrentProperty(false);
-		}
-	}
+   ABLPSpace* Space = GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId());
+   if (const ABLPPropertySpace* PropertySpace = Cast<ABLPPropertySpace>(Space))
+   {
+      if (PropertySpace->GetOwnerId() == -1)
+      {
+         PlayerStatePtr->SetCanBuyCurrentProperty(true);
+      }
+      else
+      {
+         PlayerStatePtr->SetCanBuyCurrentProperty(false);
+      }
+   }
 }
 ```
 
@@ -314,41 +314,41 @@ void ABLPPlayerController::CheckIfPropertyIsForSale(ABLPPlayerState* PlayerState
 ```
 void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	...
+   ...
 	
-	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
-		return;
-	}
+   if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
+   {
+      UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
+      return;
+   }
 	
-    ABLPPropertySpace* PropertySpaceToPurchase = 
-    Cast<ABLPPropertySpace>(GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId()));
+   ABLPPropertySpace* PropertySpaceToPurchase = 
+   Cast<ABLPPropertySpace>(GameStatePtr->GetSpaceFromId(PlayerStatePtr->GetCurrentSpaceId()));
 
-	if (!PlayerStatePtr->GetCanBuyCurrentProperty())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("This property is not available for purchase"));
-		return;
-	}
+   if (!PlayerStatePtr->GetCanBuyCurrentProperty())
+   {
+      UE_LOG(LogTemp, Warning, TEXT("This property is not available for purchase"));
+      return;
+   }
 
-	const int RemainingBalance = PlayerStatePtr->GetBalance() - PropertySpaceToPurchase->GetPurchaseCost();
-	if (RemainingBalance < 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("You need %d more credits"), abs(RemainingBalance));
-		return;
-	}
+   const int RemainingBalance = PlayerStatePtr->GetBalance() - PropertySpaceToPurchase->GetPurchaseCost();
+   if (RemainingBalance < 0)
+   {
+      UE_LOG(LogTemp, Warning, TEXT("You need %d more credits"), abs(RemainingBalance));
+      return;
+   }
 	
-	PropertySpaceToPurchase->SetOwnerId(PlayerStatePtr->GetBLPPlayerId());
-	PlayerStatePtr->AddToOwnedPropertyList(PropertySpaceToPurchase);
-	GameStatePtr->RemoveFromAvailablePropertySpaceList(PropertySpaceToPurchase);
-	PlayerStatePtr->AddToBalance(-PropertySpaceToPurchase->GetPurchaseCost());
-	PlayerStatePtr->SetCanBuyCurrentProperty(false);
+   PropertySpaceToPurchase->SetOwnerId(PlayerStatePtr->GetBLPPlayerId());
+   PlayerStatePtr->AddToOwnedPropertyList(PropertySpaceToPurchase);
+   GameStatePtr->RemoveFromAvailablePropertySpaceList(PropertySpaceToPurchase);
+   PlayerStatePtr->AddToBalance(-PropertySpaceToPurchase->GetPurchaseCost());
+   PlayerStatePtr->SetCanBuyCurrentProperty(false);
 
-	// If this is an estate property, check if player can now build on the family of estate properties.
-	if (const ABLPEstatePropertySpace* EstatePropertySpace = Cast<ABLPEstatePropertySpace>(PropertySpaceToPurchase))
-	{
-		UpdateCanBuild(EstatePropertySpace, PlayerStatePtr);
-	}
+   // If this is an estate property, check if player can now build on the family of estate properties.
+   if (const ABLPEstatePropertySpace* EstatePropertySpace = Cast<ABLPEstatePropertySpace>(PropertySpaceToPurchase))
+   {
+      UpdateCanBuild(EstatePropertySpace, PlayerStatePtr);
+   }
 }
 ```
 #### This function checks a couple of things, then sets the OwnerId of the PropertySpace to the calling players BLPPlayerId, adds it to the players OwnedPropertyList in their PlayerState, removes from the AvailablePropertySpaceList in the GameState, and charges the purchase cost.
@@ -362,40 +362,40 @@ void ABLPPlayerController::Server_BuyPropertySpace_Implementation(ABLPPlayerStat
 // Updates can build bool for a family of estate properties
 void ABLPPlayerController::UpdateCanBuild(const ABLPEstatePropertySpace* EstatePropertySpacePtr, const ABLPPlayerState* BLPPlayerStatePtr) const
 {
-	TArray<ABLPPropertySpace*> OwnedPropertyList = BLPPlayerStatePtr->GetOwnedPropertyList();
-	const FString TargetFamilyColor = EstatePropertySpacePtr->GetFamilyColor();
-	TArray<ABLPEstatePropertySpace*> MatchingEstateProperties;
+   TArray<ABLPPropertySpace*> OwnedPropertyList = BLPPlayerStatePtr->GetOwnedPropertyList();
+   const FString TargetFamilyColor = EstatePropertySpacePtr->GetFamilyColor();
+   TArray<ABLPEstatePropertySpace*> MatchingEstateProperties;
 
-	for (ABLPPropertySpace* PropertySpace : OwnedPropertyList)
-	{
-		if (ABLPEstatePropertySpace* EstatePropertySpace = Cast<ABLPEstatePropertySpace>(PropertySpace))
-		{
-			if (EstatePropertySpace->GetFamilyColor() == TargetFamilyColor)
-			{
-				MatchingEstateProperties.Add(EstatePropertySpace);
-			}
-		}
-	}
-	if (TargetFamilyColor == "Brown" || TargetFamilyColor == "DarkBlue")
-	{
-		if (MatchingEstateProperties.Num() == 2)
-		{
-			for (ABLPEstatePropertySpace* EstatePropertySpace : MatchingEstateProperties )
-			{
-				EstatePropertySpace->SetCanBuild(true);
-			}
-		}
-	}
-	else
-	{
-		if (MatchingEstateProperties.Num() == 3)
-		{
-			for (ABLPEstatePropertySpace* EstatePropertySpace : MatchingEstateProperties )
-			{
-				EstatePropertySpace->SetCanBuild(true);
-			}
-		}
-	}
+   for (ABLPPropertySpace* PropertySpace : OwnedPropertyList)
+   {
+      if (ABLPEstatePropertySpace* EstatePropertySpace = Cast<ABLPEstatePropertySpace>(PropertySpace))
+      {
+         if (EstatePropertySpace->GetFamilyColor() == TargetFamilyColor)
+         {
+            MatchingEstateProperties.Add(EstatePropertySpace);
+         }
+      }
+   }
+   if (TargetFamilyColor == "Brown" || TargetFamilyColor == "DarkBlue")
+   {
+      if (MatchingEstateProperties.Num() == 2)
+      {
+         for (ABLPEstatePropertySpace* EstatePropertySpace : MatchingEstateProperties )
+         {
+            EstatePropertySpace->SetCanBuild(true);
+         }
+      }
+   }
+   else
+   {
+      if (MatchingEstateProperties.Num() == 3)
+      {
+         for (ABLPEstatePropertySpace* EstatePropertySpace : MatchingEstateProperties )
+         {
+           EstatePropertySpace->SetCanBuild(true);
+         }
+      }
+   }
 }
 ```
 #### This function retrieves all owned family members (if any) from the players OwnedPropertyList. If all are owned the CanBuild flag of the EstatePropertySpace being purchased and its family members is set to true. If a player can build on an EstatePropertySpace, the BuildBtn becomes visible in the PropertyMenu.
@@ -517,29 +517,27 @@ void UBLPUWPropertyTitle::OnClick()
 ```
 void ABLPPlayerController::Server_SendSaleRequest_Implementation(const FPropertySaleData& SaleData)
 {
-	...
+   ...
 
-	if (!SaleData.OwningPlayer->GetBLPPlayerId() == SaleData.OwningPlayer->GetPlayerUpId())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Its not your turn!"));
-		return;
-	}
+   if (!SaleData.OwningPlayer->GetBLPPlayerId() == SaleData.OwningPlayer->GetPlayerUpId())
+   {
+      UE_LOG(LogTemp, Warning, TEXT("Its not your turn!"));
+      return;
+   }
 
+
+   if (SaleData.PropertyToSell->GetIsMortgaged())
+   {
+      UE_LOG(LogTemp, Warning, TEXT("This property is mortgaged and cannot be sole")); return;
+   }
 	
-  if (SaleData.PropertyToSell->GetIsMortgaged())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("This property is mortgaged and cannot be sole"));
-		return;
-	}
-	
-	if (SaleData.PropertyToSell->GetHasPendingSale())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("This property already has a sale active"));
-		return;
-	}
+   if (SaleData.PropertyToSell->GetHasPendingSale())
+   {
+      UE_LOG(LogTemp, Warning, TEXT("This property already has a sale active")); return;
+   }
 
-	SaleData.TargetPlayer->Client_AddSaleRequest(SaleData);
-	SaleData.PropertyToSell->SetHasPendingSale(true);
+   SaleData.TargetPlayer->Client_AddSaleRequest(SaleData);
+   SaleData.PropertyToSell->SetHasPendingSale(true);
 }
 ``` 
 #### This RPC checks the SaleData, calls a Client RPC which adds a sale request notification to the targeted player, and sets the HasPendingSale flag in the PropertySpace to true (this prevents building, selling, or mortgaging a property that is currently being sold).
@@ -548,18 +546,18 @@ void ABLPPlayerController::Server_SendSaleRequest_Implementation(const FProperty
 ```
 void ABLPPlayerController::Server_SendSaleResponse_Implementation(const FPropertySaleData& SaleData, const bool Status)
 {
-	...
+   ...
 	
-	if (Status)
-	{
-		TransferOwnership(SaleData);
-		// Only add sale response to target player if they accepted
-		SaleData.TargetPlayer->Client_AddSaleResponse(SaleData, Status);
-	}
+   if (Status)
+   {
+      TransferOwnership(SaleData);
+      // Only add sale response to target player if they accepted
+      SaleData.TargetPlayer->Client_AddSaleResponse(SaleData, Status);
+   }
 
-	SaleData.OwningPlayer->Client_AddSaleResponse(SaleData, Status);
+   SaleData.OwningPlayer->Client_AddSaleResponse(SaleData, Status);
 
-	SaleData.PropertyToSell->SetHasPendingSale(false);
+   SaleData.PropertyToSell->SetHasPendingSale(false);
 }
 ```
 #### If accepted TransferOwnerShip is called and SaleResponse is added to both the seller and buyers screen, which reflects the status of the sale. If declined, a SaleResponse is only sent to the seller.
@@ -569,12 +567,12 @@ void ABLPPlayerController::Server_SendSaleResponse_Implementation(const FPropert
 ```
 void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TArray<ABLPSpace*>& SpaceList)
 {
-	...
+   ...
 	
-	PlayerStatePtr->SetJailCounter(3);
-	PlayerStatePtr->SetCurrentSpaceId(10);
-	MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
-	PlayerStatePtr->Client_SimulateMoveLocally(10);
+   PlayerStatePtr->SetJailCounter(3);
+   PlayerStatePtr->SetCurrentSpaceId(10);
+   MovePlayer(AvatarPtr, PlayerStatePtr, SpaceList);
+   PlayerStatePtr->Client_SimulateMoveLocally(10);
 }
 ```
 #### This function sets the RepNotify JailCounter variable to 3 and moves the player to one of the JailCell spawn points on the JailSpace. The RepNotify function executes a delegate, which tells the GameMenu to display the in-jail icon, the amount of turns left in jail, and the SkipJailBtn if the player has get out of jail free cards. When the player finishes their turn, for the next 3 turns, the JailCounter variable is updated. When it reaches 0, the roll btn appears again and they can roll. When the turn system switches to a player who is in Jail, it automatically sets HasRolled to true in their PlayerState (to ensure the FinishTurnBtn is visible).
@@ -583,23 +581,22 @@ void ABLPPlayerController::SendToJail(ABLPPlayerState* PlayerStatePtr, const TAr
 ```
 void ABLPPlayerController::Server_SkipJail_Implementation(ABLPPlayerState* PlayerStatePtr)
 {
-	...
+   ...
     
-	if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("It's not your turn!"))
-		return;
-	}
+   if (!PlayerStatePtr->GetBLPPlayerId() == PlayerStatePtr->GetPlayerUpId())
+   {
+      UE_LOG(LogTemp, Warning, TEXT("It's not your turn!")) return;
+   }
 	
-	if (PlayerStatePtr->GetJailSkipCounter() >= 1)
-	{
-		PlayerStatePtr->SetJailSkipCounter(PlayerStatePtr->GetJailSkipCounter()-1);
-		PlayerStatePtr->SetHasRolled(true);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("You have no get out of jail free cards!"));
-	}
+   if (PlayerStatePtr->GetJailSkipCounter() >= 1)
+   {
+      PlayerStatePtr->SetJailSkipCounter(PlayerStatePtr->GetJailSkipCounter()-1);
+      PlayerStatePtr->SetHasRolled(true);
+   }
+   else
+   {
+      UE_LOG(LogTemp, Warning, TEXT("You have no get out of jail free cards!"));
+   }
 }
 ```
 #### The RepNotify variable JailSkipCounter keeps track of the players get out of jail free cards (it's limited to 2). This RPC decrements the JailSkipCounter and ensures the player can't roll again by setting HasRolled to true. The RepNotify function of JailSkipCounter, fires a delegate that updates the JailSkip icon on the GameMenu (it disappears when JailSkipCounter reaches 0).
@@ -607,7 +604,9 @@ void ABLPPlayerController::Server_SkipJail_Implementation(ABLPPlayerState* Playe
 ### Chance and Chest
 #### The Chance and Chest cards are implemented identically, so I'll only show the Chance cards to keep this long document a little shorter. This component was the most tedious and frustrating part of the project. This component starts in the GameState which has a TArray of 15 function pointers.
 ```
-TArray<BLPGameStateFuncPtr> ChanceCards {&ABLPGameState::ChanceCard0, &ABLPGameState::ChanceCard1, &ABLPGameState::ChanceCard2, &ABLPGameState::ChanceCard3,&ABLPGameState::ChanceCard4, &ABLPGameState::ChanceCard4, &ABLPGameState::ChanceCard5, &ABLPGameState::ChanceCard6, &ABLPGameState::ChanceCard7, &ABLPGameState::ChanceCard8, &ABLPGameState::ChanceCard9, &ABLPGameState::ChanceCard10, &ABLPGameState::ChanceCard11, &ABLPGameState::ChanceCard12, &ABLPGameState::ChanceCard13, &ABLPGameState::ChanceCard14};
+TArray<BLPGameStateFuncPtr> ChanceCards {&ABLPGameState::ChanceCard0, &ABLPGameState::ChanceCard1, &ABLPGameState::ChanceCard2, &ABLPGameState::ChanceCard3,&ABLPGameState::ChanceCard4,
+   &ABLPGameState::ChanceCard4, &ABLPGameState::ChanceCard5, &ABLPGameState::ChanceCard6, &ABLPGameState::ChanceCard7, &ABLPGameState::ChanceCard8, &ABLPGameState::ChanceCard9,
+   &ABLPGameState::ChanceCard10, &ABLPGameState::ChanceCard11, &ABLPGameState::ChanceCard12, &ABLPGameState::ChanceCard13, &ABLPGameState::ChanceCard14};
 ```
 #### Each function takes the players state as a parameter and applies the effect of the card to the player. When a player lands on a ChanceSpace, DrawChanceCard is called in the PlayerController.
 
@@ -625,64 +624,64 @@ void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPG
 
   switch (RandomCardIndex)
   {
-	case 0:
-		Description = "Advance to Boardwalk";
-		break;
-	case 1:
-		Description = "Advance to Go, collect $200";
-		break;
-	case 2:
-		Description = "Advance to Illinois Avenue. If you pass Go, collect $200";
-		break;
-	case 3:
-		Description = "Advance to St. Charles Place. If you pass Go, collect $200";
-		break;
-	case 4:
-		Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
-					  "Bank. If owned, pay the owner twice the rent";
-		break;
-	case 5:
-		Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
-					  "Bank. If owned, pay the owner twice the rent";
-		break;
-	case 6:
-		Description = "Advance to the nearest Utility. If unowned, you may buy it from the"
-					  "Bank. If owned, throw the dice and pay the owner ten times the amount"
-					  "thrown";
-		break;
-	case 7:
-		Description = "Bank pays you a dividend of $50";
-		break;
-	case 8:
-		Description = "Get Out of Jail Free";
-		break;
-	case 9:
-		Description = "Go back 3 Spaces";
-		break;
-	case 10:
-		Description = "Go to Jail. Go directly to Jail, do not pass Go, do not collect $200.";
-		break;
-	case 11:
-		Description = "Make general repairs on all your property. For each house pay $25."
-					  "For each hotel pay $100.";
-		break;
-	case 12:
-		Description = "Speeding fine $15.";
-		break;
-	case 13:
-		Description = "Take a trip to Reading Railroad. If you pass Go, collect $200.";
-		break;
-	case 14:
-		Description = "You have been elected Chairmen of the Board. Pay each player $50.";
-		break;
-	case 15:
-		Description = "Your building loan matures. Collect $150.";
-		break;
-	default:
-		break;
-	}
+      case 0:
+         Description = "Advance to Boardwalk";
+         break;
+      case 1:
+         Description = "Advance to Go, collect $200";
+         break;
+      case 2:
+         Description = "Advance to Illinois Avenue. If you pass Go, collect $200";
+         break;
+      case 3:
+         Description = "Advance to St. Charles Place. If you pass Go, collect $200";
+         break;
+      case 4:
+         Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
+                       "Bank. If owned, pay the owner twice the rent";
+         break;
+      case 5:
+         Description = "Advance to the nearest Railroad. If unowned, you may buy it from the"
+                       "Bank. If owned, pay the owner twice the rent";
+         break;
+      case 6:
+          Description = "Advance to the nearest Utility. If unowned, you may buy it from the"
+                        "Bank. If owned, throw the dice and pay the owner ten times the amount"
+                        "thrown";
+          break;
+      case 7:
+          Description = "Bank pays you a dividend of $50";
+          break;
+      case 8:
+         Description = "Get Out of Jail Free";
+         break;
+      case 9:
+         Description = "Go back 3 Spaces";
+         break;
+      case 10:
+         Description = "Go to Jail. Go directly to Jail, do not pass Go, do not collect $200.";
+         break;
+      case 11:
+         Description = "Make general repairs on all your property. For each house pay $25."
+                       "For each hotel pay $100.";
+         break;
+      case 12:
+         Description = "Speeding fine $15.";
+         break;
+      case 13:
+         Description = "Take a trip to Reading Railroad. If you pass Go, collect $200.";
+         break;
+      case 14:
+         Description = "You have been elected Chairmen of the Board. Pay each player $50.";
+         break;
+      case 15:
+         Description = "Your building loan matures. Collect $150.";
+         break;
+      default:
+         break;
+   }
 	
-	GameStatePtr->AddCardDrawNotificationToUI("Chance", Description, PlayerStatePtr);
+   GameStatePtr->AddCardDrawNotificationToUI("Chance", Description, PlayerStatePtr);
 
 ```
 #### A RandomCardIndex is generated and stored in the SetCurrentChanceCardIndex in the GameState for later. Based on this index the description for the notification is selected and a Chance notification is sent to all players from the GameState. When this notification finishes Server_ExecuteChanceCard is called.
@@ -690,8 +689,8 @@ void ABLPPlayerController::DrawChanceCard(ABLPPlayerState* PlayerStatePtr, ABLPG
 ```
 void ABLPPlayerController::Server_ExecuteChanceCard_Implementation(ABLPPlayerState* PlayerStatePtr, ABLPGameState* GameStatePtr)
 {
-	GameStatePtr->ExecuteChanceCard(PlayerStatePtr);
-	PlayerStatePtr->SetHasRolled(true);
+   GameStatePtr->ExecuteChanceCard(PlayerStatePtr);
+   PlayerStatePtr->SetHasRolled(true);
 }
 ```
 #### This RPC calls ExecuteChanceCard in the GameState, which executes the function at the index in the ChanceCards array that matches the CurrentChanceCardIndex set earlier. HasRolled is then set to true in the PlayerState, making the player wait to finish their turn until the Chance notification is finished.
