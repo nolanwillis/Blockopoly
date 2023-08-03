@@ -4,7 +4,7 @@
   * Motivation
   * Goals of the project
   * Why the name?
-* Components
+* Code
   * Spaces
   * Turns and Rolling
   * Buying
@@ -34,7 +34,7 @@
 
 ### Why the name?
 #### This project was my twin brother’s idea. The original pitch was to build a multiplayer monopoly game the utilized the Chronos blockchain for player payment. I would do the game development part and he was going to do the blockchain stuff (he's into Web3 and decentralized apps). So, we called the project Blockopoly. But the game development part was taking forever, and we decided that the blockchain incorporation was going to limited and kind of gimmicky, so we gave up on the joint effort. I decided to keep the name.
-## Components
+## Code
 >### This section contains some highlighted parts of the project with a brief overview of how the code works. All the code shown is an abbreviated version.
 ### Spaces
 #### The space system is what enables the game to move the player around the board and more importantly helps keep track of where each player is at a given time. Below is a list of space classes and subclasses utilized throughout the game (these are both cpp classes and blueprint classes):
