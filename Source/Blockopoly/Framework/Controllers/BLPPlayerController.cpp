@@ -183,9 +183,9 @@ void ABLPPlayerController::Server_Roll_Implementation(ABLPAvatar* AvatarPtr, ABL
 		return;
 	}
 	
-	const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
+	//const TArray<ABLPSpace*> SpaceList = GameStatePtr->GetSpaceList();
 
-	if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
+	//if (SpaceList.IsEmpty()) { UE_LOG(LogTemp, Warning, TEXT("Sent SpaceList is empty, from PC")); return; }
 
 	const int DieOneValue = FMath::RandRange(1,6);
 	const int DieTwoValue = FMath::RandRange(1,6);
@@ -271,7 +271,6 @@ void ABLPPlayerController::Server_SkipJail_Implementation(ABLPPlayerState* Playe
 	
 	if (PlayerStatePtr->GetJailSkipCounter() >= 1)
 	{
-		PlayerStatePtr->SetJailCounter(0);
 		PlayerStatePtr->SetJailSkipCounter(PlayerStatePtr->GetJailSkipCounter()-1);
 		PlayerStatePtr->SetHasRolled(true);
 	}
