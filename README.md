@@ -1,10 +1,11 @@
 # Blockopoly
 ## Contents
+* Installation
 * About the project 
   * Motivation
   * Goals of the project
   * Why the name?
-* Code
+* Components
   * Spaces
   * Turns and Rolling
   * Buying
@@ -18,7 +19,9 @@
   * Things that would be cool to add
   * Things I learned
   * Whats next for me?
-
+## Installation
+### Download the project from [itch.io](https://nolanwillis38.itch.io/blockopoly)
+#### Once downloaded open the zip, open the windows folder, and open the Unreal Engine 5 application. To play locally make sure steam is closed. To play on steam, open steam and login, then start the game.
 ## About the project
 ### Motivation
 #### In 2022 I built my first independent game project (by independent I mean without following a Youtube video or online course) called Dungeon Defender. It was a simple side scroller build with Unity. An ok first project, but it was small and very basic. In the fall after completing the project, I took a C++ course for a senior elective at my university. This course was the most challenging programming course I had taken up to that point and it gave me a lot of confidence to try Unreal Engine again. I started learning game development in Unreal first, but I was terrible at C++ and really didn't like the blueprint system, so I switched to Unity. In the winter after taking the C++ course, I completed all the programming tutorials on the UE5 docs and got a better understanding UE5's game framework. After becoming a little more confident I switched my focus to UE5's gameplay ability system or GAS. I found a Youtube video series and attempted to follow along. I made it about halfway through the first video and was completely lost. It was talking about replication, multiplayer, networking, delegates, and a bunch of other concepts I had not encountered before. So, I hesitantly bought an intermediate UE5 multiplayer course on Udemy (my first attempt at Unreal was centered around two Udemy courses and it didn't go very well). This course was easier than the courses before, the concepts just made sense. I think this was a combination of knowing more C++ and reviewing what I had learned in the courses before. After completing the course, I started a project this project. I pushed my first commit on March 20th, my goal was to finish the project in 2 months. I didn't "finish" the project until August 1st.
@@ -723,6 +726,6 @@ void ABLPPlayerController::Server_ExecuteChanceCard_Implementation(ABLPPlayerSta
 * Multiplayer is hard. State synchronization can be tricky and is something you don't really think about in single player games. 
 
 ### What’s next
-#### I probably won't attempt another multiplayer project alone. I would if I was part of a larger group. It's just time consuming, and if I'm spending that much time on a project, I want it to be complete, with art, sound, landscapes, a story, etc. I've now built a project in Unreal and Unity, I was thinking about going lower level, maybe learning DirectX or something similar. As of writing this I'll be starting a master’s in Game Programming in about 5 weeks. I can take electives focusing on graphics, ai, animation programming, networking, etc. I'm thinking of focusing on either graphics or networking, but this might change because I don't have a lot of experience with either of these topics. I might build a couple more personal projects, but I'm at the point where I really need to get work experience. This project was a great experience, and I really learned a lot about multiplayer and Unreal Engine 5. If you want to try this game there's a link to the itch.io page on my portfolio. If you've read this far thank you so much for reading this doc, project synopsis thing. 
+#### I probably won't attempt another multiplayer project alone. I would if I was part of a larger group. It's just time consuming, and if I'm spending that much time on a project, I want it to be complete, with art, sound, landscapes, a story, etc. I've now built a project in Unreal and Unity, I was thinking about going lower level, maybe learning DirectX or something similar. As of writing this I'll be starting a master’s in Game Programming in about 5 weeks. I can take electives focusing on graphics, ai, animation programming, networking, etc. I'm thinking of focusing on either graphics or networking, but this might change because I don't have a lot of experience with either of these topics. I might build a couple more personal projects, but I'm at the point where I really need to get work experience. This project was a great experience, and I really learned a lot about multiplayer and Unreal Engine 5. If you've read this far thank you so much for reading this doc, project synopsis thing. 
 
   -- Nolan, August 2nd, 2023
