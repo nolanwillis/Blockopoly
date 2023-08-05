@@ -88,14 +88,14 @@ void ABLPSpace::BeginPlay()
    }
 }
 ```
-#### It's important to not that BLPPropertySpaces are part of the SpaceList but they also add themselves to an AvailablePropertySpace list in their BeginPlay functions. This is used to make finding properties that can be purchases more convient.
+#### It's important to note that BLPPropertySpaces are part of the SpaceList but they also add themselves to an AvailablePropertySpace list in their BeginPlay functions. This is used to make finding properties that can be purchases more convient.
 
 #### All the blueprint classes listed above are for cosmetic purposes only, the only blueprint scripting they contain is for setting up the Text3D component as mentioned before. The other C++ classes add various functionalites on top of the base BLPSpace class. This wraps up the overview of spaces, more details about the Property, EstateProperty, Chance, and Chest classes are explored later.
 ---
 ### Turns and Rolling
 #### Turns and rolling took a few implementations to get right, most of the setbacks were cause when attempting to sync roll and turn notifications across users.
 
-#### The turn system revolves around a BLPSpaceID which is assigned to each player in the GameMode when they connect to the session. 
+#### The turn system revolves around a BLPlayerId which is assigned to each player in the GameMode when they connect to the session. 
 
 ```
 void ABLPGameMode::PostLogin(APlayerController* NewPlayer)
